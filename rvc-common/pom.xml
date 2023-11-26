@@ -33,5 +33,12 @@
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
         </dependency>
+
+<!--        Assistant框架-->
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-boot-start</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 </project>
