@@ -91,10 +91,10 @@ jobs:
           JASYPT_PWD: ${{ secrets.JASYPT_PWD }}
         run: |
           cd $MODULE
-          echo "encryptor:" > src/main/resources/you-cant-see-that.yml
-          echo "  algorithm: $JASYPT_ALGO" >> src/main/resources/you-cant-see-that.yml
-          echo "  password:  $JASYPT_PWD" >> src/main/resources/you-cant-see-that.yml
-          cat src/main/resources/you-cant-see-that.yml
+          echo "jasypt:" > src/main/resources/you-cant-see-that.yml
+          echo "  encryptor:" >> src/main/resources/you-cant-see-that.yml
+          echo "    algorithm: $JASYPT_ALGO" >> src/main/resources/you-cant-see-that.yml
+          echo "    password:  $JASYPT_PWD" >> src/main/resources/you-cant-see-that.yml
           cd ..
           mvn package -Dmaven.test.skip=true
 
