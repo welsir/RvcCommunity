@@ -26,6 +26,7 @@ public class WebController {
     @Resource
     TeamService teamService;
 
+
     /**
      * 获取网站首页信息
      * @return
