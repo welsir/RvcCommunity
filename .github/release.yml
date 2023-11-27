@@ -13,6 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+
       - name: Checkout Auto Label
         run: |
           if [[ "${{ github.event.head_commit.message }}" == *"<Auto>"* ]]; then
@@ -55,7 +56,7 @@ jobs:
           run_port="${BASH_REMATCH[1]}"
           fi
           
-          if [[ "$commit_message" =~ -de:([^\ ]*) ]]; then
+          if [[ "$commit_message" =~ -de:\<([^>]+)\> ]]; then
           docker_env="${BASH_REMATCH[1]}"
           fi
           
