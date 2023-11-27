@@ -86,6 +86,7 @@ jobs:
         run: |
           mvn package -Dmaven.test.skip=true
 
+
       - name: Build and Push Docker Images
         if: ${{ env.SKIP != 'image'}}
         env:
