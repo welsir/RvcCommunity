@@ -2,6 +2,7 @@ package com.tml.controller;
 
 import com.tml.pojo.WebInfoDO;
 import com.tml.service.IWebInfoDaoService;
+import com.tml.service.TeamService;
 import com.tml.service.WebInfoService;
 import com.tml.service.WebToolService;
 import io.github.common.web.Result;
@@ -22,6 +23,10 @@ public class WebController {
     @Resource
     WebToolService webToolService;
 
+    @Resource
+    TeamService teamService;
+
+
     /**
      * 获取网站首页信息
      * @return
@@ -38,5 +43,14 @@ public class WebController {
     @GetMapping("/tools")
     public Result getWebTools(){
         return webToolService.getToolList();
+    }
+
+    /**
+     * 获取网站的团队人员
+     * @return
+     */
+    @GetMapping("/team")
+    public Result getWebTeam(){
+        return teamService.getTeamList();
     }
 }
