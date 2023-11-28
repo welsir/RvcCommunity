@@ -86,6 +86,28 @@
             <artifactId>jasypt-spring-boot-starter</artifactId>
         </dependency>
 
+<!--        Assistant框架-->
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-boot-start</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-cache</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
