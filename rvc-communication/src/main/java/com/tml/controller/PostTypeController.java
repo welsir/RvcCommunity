@@ -1,5 +1,7 @@
 package com.tml.controller;
 
+import com.tml.annotation.Detection;
+import com.tml.annotation.SystemLog;
 import com.tml.pojo.entity.PostTypeDo;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
@@ -25,16 +27,11 @@ public class PostTypeController {
     @Autowired
     private PostTypeService postTypeService;
 
-    /**
-     * 获取所有交流类型列表
-     */
     @GetMapping("/list")
+    @SystemLog(businessName = "获取所有交流类型列表")
     public Result list(){
         List<PostTypeDo> list = postTypeService.list();
         return Result.success(list);
     }
-
-
-
 
 }
