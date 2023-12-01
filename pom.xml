@@ -26,6 +26,7 @@
         <module>rvc-feedback</module>
         <module>rvc-admin</module>
         <module>rvc-chatroom</module>
+        <module>rvc-communication</module>
     </modules>
 
     <properties>
@@ -139,7 +140,8 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-amqp</artifactId>
-                <version>2.3.9.RELEASE</version>
+<!--                <version>2.3.9.RELEASE</version>-->
+                <version>2.7.4</version>
             </dependency>
 
             <dependency>

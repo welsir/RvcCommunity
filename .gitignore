@@ -2,6 +2,7 @@
 target/
 .idea
 # Log file
+
 *.log
 
 # BlueJ files

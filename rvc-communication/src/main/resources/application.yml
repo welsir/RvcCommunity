@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:9200}
+
+
+spring:
+  rabbitmq:
+    host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
+    port:  ${RABBITMQ_PORT:5672}
+    username: ENC(cz1NwvIQDGEjCqPzHKG8UqOk0gUEeOr7)
+    password: ENC(cIRXIjYpvlEUV3XsBSYx8EU+AQJZJn0NsIB+64adduNXJXYGBwIUmQ==)
+    virtualHost: /
+  config:
+    import: classpath:you-cant-see-that.yml
+  datasource:
+    url:  ${MYSQL_URL:ENC(Vz4sI7jkw9Sbd1riOc2b5haSPaxLXNkWR7vmRMDw4ZYpjim/I1a/pTh+LM7H65spXer1Ny0iJcXxXuHXLdAvVhTS6GvQwS2NFxh62z2/8l5e5t44fuHh2w==)}
+    username:  ${MYSQL_USERNAME:ENC(JlTsPNa31Qk3ONcVUSZt/r6LokLpTedJ)}
+    password: ${MYSQL_PASSWORD:ENC(lgvxMGjy+dBpZalxxf4wWS6oj2wJZYvP4/1rwEcqi1/T8qpC9/Q9Fg==)}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 5MB
+
+    database: 4
+    timeout: 2000
