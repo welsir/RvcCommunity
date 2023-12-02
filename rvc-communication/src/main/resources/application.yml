@@ -3,6 +3,15 @@ server:
 
 
 spring:
+  application:
+    name: rvc-communication-service
+  cloud:
+    nacos:
+      server-addr: ENC(h9fPwDGC5mr4amLRZUqhqxaVDKDuTSuxU6qhfeRHVmjggZhV/V18Sg==)
+      username: ENC(m5Mmtr/URq8EIAiJjCDYBN/xOxOXRjxE)
+      password: ENC(1ISjMJLMFYYBvvT4e55ULGXAaJ7jTfLjzgbTHMfYpU8=)
+      config:
+        file-extension: yaml
   rabbitmq:
     host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
     port:  ${RABBITMQ_PORT:5672}
