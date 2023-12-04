@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/rvc2?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: root
+  redis:
+    host: localhost # Redis服务器地址
+    database: 0 # Redis数据库索引（默认为0）
+    port: 6379 # Redis服务器连接端口
+    password: Genius123 # Redis服务器连接密码（默认为空）
+    timeout: 3000ms # 连接超时时间（毫秒）
+  application:
+    name: rvc-feedback-service
+  cloud:
+    nacos:
+      server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
+      username: ENC(qqqHXA1bwhhYPJ9SXXZqyO5j//wygYDK)
+      password: ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)
+      config:
+        file-extension: yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  server:
+    port: 9401
+

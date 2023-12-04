@@ -26,6 +26,7 @@ public class INoticeDaoServiceImpl extends ServiceImpl<NoticeMapper, NoticeDO> i
     public IPage<NoticeVO> getNoticeList(int page, int limit, String... params) {
         MPJQueryWrapper<NoticeVO> queryWrapper = new MPJQueryWrapper<NoticeVO>()
                 .select(params)
+                .orderByAsc("id")
                 .orderByAsc("create_at");
         return mapper.selectJoinPage(new Page<>(page, limit),NoticeVO.class,queryWrapper);
     }

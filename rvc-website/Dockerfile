@@ -41,3 +41,5 @@ ENV UNIQUE_ID=${UNIQUE_ID}
 EXPOSE ${SERVER_PORT}
 
 ENTRYPOINT ["java","-jar","/rvc-website.jar"]
+
+#<Auto> -e:test -m:rvc-website -v:1.0 -rp:9300 -de:<-e ACTIVE=test -e UNIQUE_ID=0 -e SERVER_PORT=9300>
