@@ -40,7 +40,6 @@ public class TextDetection implements Detection {
 
                                 DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
                                         .content(contentValue)
-                                        .url(url)
                                         .build();
                                 //在此处 上传任务到mq
                                 /**
@@ -49,7 +48,7 @@ public class TextDetection implements Detection {
 
 //                                ProducerHandler.submit(textDetectionTaskDto);
                                  ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-                                producerHandler.submit(textDetectionTaskDto);
+//                                producerHandler.submit(textDetectionTaskDto);
 
 
 

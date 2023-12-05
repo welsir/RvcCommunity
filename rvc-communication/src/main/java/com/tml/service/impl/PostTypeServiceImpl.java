@@ -2,10 +2,8 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.mapper.PostTypeMapper;
-import com.tml.pojo.entity.PostTypeDo;
+import com.tml.pojo.entity.PostType;
 import com.tml.service.PostTypeService;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @DATE: 2023/11/28
  */
 @Service
-public class PostTypeServiceImpl extends ServiceImpl<PostTypeMapper, PostTypeDo> implements PostTypeService {
+public class PostTypeServiceImpl extends ServiceImpl<PostTypeMapper, PostType> implements PostTypeService {
 
 //    @Autowired
 //    private RabbitTemplate rabbitTemplate;

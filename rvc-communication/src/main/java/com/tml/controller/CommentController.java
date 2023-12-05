@@ -1,10 +1,11 @@
 package com.tml.controller;
 
 
-import com.tml.annotation.Detection;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.SystemLog;
 import com.tml.pojo.dto.CommentDto;
-import com.tml.pojo.dto.CommentStatusDto;
+import com.tml.pojo.dto.PageInfo;
+import com.tml.pojo.entity.Comment;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +27,15 @@ public class CommentController {
     private CommentService commentService;
 
 
+    /**
+     * 如何从header获取用户id
+     * @return
+     */
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
-    public Result list(){
-        return Result.success(API_NOT_IMPLEMENTED);
+    public Result list(PageInfo<String> params){
+        Page<Comment> commentListPage = commentService.list(params);
+        return Result.success(commentListPage);
     }
 
 
@@ -42,14 +48,13 @@ public class CommentController {
     }
 
 
-    @PostMapping("/status")
-    @SystemLog(businessName = "评论帖子的回调")
-    public void status(@RequestBody CommentStatusDto commentStatusDto){
-        commentService.status(commentStatusDto);
-    }
 
 
-
+    /**
+     * 先不实现
+     * @param
+     * @return
+     */
     @GetMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
     public Result favorite(){

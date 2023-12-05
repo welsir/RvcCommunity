@@ -23,7 +23,7 @@ public class ProducerHandler {
     @Resource
     RabbitTemplate rabbitTemplate;
 //
-    public void submit(Object submit){
-        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.text", JSON.toJSONString(submit));
+    public void submit(Object submit,String type){
+        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform" + type, JSON.toJSONString(submit));
     }
 }

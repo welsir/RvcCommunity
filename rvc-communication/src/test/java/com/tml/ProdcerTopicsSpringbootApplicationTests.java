@@ -35,8 +35,8 @@ class ProdcerTopicsSpringbootApplicationTests {
          * 3、消息内容
          */
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.text", message);
-//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
-        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.audio", audioUrl);
+        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
+//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.audio", audioUrl);
  
     }
 

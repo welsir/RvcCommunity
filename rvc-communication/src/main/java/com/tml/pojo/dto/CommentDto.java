@@ -13,11 +13,11 @@ public class CommentDto {
 //    内容
     private String content;
 //    所属用户id
-    private Long userId;
+    private String userId;
 //    所属帖子id
-    private Long postId;
+    private String postId;
 //    顶级评论id
-    private Long rootCommentId;
+    private String rootCommentId;
 //    回复目标评论id
-    private Long toCommentId;
+    private String toCommentId;
 }

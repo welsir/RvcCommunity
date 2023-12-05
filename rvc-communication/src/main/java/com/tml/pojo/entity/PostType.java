@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @NAME: PostTypeDo
+ * @NAME: PostType
  * @USER: yuech
  * @Description:
  * @DATE: 2023/11/28
@@ -19,10 +19,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName(value = DBConstant.RVC_COMMUNICATION_POST_TYPE )
-public class PostTypeDo {
+public class PostType {
 
     @TableId(value = "tag_id", type = IdType.AUTO)
-    private Long id;
+    private String id;
 
     private String tagName;
 

@@ -14,9 +14,10 @@ import java.io.Serializable;
 @Data
 @Builder
 public class DetectionTaskDto implements Serializable {
-    private Long id;
+    private String id;
 //    内容
     private String content;
-//    回调
-    private String url;
+
+    //    业务名
+    private String name;
 }

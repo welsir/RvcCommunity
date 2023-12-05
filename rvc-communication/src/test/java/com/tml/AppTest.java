@@ -33,8 +33,27 @@ public class AppTest
      */
     public void testApp()
     {
-        assertTrue( true );
+        int[] cardPoints = {96,90,41,82,39,74,64,50,30};
+        int k = 8;
+        System.out.println(maxScore(cardPoints,k));
     }
 
-
+    public static int maxScore(int[] cardPoints, int k) {
+        int N = cardPoints.length - k;
+        int sum = 0;
+        int minSum = Integer.MAX_VALUE;
+        int NSum = 0;
+        for (int i=0;i<cardPoints.length;i++){
+            sum += cardPoints[i];
+            if (i < N){
+                NSum += cardPoints[i];
+            }else {
+                minSum = Math.min(minSum,NSum);
+                NSum += cardPoints[i];
+                NSum -= cardPoints[i -N];
+            }
+        }
+        minSum = Math.min(minSum,NSum);
+        return sum-minSum;
+    }
 }
