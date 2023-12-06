@@ -1,5 +1,7 @@
 package com.tml;
 
+import com.tml.mapper.CommentMapper;
+import com.tml.mapper.CoverMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,9 +20,17 @@ import static com.tml.constant.DetectionConstants.EXCHANGE_TOPICS_INFORM;
 class ProdcerTopicsSpringbootApplicationTests {
     @Resource
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private CoverMapper coverMapper;
+
+    @Autowired
+    private CommentMapper commentMapper;
  
     @Test
     public void Producer_topics_springbootTest() {
+
+
  
         //使用rabbitTemplate发送消息
         String message = "你好,冰毒";
@@ -34,10 +44,17 @@ class ProdcerTopicsSpringbootApplicationTests {
          * 2、routingKey
          * 3、消息内容
          */
+
+        String exchangeName ="detection.topic";
+        String msg = "hello";
+//        rabbitTemplate.convertAndSend(exchangeName, "china.news", msg);
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.text", message);
-        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
+//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.audio", audioUrl);
- 
+
+        System.out.println(coverMapper.selectById("1732366351294660608"));
+        System.out.println(commentMapper.selectById("1732345167421243392"));
+
     }
 
 

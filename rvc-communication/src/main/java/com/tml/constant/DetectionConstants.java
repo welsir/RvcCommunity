@@ -14,11 +14,11 @@ public class DetectionConstants {
     public static final String QUEUE_STATUS_IMAGE = "queue_status_image";
 
 
-    public static final String ROUTINGKEY_TEXT="statustext";
+    public static final String ROUTINGKEY_TEXT="res.text";
 
-    public static final String ROUTINGKEY_AUDIO="statusaudio";
+    public static final String ROUTINGKEY_AUDIO="res.audio";
 
-    public static final String ROUTINGKEY_IMAGE="statusimage";
+    public static final String ROUTINGKEY_IMAGE="res.image";
 
 
     public static final Integer STATUS_UNDERREVIEW = 2;

@@ -8,6 +8,7 @@ import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.entity.Comment;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,10 @@ import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
  */
 @RestController
 @RequestMapping("/communication/comment")
+@RequiredArgsConstructor
 public class CommentController {
 
-    @Autowired
-    private CommentService commentService;
+    private final CommentService commentService;
 
 
     /**

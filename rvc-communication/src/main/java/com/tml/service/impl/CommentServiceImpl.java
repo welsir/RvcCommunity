@@ -28,10 +28,6 @@ import static com.tml.constant.DetectionConstants.STATUS_UNDERREVIEW;
 @Service
 public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
-
-
-
-
     @Override
     public void comment(CommentDto commentDto) {
 //        保存用户评论信息
@@ -55,7 +51,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
                 .id(uuid)
                 .content(commentDto.getContent())
-                .name("comment")
+                .name("comment.text")
                 .build();
 
         ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);

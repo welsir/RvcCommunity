@@ -1,24 +1,32 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.mapper.CollectPostMapper;
+import com.tml.mapper.CoverMapper;
 import com.tml.mapper.LikePostMapper;
 import com.tml.mapper.PostMapper;
+import com.tml.mq.producer.handler.ProducerHandler;
+import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.entity.CollectPost;
-import com.tml.pojo.entity.Comment;
-import com.tml.pojo.entity.LikePost;
-import com.tml.pojo.entity.Post;
+import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
+import com.tml.strategy.SortStrategy;
+import com.tml.strategy.impl.LikeSortStrategy;
+import com.tml.strategy.impl.TimeSortStrategy;
+import com.tml.strategy.impl.ViewSortStrategy;
 import com.tml.utils.BeanCopyUtils;
+import com.tml.utils.BeanUtils;
+import com.tml.utils.Uuid;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -28,17 +36,22 @@ import java.util.stream.Collectors;
  * @DATE: 2023/12/5
  */
 @Service
+@RequiredArgsConstructor
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
-    private CollectPostMapper collectPostMapper;
-    private LikePostMapper likePostMapper;
-    public PostServiceImpl(CollectPostMapper collectPostMapper,LikePostMapper likePostMapper) {
-        this.collectPostMapper = collectPostMapper;
-        this.likePostMapper = likePostMapper;
+    private final CollectPostMapper collectPostMapper;
+    private final LikePostMapper likePostMapper;
+    private final CoverMapper coverMapper;
+    private final Map<String, SortStrategy> strategyMap = new HashMap<>();
+    {
+        strategyMap.put("1", new TimeSortStrategy());
+        strategyMap.put("2", new LikeSortStrategy());
+        strategyMap.put("3", new ViewSortStrategy());
     }
 
+
     @Override
-    public List<PostVo> list(PageInfo<String> params) {
+    public List<PostVo> list(PageInfo<String> params,String tagId) {
 //        模拟获取uuid
         String uuid = "1";
 //        如果请求Header中uid不为null，要返回该用户对各个帖子的是否点赞和收藏
@@ -50,6 +63,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Page<Post> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Post::getHasShow, 1); // hasshow 等于 1 的条件
+        //tagId 不为空
+        if (!Strings.isBlank(tagId)){
+            queryWrapper.eq(Post::getTagId,tagId);
+        }
         Page<Post> list = this.page(page,queryWrapper);
 //获取的分页结果
         List<Post> records = list.getRecords();
@@ -66,18 +83,26 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(truncatedPosts, PostVo.class);
 //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
-        postVos.stream().forEach(postVo -> {
-            LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-            collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
-            LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-            likePostQueryWrapper.eq(LikePost::getUid,uuid);
+        if (!Strings.isBlank(uuid)){
+            postVos.stream().forEach(postVo -> {
+                LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
+                collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
+                LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
+                likePostQueryWrapper.eq(LikePost::getUid,uuid);
 
-            boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
-            boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
-            postVo.setLike(like);
-            postVo.setCollect(collect);
-        });
+                boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
+                boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
+                postVo.setLike(like);
+                postVo.setCollect(collect);
+            });
+        }
 
+//        排序
+        SortStrategy sortStrategy = strategyMap.get(params.getData());
+        sortStrategy.sort(postVos);
+
+//        获取 作者用户名  作者昵称  作者头像
+//        调用用户接口
 
         return postVos;
     }
@@ -96,4 +121,30 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         return postVo;
     }
+
+    @Override
+    public String cover(String coverUrl) {
+//        数据库添加记录
+        String uuid = Uuid.getUuid();
+        Cover cover = Cover.builder()
+                .coverId(uuid)
+                .hasShow(2)
+                .coverUrl(coverUrl)
+                .build();
+        coverMapper.insert(cover);
+
+
+        //       提交审核任务
+        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+                .id(uuid)
+                .content(coverUrl)
+                .name("post_cover")
+                .build();
+
+        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
+        producerHandler.submit(textDetectionTaskDto,"image");
+
+        return uuid;
+    }
+
 }

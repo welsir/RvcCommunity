@@ -20,6 +20,12 @@ public class PostVo {
     private String postId;
     //        创建帖子用户id
     private String uid;
+//作者用户名
+    private String username;
+//    作者昵称
+    private String nickname;
+//    作者头像
+    private String avatar;
     //        帖子类型
     private String tagId;
     //        帖子标题

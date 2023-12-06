@@ -29,7 +29,7 @@ public class Post {
 //        帖子内容
     private String content;
 //        帖子封面
-    private String cover;
+    private String coverId;
 //        评论数
     private Long commentNum;
 //        点赞数
@@ -44,4 +44,6 @@ public class Post {
     private LocalDateTime updateAt;
 //        展示状态（1：展示，0：不可展示，2，审核流程中）
     private Integer hasShow;
+
+    private String violationInformation;
 }

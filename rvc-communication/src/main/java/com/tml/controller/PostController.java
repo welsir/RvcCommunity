@@ -1,21 +1,15 @@
 package com.tml.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.SystemLog;
 import com.tml.mq.producer.handler.ProducerHandler;
-import com.tml.pojo.dto.CoverDto;
 import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.entity.Post;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
 import com.tml.utils.BeanUtils;
 import io.github.common.web.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,18 +23,23 @@ import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
  */
 @RestController
 @RequestMapping("/communication/post")
+@RequiredArgsConstructor
 public class PostController {
 
 
-    @Autowired
-    private PostService postService;
+    private final PostService postService;
+
 
     @SystemLog(businessName = "获取交流帖子列表")
     @GetMapping("/list")
-    public Result list(PageInfo<String> params){
-        List<PostVo> PostListPage =postService.list(params);
+    public Result list(PageInfo<String> params,@RequestParam("tagId") String tagId){
+        List<PostVo> PostListPage =postService.list(params,tagId);
     return Result.success(PostListPage);
     }
+
+
+
+
 
     /**
      * 用户id如何获取
@@ -77,23 +76,14 @@ public class PostController {
 
 
     /**
-     * 审核流程   借用接口测试音频
+     * 审核流程  用户先上传封面进行审核     发布帖子携带封面id
      * @return
      */
     @GetMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
-    public Result add(@RequestBody CoverDto coverDto){
-        //        审核
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id("1111")
-                .content(coverDto.getUrl())
-                .name("audio")
-                .build();
+    public Result add(){
 
-        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-        producerHandler.submit(textDetectionTaskDto,"audio");
-
-        return Result.success(coverDto);
+        return Result.success(API_NOT_IMPLEMENTED);
     }
 
 
@@ -123,18 +113,9 @@ public class PostController {
 
     @GetMapping("/cover")
     @SystemLog(businessName = "上传帖子封面  [T]  [审]")
-    public Result cover(@RequestBody CoverDto coverDto){
-        //        审核
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id("1111")
-                .content(coverDto.getUrl())
-                .name("post")
-                .build();
-
-        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-        producerHandler.submit(textDetectionTaskDto,"image");
-
-        return Result.success(coverDto);
+    public Result cover( String coverUrl){
+        String coverId = postService.cover(coverUrl);
+        return Result.success(coverId);
     }
 
 }
