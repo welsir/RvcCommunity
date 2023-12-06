@@ -12,6 +12,7 @@ import com.tml.service.INoticeDaoService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class INoticeDaoServiceImpl extends ServiceImpl<NoticeMapper, NoticeDO> implements INoticeDaoService {
@@ -33,14 +34,14 @@ public class INoticeDaoServiceImpl extends ServiceImpl<NoticeMapper, NoticeDO> i
 
     @Override
     public IPage<NoticeVO> getNoticeList(String type, int page, int limit) {
-        String queryParams = queryParamGroup.getQueryParams(type);
-        return getNoticeList(page,limit,queryParams);
+        List<String> queryParams = queryParamGroup.getQueryParams(type);
+        return getNoticeList(page,limit,queryParams.toArray(new String[0]));
     }
 
     @Override
     public NoticeDO getNotice(String noticeId) {
-        String queryParams = queryParamGroup.getQueryParams("detail_notice");
-        return query().select(queryParams).eq("notice_id",noticeId).one();
+        List<String> queryParams = queryParamGroup.getQueryParams("detail_notice");
+        return query().select(queryParams.toArray(new String[0])).eq("notice_id",noticeId).one();
     }
 
     @Override

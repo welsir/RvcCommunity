@@ -8,7 +8,6 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@ComponentScan({"com.tml.*","io.github.*"})
 public class FeedbackApplication {
 
     public static void main( String[] args )

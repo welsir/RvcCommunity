@@ -9,10 +9,9 @@ spring:
 
 
 rvc:
-  query: "{
-  home_notice: 'notice_id,title,author,cover,watch_num,create_at',
-  detail_notice: 'notice_id,title,author,cover,watch_num,create_at,content,like_num'
-  }"
+  query-group:
+    home_notice: notice_id,title,author,cover,watch_num,create_at
+    detail_notice: notice_id,title,author,cover,watch_num,create_at,content,like_num
   limit:
     notice:
       home: 6

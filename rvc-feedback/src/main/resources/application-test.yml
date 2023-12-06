@@ -43,4 +43,9 @@ management:
   server:
     port: 9401
 
-
+assistant:
+  service:
+    id:
+      snowflake:
+        register: register-redis
+        startTime: 2023-12-05 00:00:00

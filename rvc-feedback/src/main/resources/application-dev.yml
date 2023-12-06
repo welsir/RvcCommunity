@@ -27,3 +27,10 @@ management:
   server:
     port: 9401
 
+assistant:
+  service:
+    id:
+      snowflake:
+        workerId: 1
+        dataCenterId: 1
+        startTime: 2023-12-05 00:00:00
