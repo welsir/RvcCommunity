@@ -57,3 +57,7 @@ spring:
     port: ${REDIS_PORT:ENC(vZrw6ItoyBBaKAHqyYi6zzoVUc8BRiM+)} # Redis服务器连接端口
     password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
+snowflake:
+  workerId: 1
+  dataCenterId: 1
+
