@@ -2,7 +2,7 @@ spring:
   main:
     web-application-type: reactive
   application:
-    name: rvc-gateway-1-service
+    name: rvc-gateway-service
   datasource:
     username: root
     password: root
@@ -32,27 +32,27 @@ spring:
     gateway:
       routes:
         - id: user-service
-          uri: http://${user-service.host}:${user-service.port}
+          uri: lb://rvc-user-service
           predicates:
             - Path=/user/**
         - id: model-service
-          uri: http://${model-service.host}:${model-service.port}
+          uri: lb://rvc-model-service
           predicates:
             - Path=/model/**
         - id: communication-service
-          uri: http://${communication-service.host}:${communication-service.port}
+          uri: lb://rvc-communication-service
           predicates:
             - Path=/communication/**
         - id: verification-service
-          uri: http://${verification-service.host}:${verification-service.port}
+          uri: lb://rvc-verification-service
           predicates:
             - Path=/verification/**
         - id: file-service
-          uri: http://${file-service.host}:${file-service.port}
+          uri: lb://rvc-file-service
           predicates:
             - Path=/file/**
         - id: check-service
-          uri: http://${check-service.host}:${check-service.port}
+          uri: lb://rvc-check-service
           predicates:
             - Path=/check/**
   redis:

@@ -19,8 +19,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.PostConstruct;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,9 +31,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
 
     private static final String AUTHORIZE_TOKEN = "token";
 
-
     private HashSet<String> whiteApi;
-
 
     private ArrayList<String> laxTokenApi;
 
@@ -60,18 +56,6 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
                 //8. 返回
                 return response.setComplete();
             }
-
-            // 如果请求头中有令牌则解析令牌
-//        try {
-////            JwtUtil.parseJWT(token);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            // 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
-//            response.setStatusCode(HttpStatus.UNAUTHORIZED);
-//            // 返回
-//            return response.setComplete();
-//        }
-
             try {
                 ServerHttpRequest newRequest = null;
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
