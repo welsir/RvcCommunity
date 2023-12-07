@@ -1,6 +1,5 @@
 package com.tml.pojo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.tml.constant.dbTableConfig;
@@ -13,11 +12,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName(value = dbTableConfig.RVC_FEEDBACK_TYPE )
-public class FeedbackTypeDO {
+@TableName(value = dbTableConfig.RVC_FEEDBACK_STATUS )
+public class FeedbackStatusDO {
 
     @TableId(value = "id")
     private Integer id;
 
-    private String type;
+    private String status;
 }

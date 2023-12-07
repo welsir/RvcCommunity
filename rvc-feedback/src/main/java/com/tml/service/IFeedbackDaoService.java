@@ -9,6 +9,6 @@ public interface IFeedbackDaoService {
     IPage<FeedbackVO> feedbackPageVO(int page,int limit,String queryType,String order);
     Boolean feedbackAdd(FeedbackDO feedbackDO);
 
-    Boolean feedbackUpdate(String uid,String fb_id,FeedbackDO feedback);
-    Boolean feedbackDelete(String uid,String fb_id);
+    Boolean feedbackUpdate(String uid,Long fb_id,FeedbackDO feedback);
+    Boolean feedbackDelete(String uid,Long fb_id);
 }

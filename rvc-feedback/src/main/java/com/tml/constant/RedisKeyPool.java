@@ -10,4 +10,5 @@ public class RedisKeyPool {
      * noticeId,uid
      */
     public static final RedisKey HASH_FEEDBACK_TYPE = new RedisKey("rvc:feedback:type",-1,TimeUnit.MINUTES);
+    public static final RedisKey HASH_STATUS_TYPE = new RedisKey("rvc:feedback:status",-1,TimeUnit.MINUTES);
 }

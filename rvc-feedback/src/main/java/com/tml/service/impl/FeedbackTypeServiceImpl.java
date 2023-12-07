@@ -6,15 +6,14 @@ import com.tml.service.FeedbackTypeService;
 import com.tml.service.IFeedbackTypeDaoService;
 import io.github.common.RedisKey;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,7 +23,7 @@ public class FeedbackTypeServiceImpl implements FeedbackTypeService {
     private IFeedbackTypeDaoServiceImpl daoService;
 
     @Resource
-    private ThreadPoolExecutor asyncMaster;
+    private ThreadPoolTaskExecutor asyncMaster;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -57,12 +56,12 @@ public class FeedbackTypeServiceImpl implements FeedbackTypeService {
             asyncMaster.submit(()->{
                 stringRedisTemplate.opsForHash().putAll(redisKey,
                         finalTypeDOS.stream().collect(
-                                Collectors.toMap(FeedbackTypeDO::getId, FeedbackTypeDO::getType))
+                                Collectors.toMap(fb-> fb.getId().toString(), FeedbackTypeDO::getType))
                 );
             });
         }else{
             typeDOS = entries.entrySet().stream()
-                    .map(entry -> new FeedbackTypeDO((Integer) entry.getKey(), (String) entry.getValue()))
+                    .map(entry -> new FeedbackTypeDO( Integer.valueOf(entry.getKey().toString()), (String) entry.getValue()))
                     .collect(Collectors.toList());
         }
 

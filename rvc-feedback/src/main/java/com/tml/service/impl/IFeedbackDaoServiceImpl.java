@@ -22,7 +22,10 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
     @Override
     public IPage<FeedbackVO> feedbackPageVO(int page, int limit, String queryType, String order) {
-        return this.BeanPageVOList(page,limit, queryParamGroup.getQueryParams(queryType),List.of(order),true,FeedbackVO.class);
+        return this.BeanPageVOList(page,limit,
+                queryParamGroup.getQueryParams(queryType),
+                List.of("fb_id",order),true,
+                FeedbackVO.class);
     }
 
     @Override
@@ -31,12 +34,12 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
     }
 
     @Override
-    public Boolean feedbackUpdate(String uid, String fb_id, FeedbackDO feedback) {
+    public Boolean feedbackUpdate(String uid, Long fb_id, FeedbackDO feedback) {
         return this.updateBean(feedback,Map.of("fb_id",fb_id,"uid",uid));
     }
 
     @Override
-    public Boolean feedbackDelete(String uid, String fb_id) {
+    public Boolean feedbackDelete(String uid, Long fb_id) {
         return this.deleteBean(Map.of("fb_id",fb_id,"uid",uid));
     }
 
