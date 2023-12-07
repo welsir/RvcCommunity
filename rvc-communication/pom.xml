@@ -36,8 +36,6 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
-
-
         <dependency>
             <groupId>com.tml</groupId>
             <artifactId>rvc-common</artifactId>
