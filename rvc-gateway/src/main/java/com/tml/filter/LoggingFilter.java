@@ -1,9 +1,7 @@
 package com.tml.filter;
 
-import com.tml.mapper.RequestRecordMapper;
 import com.tml.pojo.DO.RequestRecordDO;
 import com.tml.service.RequestRecordService;
-import com.tml.utils.SnowFlakeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -33,7 +31,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         String url = request.getURI().toString();
         LocalDateTime dateTime = LocalDateTime.now();
-        requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(SnowFlakeUtil.getNextId()),remoteAddress.getHostName(),url,dateTime.format(formatter)));
+//        requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(SnowFlakeUtil.getNextId()),remoteAddress.getHostName(),url,dateTime.format(formatter)));
         return chain.filter(exchange);
     }
 
