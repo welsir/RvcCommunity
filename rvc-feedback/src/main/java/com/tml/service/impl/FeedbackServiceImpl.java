@@ -45,6 +45,11 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
+    public Result<?> changeStatus(String uid, String fb_id, Integer status) {
+        return null;
+    }
+
+    @Override
     public Result<?> deleteFeedback(String uid, String fb_id) {
         return null;
     }

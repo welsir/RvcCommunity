@@ -1,5 +1,7 @@
 package com.tml.filter;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -69,6 +71,27 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
 //            // 返回
 //            return response.setComplete();
 //        }
+
+            try {
+                ServerHttpRequest newRequest = null;
+                String loginID = (String) StpUtil.getLoginIdByToken(token);
+                if (StpUtil.isLogin(loginID)) {
+                    //TODO 解析token body得到 uid与username 待商讨
+                    String[] userInfo = {"xxxx","xxxxx"};
+                    if(userInfo.length==2){
+                        String uid = userInfo[0];
+                        String username = userInfo[1];
+                        newRequest = request.mutate().header("uid",uid).header("username",username).build();
+                        return chain.filter(exchange.mutate().request(newRequest).build());
+                    }
+                }
+            } catch (NotLoginException e) {
+                e.printStackTrace();
+                //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                //11. 返回
+                return response.setComplete();
+            }
         }
 
         // 放行

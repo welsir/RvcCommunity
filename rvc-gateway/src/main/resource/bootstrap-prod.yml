@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
-    username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
-    password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
+    url: ${MYSQL_URL:ENC(Q/mUDDQ+0TwZ+60p9l6jr/F2nN/93jltB6EvwDqxGR5r91clGxM6slm0dskGePCLbdSFU+3NYgN1A3sJVjTNvd7r2XJs8V6coHAg0F9fe42NS087BTdFgrZjYRW09b2vlMFxo7KBJUwv2qZO8Kfa5VvulLkoBP28jdJsNkHbCDw=)}
+    username: ${MYSQL_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
+    password: ${MYSQL_PASSWORD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 4
@@ -52,8 +52,8 @@ spring:
           predicates:
             - Path=/check/**
   redis:
-    host: ${REDIS_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)} # Redis服务器地址
+    host: ${REDIS_ADDR:ENC(gfVHUx9Q3MOobwxRYtxbvNuo0SeQBllfb7SLgEtm8ZY=)} # Redis服务器地址
     database: 0 # Redis数据库索引（默认为0）
-    port: ${REDIS_PORT:ENC(vZrw6ItoyBBaKAHqyYi6zzoVUc8BRiM+)} # Redis服务器连接端口
-    password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)} # Redis服务器连接密码（默认为空）
+    port: ${REDIS_PORT:ENC(lFAbKYtMOt5dctRhoYYeIdekCwPv5euR)} # Redis服务器连接端口
+    password: ${REDIS_PWD:ENC(g+DlVpnt76Ji9s86jd28sGrL+GMWgvWivTRehbesgrA=)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）

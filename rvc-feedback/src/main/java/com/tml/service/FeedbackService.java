@@ -22,5 +22,7 @@ public interface FeedbackService {
 
     Result<?> updateFeedback(FeedbackForm form,String uid);
 
+    Result<?> changeStatus(String uid,String fb_id,Integer status);
+
     Result<?> deleteFeedback(String uid,String fb_id);
 }
