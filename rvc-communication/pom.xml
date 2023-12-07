@@ -15,6 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <assistant.version>1.0.8</assistant.version>
     </properties>
 
     <dependencies>
@@ -43,7 +44,11 @@
         </dependency>
 
 
-
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-boot-start</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
         <!--        springboot-web-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

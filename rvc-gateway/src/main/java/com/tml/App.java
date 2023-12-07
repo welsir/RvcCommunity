@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @EnableScheduling
 @EnableAsync
-public class App 
+public class App
 {
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
