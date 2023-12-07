@@ -22,8 +22,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
     @Override
     public IPage<FeedbackVO> feedbackPageVO(int page, int limit, String queryType, String order) {
-        String queryParams = queryParamGroup.getQueryParams(queryType);
-        return this.BeanPageVOList(page,limit, List.of(queryParams),List.of(order),FeedbackVO.class,true);
+        return this.BeanPageVOList(page,limit, queryParamGroup.getQueryParams(queryType),List.of(order),true,FeedbackVO.class);
     }
 
     @Override
