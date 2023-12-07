@@ -2,13 +2,12 @@ package com.tml.filter;
 
 import com.tml.pojo.DO.RequestRecordDO;
 import com.tml.service.RequestRecordService;
-import org.springframework.beans.factory.annotation.Value;
+import com.tml.util.SnowflakeIdGenerator;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -25,13 +24,16 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     @Resource
     RequestRecordService requestRecordService;
 
+    @Resource
+    SnowflakeIdGenerator snowflakeIdGenerator;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         String url = request.getURI().toString();
         LocalDateTime dateTime = LocalDateTime.now();
-//        requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(SnowFlakeUtil.getNextId()),remoteAddress.getHostName(),url,dateTime.format(formatter)));
+        requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(snowflakeIdGenerator.generateId()),remoteAddress.getHostName(),url,dateTime.format(formatter)));
         return chain.filter(exchange);
     }
 
