@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.tml.constant.HandlerName.LOGIN_WATCH_NOTICE;
@@ -69,6 +70,7 @@ public class NoticeServiceImpl implements NoticeService {
     public Result watchNotice(String noticeId, String uid) throws ServiceException {
         String type = StringUtils.hasText(uid)?LOGIN_WATCH_NOTICE:NO_LOGIN_WATCH_NOTICE;
         uid = StringUtils.hasText(uid)?uid:"";
+        HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
         return strategyFactory.handlerRes(type,Map.of("noticeId",noticeId,"uid",uid));
     }
 

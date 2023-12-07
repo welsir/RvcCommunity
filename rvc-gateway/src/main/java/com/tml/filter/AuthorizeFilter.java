@@ -1,0 +1,82 @@
+package com.tml.filter;
+
+import com.alibaba.cloud.commons.lang.StringUtils;
+import lombok.Data;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import javax.annotation.PostConstruct;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+
+@Component
+@RefreshScope
+@ConfigurationProperties(prefix = "api")
+@Data
+public class AuthorizeFilter implements GlobalFilter, Ordered {
+
+    private static final String AUTHORIZE_TOKEN = "token";
+
+
+    private HashSet<String> whiteApi;
+
+
+    private ArrayList<String> laxTokenApi;
+
+    @SneakyThrows
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
+        ServerHttpResponse response = exchange.getResponse();
+
+        URL url = new URL(request.getURI().toString());
+        String path = url.getPath();
+        // 获取请求头
+        HttpHeaders headers = request.getHeaders();
+        // 请求头中获取令牌
+        String token = headers.getFirst(AUTHORIZE_TOKEN);
+
+        if(whiteApi.contains(path)){
+            // 判断请求头中是否有令牌
+            if (StringUtils.isEmpty(token)) {
+                //7. 响应中放入返回的状态吗, 没有权限访问
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                //8. 返回
+                return response.setComplete();
+            }
+
+            // 如果请求头中有令牌则解析令牌
+//        try {
+////            JwtUtil.parseJWT(token);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            // 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
+//            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+//            // 返回
+//            return response.setComplete();
+//        }
+        }
+
+        // 放行
+        return chain.filter(exchange);
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+}

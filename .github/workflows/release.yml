@@ -32,6 +32,7 @@ jobs:
           
           env=""
           module=""
+          module_type=""
           version=""
           skip=""
           docker_env=""
@@ -39,6 +40,10 @@ jobs:
           
           if [[ "$commit_message" =~ -e:([^\ ]*) ]]; then
           env="${BASH_REMATCH[1]}"
+          fi
+          
+          if [[ "$commit_message" =~ -type:([^\ ]*) ]]; then
+          module_type="${BASH_REMATCH[1]}"
           fi
           
           if [[ "$commit_message" =~ -m:([^\ ]*) ]]; then
@@ -65,13 +70,15 @@ jobs:
           
           echo "Environment: $env"
           echo "Module: $module"
+          echo "Module_Type: $module_type"
           echo "Version: $version"
           echo "Skip: $skip"
           echo "Run_Port: $run_port"
-          echo "Docker_Env: $docker_env"
+          echo "Docker_Env: $docker_env"    
           
           echo "ENV=$env" >> $GITHUB_ENV
           echo "MODULE=$module" >> $GITHUB_ENV
+          echo "MODULE_TYPE=$module_type" >> $GITHUB_ENV
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "SKIP=$skip" >> $GITHUB_ENV
           echo "RUN_PORT=$run_port" >> $GITHUB_ENV
@@ -90,12 +97,16 @@ jobs:
           JASYPT_ALGO: ${{ secrets.JASYPT_ALGO }}
           JASYPT_PWD: ${{ secrets.JASYPT_PWD }}
         run: |
-          cd $MODULE
+          if [ "${{ env.MODULE_TYPE }}" != "single" ]; then
+            cd $MODULE
+          fi 
           echo "jasypt:" > src/main/resources/you-cant-see-that.yml
           echo "  encryptor:" >> src/main/resources/you-cant-see-that.yml
           echo "    algorithm: $JASYPT_ALGO" >> src/main/resources/you-cant-see-that.yml
           echo "    password:  $JASYPT_PWD" >> src/main/resources/you-cant-see-that.yml
-          cd ..
+          if [ "${{ env.MODULE_TYPE }}" != "single" ]; then
+            cd ..
+          fi 
           mvn package -Dmaven.test.skip=true
 
       - name: Build and Push Docker Images
@@ -105,7 +116,10 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PWD }}
         run: |
           echo "Module Name: $MODULE"
-          cd $MODULE
+          
+          if [ "${{ env.MODULE_TYPE }}" != "single" ]; then
+            cd $MODULE
+          fi 
           
           mkdir docker
           cp ./Dockerfile ./docker
