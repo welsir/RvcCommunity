@@ -1,5 +1,6 @@
 package com.tml.service;
 
+import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.vo.PostVo;
 
@@ -12,4 +13,10 @@ public interface PostService {
 
 
     String cover(String coverUrl);
+
+    void favorite(CoinDto coinDto);
+
+    void collection(CoinDto coinDto);
+
+    void delete(String postId);
 }

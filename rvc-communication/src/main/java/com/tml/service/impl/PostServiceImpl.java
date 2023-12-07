@@ -1,6 +1,8 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.mapper.CollectPostMapper;
@@ -8,6 +10,7 @@ import com.tml.mapper.CoverMapper;
 import com.tml.mapper.LikePostMapper;
 import com.tml.mapper.PostMapper;
 import com.tml.mq.producer.handler.ProducerHandler;
+import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.entity.*;
@@ -42,6 +45,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final CollectPostMapper collectPostMapper;
     private final LikePostMapper likePostMapper;
     private final CoverMapper coverMapper;
+    private final PostMapper postMapper;
+
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
         strategyMap.put("1", new TimeSortStrategy());
@@ -145,6 +150,82 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         producerHandler.submit(textDetectionTaskDto,"image");
 
         return uuid;
+    }
+
+    @Override
+    public void favorite(CoinDto coinDto) {
+        //1、点赞    添加关系表中的记录       post表 like_num +1
+        //0、取消点赞    删除关系表中的记录       post表 like_num -1
+        if (coinDto.getType().equals("1")){
+            String uuid = Uuid.getUuid();
+            LikePost likePost = new LikePost(uuid, coinDto.getUid(), coinDto.getPostId());
+            try {
+                likePostMapper.insert(likePost);
+            } catch (Exception e) {
+                throw new RuntimeException("操作失败");
+            }
+            LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
+                    .eq(Post::getPostId, coinDto.getPostId())
+                    .setSql("like_num = like_num + 1");
+            postMapper.update(null,updateWrapper);
+        } else if (coinDto.getType().equals("0")) {
+            LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            likePostLambdaQueryWrapper.eq(LikePost::getUid,coinDto.getUid())
+                            .eq(LikePost::getPostId,coinDto.getPostId());
+            int delete = likePostMapper.delete(likePostLambdaQueryWrapper);
+              if (delete == 0){
+                  throw new RuntimeException("操作失败");
+              }
+            LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
+                    .eq(Post::getPostId, coinDto.getPostId())
+                    .setSql("like_num = like_num - 1");
+            postMapper.update(null,updateWrapper);
+        }
+    }
+
+    @Override
+    public void collection(CoinDto coinDto) {
+        //1、收藏    添加关系表中的记录       post表 colletc_num +1
+        //0、取消收藏    删除关系表中的记录       post表 colletc_num -1
+        if (coinDto.getType().equals("1")){
+            String uuid = Uuid.getUuid();
+            CollectPost collectPost = new CollectPost(uuid, coinDto.getUid(), coinDto.getPostId());
+            try {
+                collectPostMapper.insert(collectPost);
+            } catch (Exception e) {
+                throw new RuntimeException("操作失败");
+            }
+            LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
+                    .eq(Post::getPostId, coinDto.getPostId())
+                    .setSql("collect_num = collect_num + 1");
+            postMapper.update(null,updateWrapper);
+        } else if (coinDto.getType().equals("0")) {
+            LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            likePostLambdaQueryWrapper.eq(CollectPost::getUid,coinDto.getUid())
+                    .eq(CollectPost::getPostId,coinDto.getPostId());
+            int delete = collectPostMapper.delete(likePostLambdaQueryWrapper);
+            if (delete == 0){
+                throw new RuntimeException("操作失败");
+            }
+            LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
+                    .eq(Post::getPostId, coinDto.getPostId())
+                    .setSql("collect_num = collect_num - 1");
+            postMapper.update(null,updateWrapper);
+        }
+    }
+
+    @Override
+    public void delete(String postId) {
+        Post post = Post.builder()
+                .postId(postId)
+                .hasDelete(1)
+                .build();
+        System.out.println(post);
+        try {
+            postMapper.updateById(post);
+        } catch (Exception e) {
+            throw new RuntimeException("记录不存在");
+        }
     }
 
 }

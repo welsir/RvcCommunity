@@ -2,6 +2,8 @@ package com.tml;
 
 import com.tml.mapper.CommentMapper;
 import com.tml.mapper.CoverMapper;
+import com.tml.mapper.PostMapper;
+import com.tml.pojo.entity.Post;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,6 +28,19 @@ class ProdcerTopicsSpringbootApplicationTests {
 
     @Autowired
     private CommentMapper commentMapper;
+
+    @Autowired
+    private PostMapper postMapper;
+
+
+    @Test
+    public void sqlTest(){
+//        Post post = Post.builder()
+//                .postId("1")
+//                .delete(1)
+//                .build();
+//        postMapper.updateById(post);
+    }
  
     @Test
     public void Producer_topics_springbootTest() {

@@ -46,4 +46,6 @@ public class Post {
     private Integer hasShow;
 
     private String violationInformation;
+//    (1:帖子被删除  0：未删除)
+    private Integer hasDelete;
 }
