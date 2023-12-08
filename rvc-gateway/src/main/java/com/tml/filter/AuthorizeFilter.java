@@ -1,5 +1,7 @@
 package com.tml.filter;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -17,8 +19,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.PostConstruct;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,9 +31,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
 
     private static final String AUTHORIZE_TOKEN = "token";
 
-
     private HashSet<String> whiteApi;
-
 
     private ArrayList<String> laxTokenApi;
 
@@ -58,17 +56,26 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
                 //8. 返回
                 return response.setComplete();
             }
-
-            // 如果请求头中有令牌则解析令牌
-//        try {
-////            JwtUtil.parseJWT(token);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            // 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
-//            response.setStatusCode(HttpStatus.UNAUTHORIZED);
-//            // 返回
-//            return response.setComplete();
-//        }
+            try {
+                ServerHttpRequest newRequest = null;
+                String loginID = (String) StpUtil.getLoginIdByToken(token);
+                if (StpUtil.isLogin(loginID)) {
+                    //TODO 解析token body得到 uid与username 待商讨
+                    String[] userInfo = {"xxxx","xxxxx"};
+                    if(userInfo.length==2){
+                        String uid = userInfo[0];
+                        String username = userInfo[1];
+                        newRequest = request.mutate().header("uid",uid).header("username",username).build();
+                        return chain.filter(exchange.mutate().request(newRequest).build());
+                    }
+                }
+            } catch (NotLoginException e) {
+                e.printStackTrace();
+                //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                //11. 返回
+                return response.setComplete();
+            }
         }
 
         // 放行

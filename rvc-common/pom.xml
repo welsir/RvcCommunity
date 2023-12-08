@@ -35,5 +35,10 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
