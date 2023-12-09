@@ -1,31 +1,29 @@
-package com.tml.pojo.entity;
+package com.tml.pojo.vo;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Builder;
+import com.tml.pojo.entity.User;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * @NAME: Comment
+ * @NAME: CommentVo
  * @USER: yuech
  * @Description:
- * @DATE: 2023/11/29
+ * @DATE: 2023/12/9
  */
 @Data
-@Builder
-@TableName("rvc_communication_comment")
-public class Comment {
+@AllArgsConstructor
+@NoArgsConstructor
+public class CommentVo {
     //评论id
-    @TableId
     private String postCommentId;
     //内容
     private String content;
     //评论时间
     private LocalDateTime createAt;
-    //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
-    private Integer detectionStatus;
     //所属用户id
     private String userId;
     //所属帖子id
@@ -38,6 +36,11 @@ public class Comment {
     private String toUserId;
     //修改时间
     private LocalDateTime updateAt;
-//    违规原因
-    private String violationInformation;
+
+
+    private User user;
+
+    private User replayUser;
+
+    private List<CommentVo> childrenComment;
 }

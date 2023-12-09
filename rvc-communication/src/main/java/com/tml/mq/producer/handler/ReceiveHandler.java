@@ -10,6 +10,7 @@ import com.tml.strategy.DetectionProcessStrategy;
 import com.tml.strategy.impl.CommentProcessStrategy;
 import com.tml.strategy.impl.CoverProcessStrategy;
 
+import com.tml.strategy.impl.PostProcessStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -44,19 +45,21 @@ public class ReceiveHandler {
     private final Map<String, DetectionProcessStrategy> strategyMap = new HashMap<>();
 
     @Autowired
-    public ReceiveHandler(CoverProcessStrategy coverProcessStrategy, CommentProcessStrategy commentProcessStrategy) {
+    public ReceiveHandler(CoverProcessStrategy coverProcessStrategy, CommentProcessStrategy commentProcessStrategy, PostProcessStrategy postProcessStrategy) {
         strategyMap.put("post_cover", coverProcessStrategy);
         strategyMap.put("comment.text",commentProcessStrategy);
+        strategyMap.put("post.text",postProcessStrategy);
     }
 
 //    监听text队列
-//    @RabbitListener(queues = {QUEUE_STATUS_TEXT})
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "res.text"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+                value = @Queue(),
+//            value = @Queue(name = "res.text"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
             key = "res.text"
     ))
     public void receive_text(Message message) throws Exception {
+
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -66,14 +69,16 @@ public class ReceiveHandler {
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
 ////处理逻辑  更新数据库
         detectionProcessStrategy.process(detectionTaskDto);
+
     }
 
 
 
     //监听 image 队列
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "res.image"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            value = @Queue(),
+//            value = @Queue(name = "res.image"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
             key = "res.image"
     ))
     public void receive_image(Message message) throws Exception {
@@ -91,8 +96,9 @@ public class ReceiveHandler {
 
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = "res.audio"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            value = @Queue(),
+//            value = @Queue(name = "res.audio"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
             key = "res.audio"
     ))
     public void receive_audio(Message message) throws Exception {

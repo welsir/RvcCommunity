@@ -18,7 +18,7 @@ public class CoverProcessStrategy implements DetectionProcessStrategy {
      public void process(DetectionStatusDto detectionStatusDto) {
         Cover cover = coverMapper.selectById(detectionStatusDto.getId());
         cover.setViolationInformation(detectionStatusDto.getViolationInformation());
-        cover.setHasShow(detectionStatusDto.getStatus());
+        cover.setDetectionStatus(detectionStatusDto.getStatus());
         coverMapper.updateById(cover);
     }
 }

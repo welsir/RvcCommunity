@@ -3,14 +3,18 @@ package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.SystemLog;
+import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.entity.Comment;
+import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 
@@ -35,7 +39,7 @@ public class CommentController {
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     public Result list(PageInfo<String> params){
-        Page<Comment> commentListPage = commentService.list(params);
+        List<CommentVo> commentListPage = commentService.list(params);
         return Result.success(commentListPage);
     }
 
@@ -58,8 +62,9 @@ public class CommentController {
      */
     @GetMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
-    public Result favorite(){
-        return Result.success(API_NOT_IMPLEMENTED);
+    public Result favorite(@RequestBody CoinDto coinDto){
+        commentService.favorite(coinDto);
+        return Result.success();
     }
 
 

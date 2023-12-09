@@ -14,7 +14,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 
-import static com.tml.constant.DetectionConstants.EXCHANGE_TOPICS_INFORM;
 
 
 @SpringBootTest
@@ -62,13 +61,15 @@ class ProdcerTopicsSpringbootApplicationTests {
 
         String exchangeName ="detection.topic";
         String msg = "hello";
+
+
 //        rabbitTemplate.convertAndSend(exchangeName, "china.news", msg);
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.text", message);
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
 //        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.audio", audioUrl);
 
-        System.out.println(coverMapper.selectById("1732366351294660608"));
-        System.out.println(commentMapper.selectById("1732345167421243392"));
+//        System.out.println(coverMapper.selectById("1732366351294660608"));
+//        System.out.println(commentMapper.selectById("1732345167421243392"));
 
     }
 

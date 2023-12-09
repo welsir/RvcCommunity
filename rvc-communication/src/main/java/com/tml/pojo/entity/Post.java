@@ -2,8 +2,10 @@ package com.tml.pojo.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @TableName("rvc_communication_post")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Post {
 //          帖子id
     @TableId
@@ -42,8 +46,8 @@ public class Post {
     private LocalDateTime createAt;
 //        更新日期
     private LocalDateTime updateAt;
-//        展示状态（1：展示，0：不可展示，2，审核流程中）
-    private Integer hasShow;
+    //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
+    private Integer detectionStatus;
 
     private String violationInformation;
 //    (1:帖子被删除  0：未删除)

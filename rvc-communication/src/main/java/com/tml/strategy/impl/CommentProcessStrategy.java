@@ -9,6 +9,8 @@ import com.tml.strategy.DetectionProcessStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 /**
  * @NAME: CommentProcessStrategy
  * @USER: yuech
@@ -22,9 +24,12 @@ public class CommentProcessStrategy implements DetectionProcessStrategy {
     private final CommentMapper commentMapper;
     @Override
     public void process(DetectionStatusDto detectionStatusDto) {
+
         Comment comment = commentMapper.selectById(detectionStatusDto.getId());
         comment.setViolationInformation(detectionStatusDto.getViolationInformation());
-        comment.setHasShow(detectionStatusDto.getStatus());
+        comment.setDetectionStatus(detectionStatusDto.getStatus());
         commentMapper.updateById(comment);
+        System.out.println(comment);
+        System.out.println(LocalDate.now());
     }
 }

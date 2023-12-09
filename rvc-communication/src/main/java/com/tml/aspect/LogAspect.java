@@ -14,12 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 
-/**
- * @author yuech
- * @version 1.0
- * @description: TODO
- * @date 2022/12/4 9:37
- */
+
 @Component
 @Aspect
 @Slf4j

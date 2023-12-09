@@ -2,24 +2,22 @@ package com.tml.constant;
 
 public class DetectionConstants {
 
-    public static final String EXCHANGE_TOPICS_STATUS="exchange_topics_status";
-    public static final String EXCHANGE_TOPICS_INFORM="exchange_topics_inform";
+    public static final String RES_EXCHANGE_NAME = "res.topic";
+    public static final String DETECTION_EXCHANGE_NAME = "detection.topic";
+
+    public static final String TEXT_QUEUE_NAME = "res.text";
+    public static final String TEXT_ROUTER_KEY = "res.text";
+
+    public static final String IMAGE_QUEUE_NAME = "res.image";
+    public static final String IMAGE_ROUTER_KEY = "res.image";
+
+    public static final String AUDIO_QUEUE_NAME = "res.audio";
+    public static final String AUDIO_ROUTER_KEY = "res.audio";
 
 
+    public static final Integer UN_DETECTION = 0;
+    public static final Integer DETECTION_SUCCESS = 1;
+    public static final Integer DETECTION_FAIL = 2;
+    public static final Integer DETECTION_Manual = 3;
 
-    public static final String QUEUE_STATUS_TEXT = "queue_status_text";
-
-    public static final String QUEUE_STATUS_AUDIO = "queue_status_audio";
-
-    public static final String QUEUE_STATUS_IMAGE = "queue_status_image";
-
-
-    public static final String ROUTINGKEY_TEXT="res.text";
-
-    public static final String ROUTINGKEY_AUDIO="res.audio";
-
-    public static final String ROUTINGKEY_IMAGE="res.image";
-
-
-    public static final Integer STATUS_UNDERREVIEW = 2;
 }

@@ -20,6 +20,7 @@ public class Cover {
     private String postId;
     private String coverUrl;
     private String createAt;
-    private Integer hasShow;
+    //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
+    private Integer detectionStatus;
     private String violationInformation;
 }

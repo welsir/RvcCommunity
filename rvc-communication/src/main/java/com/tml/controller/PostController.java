@@ -3,6 +3,7 @@ package com.tml.controller;
 import com.tml.annotation.SystemLog;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.PageInfo;
+import com.tml.pojo.dto.PostDto;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
 import io.github.common.web.Result;
@@ -36,9 +37,6 @@ public class PostController {
     }
 
 
-
-
-
     /**
      * 用户id如何获取
      * @return
@@ -52,7 +50,7 @@ public class PostController {
 
 
     /**
-     * 先不实现
+     * 点赞帖子
      * @return
      */
     @PutMapping("/favorite")
@@ -76,10 +74,11 @@ public class PostController {
      * 审核流程  用户先上传封面进行审核     发布帖子携带封面id
      * @return
      */
-    @GetMapping("/add")
+    @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
-    public Result add(){
-        return Result.success(API_NOT_IMPLEMENTED);
+    public Result add(@RequestBody PostDto postDto){
+        postService.add(postDto);
+        return Result.success();
     }
 
 
@@ -94,13 +93,14 @@ public class PostController {
 
 
     /**
-     *
+     *修改我发布的帖子
      * @return
      */
-    @GetMapping("/update")
+    @PutMapping("/update")
     @SystemLog(businessName = "修改我发布的帖子  [T]  [审]")
-    public Result update(){
-        return Result.success(API_NOT_IMPLEMENTED);
+    public Result update(@RequestBody PostDto postDto){
+//        postService.update(postDto);
+        return Result.success();
     }
 
 

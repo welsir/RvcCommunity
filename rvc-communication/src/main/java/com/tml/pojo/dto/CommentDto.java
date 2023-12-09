@@ -18,6 +18,8 @@ public class CommentDto {
     private String postId;
 //    顶级评论id
     private String rootCommentId;
-//    回复目标评论id
+//    回复目标用户id
+    private String toUserId;
+    //回复评论id
     private String toCommentId;
 }
