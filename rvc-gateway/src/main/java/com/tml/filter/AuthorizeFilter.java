@@ -60,11 +60,10 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
                 ServerHttpRequest newRequest = null;
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
                 if (StpUtil.isLogin(loginID)) {
-                    //TODO 解析token body得到 uid与username 待商讨
-                    String[] userInfo = {"xxxx","xxxxx"};
-                    if(userInfo.length==2){
-                        String uid = userInfo[0];
-                        String username = userInfo[1];
+                    String[] vars = loginID.split("\\|");
+                    if(vars.length==2){
+                        String uid = vars[0];
+                        String username = vars[1];
                         newRequest = request.mutate().header("uid",uid).header("username",username).build();
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
