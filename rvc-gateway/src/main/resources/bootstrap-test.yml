@@ -1,4 +1,6 @@
 spring:
+  main:
+    web-application-type: reactive
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
