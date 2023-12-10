@@ -25,3 +25,4 @@ hs_err_pid*
 replay_pid*
 you-cant-see-that.yml
 EncYMLTest.*
+/rvc-user/src/main/resources/application-dev.yml
