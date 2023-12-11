@@ -32,10 +32,6 @@ public class CommentController {
     private final CommentService commentService;
 
 
-    /**
-     * 如何从header获取用户id
-     * @return
-     */
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     public Result list(PageInfo<String> params){

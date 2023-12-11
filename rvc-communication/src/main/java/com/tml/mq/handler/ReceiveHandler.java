@@ -1,4 +1,4 @@
-package com.tml.mq.producer.handler;
+package com.tml.mq.handler;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +26,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
-
-
+import java.util.Objects;
 
 
 /**
@@ -67,6 +65,10 @@ public class ReceiveHandler {
 
 ////处理逻辑  更新数据库
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
+        //如果没有的话就是其他服务的处理  直接放行
+        if(Objects.isNull(detectionProcessStrategy)){
+            return;
+        }
 ////处理逻辑  更新数据库
         detectionProcessStrategy.process(detectionTaskDto);
 
@@ -89,6 +91,10 @@ public class ReceiveHandler {
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
 ////处理逻辑  更新数据库
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
+        //如果没有的话就是其他服务的处理  直接放行
+        if(Objects.isNull(detectionProcessStrategy)){
+            return;
+        }
 ////处理逻辑  更新数据库
         detectionProcessStrategy.process(detectionTaskDto);
 

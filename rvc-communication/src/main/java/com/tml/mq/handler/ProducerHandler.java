@@ -1,4 +1,4 @@
-package com.tml.mq.producer.handler;
+package com.tml.mq.handler;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;

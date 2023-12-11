@@ -11,6 +11,8 @@ public class DetectionStatusDto {
     private Integer status;
 
     private String violationInformation;
+//
+//    private String labels;
 
     private String name;
 

@@ -9,7 +9,7 @@ import com.tml.mapper.CollectPostMapper;
 import com.tml.mapper.CoverMapper;
 import com.tml.mapper.LikePostMapper;
 import com.tml.mapper.PostMapper;
-import com.tml.mq.producer.handler.ProducerHandler;
+import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
@@ -30,7 +30,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 
-import static com.tml.constant.CommonConstant.POST_WATCH_TIME;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
 import static com.tml.constant.DetectionConstants.UN_DETECTION;
 
@@ -137,36 +135,44 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         /**
          * 模拟获取uuid
          */
-        String userId = "1";
+        String uuid = "1";
         Post post = this.getById(postId);
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
 
 //        如果用户未登录直接返回vo对象
-        if (Objects.isNull(userId)){
+        if (Objects.isNull(uuid)){
             return postVo;
         }
 
 
 //        异步 帖子浏览次数+1（1分钟内浏览 浏览次数不加1 并且更新上次浏览时间）
-        this.executor.execute(() -> watchPost(userId,postId));
+        this.executor.execute(() -> watchPost(uuid,postId));
 
-        /**
-         * 调用用户服务提供的接口    去关系表查看用户是否点赞  收藏
-          */
+        //去关系表查看用户是否点赞  收藏
+        LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
+        collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
+        LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
+        likePostQueryWrapper.eq(LikePost::getUid,uuid);
+        boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
+        boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
 
 //        封装vo对象并返回
-
-
+        postVo.setLike(like);
+        postVo.setCollect(collect);
 
         return postVo;
     }
 
     @Override
     public String cover(String coverUrl) {
+        /**
+         * 判断用户是否登录
+         */
+
 //        数据库添加记录
-        String uuid = Uuid.getUuid();
+        String coverId = Uuid.getUuid();
         Cover cover = Cover.builder()
-                .coverId(uuid)
+                .coverId(coverId)
                 .detectionStatus(UN_DETECTION)
                 .coverUrl(coverUrl)
                 .build();
@@ -175,7 +181,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         //       提交审核任务
         DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id(uuid)
+                .id(coverId)
                 .content(coverUrl)
                 .name("post_cover")
                 .build();
@@ -183,7 +189,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
         producerHandler.submit(textDetectionTaskDto,"image");
 
-        return uuid;
+        return coverId;
     }
 
     @Override
