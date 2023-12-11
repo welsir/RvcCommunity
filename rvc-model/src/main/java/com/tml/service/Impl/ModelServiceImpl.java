@@ -89,6 +89,8 @@ public class ModelServiceImpl implements ModelService {
             SingleModel singleModel = new SingleModel();
             BeanUtils.copyProperties(model,singleModel);
             UserRelativeRequestForm form = new UserRelativeRequestForm(uid, modelId);
+            List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId).eq("authorId", uid));
+
             singleModel.setIsCollection(userServiceClient.isCollection(form));
             singleModel.setIsLike(userServiceClient.isCollection(form));
             asyncService.asyncAddModelViewNums(singleModel.getModelId());
