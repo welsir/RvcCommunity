@@ -1,6 +1,8 @@
-package com.tml.pojo.vo;
+package com.tml.pojo.VO;
 
+import com.tml.pojo.DO.ModelDO;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 /**
  * @Description
@@ -12,6 +14,10 @@ public class ModelVO {
 
     private String id;
     private String description;
-
-
+    private String picture;
+    private String name;
+    private String likesNum;
+    private String collectionNum;
+    private String isLike;
+    private String isCollection;
 }

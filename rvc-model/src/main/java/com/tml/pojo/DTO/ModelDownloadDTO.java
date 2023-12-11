@@ -5,11 +5,11 @@ import lombok.Data;
 /**
  * @Description
  * @Author welsir
- * @Date 2023/12/6 16:02
+ * @Date 2023/12/11 14:50
  */
 @Data
-public class ReceiveUploadModelDTO {
+public class ModelDownloadDTO {
 
-    private String fileId;
+    private String id;
     private String url;
 }

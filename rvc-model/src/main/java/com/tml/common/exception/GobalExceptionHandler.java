@@ -1,8 +1,8 @@
-package com.tml.exception;
+package com.tml.common.exception;
 
 import com.tml.common.Result;
+import com.tml.common.log.AbstractLogger;
 import com.tml.pojo.ResultCodeEnum;
-import org.apache.logging.log4j.spi.AbstractLogger;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

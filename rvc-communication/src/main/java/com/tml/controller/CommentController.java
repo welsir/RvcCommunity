@@ -1,10 +1,9 @@
 package com.tml.controller;
 
 
-import com.tml.annotation.Detection;
 import com.tml.annotation.SystemLog;
-import com.tml.pojo.dto.CommentDto;
-import com.tml.pojo.dto.CommentStatusDto;
+import com.tml.pojo.DTO.CommentDto;
+import com.tml.pojo.DTO.CommentStatusDto;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;

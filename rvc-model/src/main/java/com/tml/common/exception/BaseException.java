@@ -1,4 +1,4 @@
-package com.tml.exception;
+package com.tml.common.exception;
 
 import com.tml.pojo.ResultCodeEnum;
 

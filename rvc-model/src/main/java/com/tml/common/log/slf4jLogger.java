@@ -1,4 +1,4 @@
-package com.example.filesystem.common.log;
+package com.tml.common.log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component("slf4j")
 public class slf4jLogger implements BaseLoggerInterface{
 
-    private final static Logger FILE_SYSTEM = LoggerFactory.getLogger("fileSystem");
+    private final Logger FILE_SYSTEM = LoggerFactory.getLogger("model-service");
 
     @Override
     public void info(String msg, Object... args) {

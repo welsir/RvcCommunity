@@ -8,17 +8,15 @@ import org.springframework.stereotype.Component;
 /**
  * @Description
  * @Author welsir
- * @Date 2023/12/7 15:22
+ * @Date 2023/12/10 21:16
  */
-@Data
 @Configuration
+@Data
 @Component
-public class LoggerConfig {
+public class SystemConfig {
 
-    @Value("${file.logger.handler}")
-    private String logger;
+    @Value("${page.size}")
+    private String size;
 
-    @Value("${file.logger.enable}")
-    private boolean enable;
 
 }
