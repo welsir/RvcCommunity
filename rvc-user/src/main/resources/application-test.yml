@@ -8,8 +8,24 @@ spring:
       password: ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)
       config:
         file-extension: yaml
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
+    username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
+    password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
+  redis:
+    host: ${REDIS_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
+    database: 0
+    port: ${REDIS_PORT:ENC(vZrw6ItoyBBaKAHqyYi6zzoVUc8BRiM+)}
+    password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)}
+    timeout: 3000ms
 
 jasypt:
   encryptor:
     algorithm: PBEWithMD5AndDES
     password: ${JASYPT_PASSWORD:}
+
+user:
+  retry:
+    max-retries: 3
+    retry-interval: 1000

@@ -1,8 +1,13 @@
 package com.tml.service;
 
+import com.tml.pojo.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Date 2023/12/10
@@ -10,9 +15,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public interface UserService {
-    String login(LoginDTO loginDTO);
+    Map<String, String> login(LoginDTO loginDTO);
 
-    String register(RegisterDTO registerDTO);
+    Map<String, String> register(RegisterDTO registerDTO);
 
-    boolean sendCode(String email);
+    void sendCode(String email, boolean type);
+
+    UserInfoVO one(String uid);
+
+    List<UserInfoVO> list(List<String> uidList);
 }
