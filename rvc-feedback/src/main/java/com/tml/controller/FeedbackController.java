@@ -2,9 +2,11 @@ package com.tml.controller;
 
 import com.tml.pojo.FeedbackTypeDO;
 import com.tml.pojo.form.FeedbackForm;
+import com.tml.pojo.vo.FeedbackVO;
 import com.tml.service.FeedbackService;
 import com.tml.service.FeedbackStatusService;
 import com.tml.service.FeedbackTypeService;
+import io.github.common.PageVO;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeRegisterException;
 import lombok.AllArgsConstructor;
@@ -28,6 +30,20 @@ public class FeedbackController {
 
     @Resource
     FeedbackStatusService statusService;
+
+    @GetMapping("/list")
+    public Result<PageVO<FeedbackVO>> getFeedbackList(@RequestHeader(required = false)String uid,
+                                                      @RequestParam Integer page,
+                                                      @RequestParam Integer limit,
+                                                      @RequestParam(required = false,value = "") String order){
+        return feedbackService.getFeedbackPageVO(page, limit, uid, order);
+    }
+
+    @GetMapping("/getFeedback")
+    public Result<?> getFeedbackList(@RequestHeader(required = false)String uid,
+                                                      @RequestParam(name = "fbid") Long fbid){
+        return feedbackService.getFeedbackVO(uid,fbid);
+    }
 
     @PostMapping("/add")
     public Result<?> addFeedback(
