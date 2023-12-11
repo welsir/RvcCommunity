@@ -11,7 +11,7 @@ spring:
     password: ${REDIS_PWD:ENC(g+DlVpnt76Ji9s86jd28sGrL+GMWgvWivTRehbesgrA=)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
   application:
-    name: rvc-website${UNIQUE_ID:0}-service
+    name: rvc-website-${UNIQUE_ID:0}-service
   cloud:
     nacos:
       server-addr: ${NACOS_SERVER_ADDR:ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)}
@@ -42,3 +42,5 @@ management:
         include: '*'
   server:
     port: 9301
+
+

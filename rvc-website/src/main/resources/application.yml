@@ -6,3 +6,14 @@ spring:
     import: classpath:you-cant-see-that.yml
   profiles:
     active: ${ACTIVE:dev}
+
+
+rvc:
+  query-group:
+    home_notice: notice_id,title,author,cover,watch_num,create_at
+    detail_notice: notice_id,title,author,cover,watch_num,create_at,content,like_num
+  limit:
+    notice:
+      home: 6
+      web: 10
+

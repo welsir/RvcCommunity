@@ -1,0 +1,64 @@
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: rvc-gateway-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:ENC(Q/mUDDQ+0TwZ+60p9l6jr/F2nN/93jltB6EvwDqxGR5r91clGxM6slm0dskGePCLbdSFU+3NYgN1A3sJVjTNvd7r2XJs8V6coHAg0F9fe42NS087BTdFgrZjYRW09b2vlMFxo7KBJUwv2qZO8Kfa5VvulLkoBP28jdJsNkHbCDw=)}
+    username: ${MYSQL_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
+    password: ${MYSQL_PASSWORD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 4
+      max-active: 20
+      min-idle: 1
+      max-wait: 3000
+  cloud:
+    nacos:
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+      server-addr: 117.21.200.55:18848
+      config:
+        file-extension: yaml
+        extension-configs:
+          - dataId: authority-api-dev.yaml
+            refresh: true
+            group: DEFAULT_GROUP
+        shared-configs:
+          - dataId: commom-dev.yaml
+            refresh: true
+            group: DEFAULT_GROUP
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://rvc-user-service
+          predicates:
+            - Path=/user/**
+        - id: model-service
+          uri: lb://rvc-model-service
+          predicates:
+            - Path=/model/**
+        - id: communication-service
+          uri: lb://rvc-communication-service
+          predicates:
+            - Path=/communication/**
+        - id: verification-service
+          uri: lb://rvc-verification-service
+          predicates:
+            - Path=/verification/**
+        - id: file-service
+          uri: lb://rvc-file-service
+          predicates:
+            - Path=/file/**
+        - id: check-service
+          uri: lb://rvc-check-service
+          predicates:
+            - Path=/check/**
+  redis:
+    host: localhost # Redis服务器地址
+    database: 0 # Redis数据库索引（默认为0）
+    port: 6379 # Redis服务器连接端口
+    password: root # Redis服务器连接密码（默认为空）
+    timeout: 3000ms # 连接超时时间（毫秒）
+
