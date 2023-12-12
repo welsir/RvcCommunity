@@ -31,7 +31,7 @@ public class LogAspect {
         try {
             handleBefore(joinPoint);
             ret = joinPoint.proceed();
-            handleAfter(ret);
+//            handleAfter(ret);
         } finally {
             long endTime = System.currentTimeMillis(); // 获取程序结束时间
             long totalTime = endTime - startTime; // 计算总运行时间

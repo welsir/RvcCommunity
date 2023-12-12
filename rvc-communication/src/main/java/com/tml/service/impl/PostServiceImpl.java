@@ -132,6 +132,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public PostVo details(String postId) {
+        if (Strings.isBlank(postId)){
+            throw new RuntimeException("参数为空");
+        }
         /**
          * 模拟获取uuid
          */

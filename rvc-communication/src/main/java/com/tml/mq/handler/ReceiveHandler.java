@@ -112,7 +112,7 @@ public class ReceiveHandler {
         ObjectMapper objectMapper = new ObjectMapper();
 
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
-        System.out.println(detectionTaskDto);
+
 //        DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
 ////处理逻辑  更新数据库
 //        detectionProcessStrategy.process(detectionTaskDto);
