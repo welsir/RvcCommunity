@@ -1,6 +1,8 @@
 package com.tml.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tml.common.DetectionStatusEnum;
+import com.tml.constant.QueryType;
 import com.tml.pojo.FeedbackDO;
 import com.tml.pojo.form.FeedbackForm;
 import com.tml.pojo.vo.FeedbackVO;
@@ -12,6 +14,8 @@ import io.github.common.logger.CommonLogger;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
+import io.github.query.QueryParamGroup;
+import io.github.util.PageUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -38,12 +42,14 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public Result<PageVO<FeedbackVO>> getFeedbackPageVO(Integer page, Integer limit, String uid, String order) {
-        return null;
+        IPage<FeedbackVO> feedbackVOIPage = feedbackDaoService.feedbackPageVO(page, limit, order);
+        return Result.success(PageUtil.toPageVO(feedbackVOIPage));
     }
 
     @Override
-    public Result<?> getFeedbackVO(String uid, String fb_id) {
-        return null;
+    public Result<?> getFeedbackVO(String uid, Long fb_id) {
+        FeedbackVO feedbackVO = feedbackDaoService.feedbackVO(fb_id);
+        return Result.success(Map.of("feedback", feedbackVO));
     }
 
     @Override
@@ -106,7 +112,8 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
-    public Result<?> deleteFeedback(String uid, String fb_id) {
-        return null;
+    public Result<?> deleteFeedback(String uid, Long fb_id) {
+        Boolean res = feedbackDaoService.feedbackDelete(uid, fb_id);
+        return Result.success(Map.of("success",res));
     }
 }
