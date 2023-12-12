@@ -1,3 +1,4 @@
+
 name: Genius 多模块项目部署 [CI|CD]流
 
 on:
@@ -171,4 +172,3 @@ jobs:
             
               docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
             fi
-      
