@@ -9,10 +9,10 @@ spring:
       config:
         file-extension: yaml
   datasource:
+    url:  ${MYSQL_URL:ENC(Vz4sI7jkw9Sbd1riOc2b5haSPaxLXNkWR7vmRMDw4ZYpjim/I1a/pTh+LM7H65spXer1Ny0iJcXxXuHXLdAvVhTS6GvQwS2NFxh62z2/8l5e5t44fuHh2w==)}
+    username:  ${MYSQL_USERNAME:ENC(JlTsPNa31Qk3ONcVUSZt/r6LokLpTedJ)}
+    password: ${MYSQL_PASSWORD:ENC(lgvxMGjy+dBpZalxxf4wWS6oj2wJZYvP4/1rwEcqi1/T8qpC9/Q9Fg==)}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
-    username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
-    password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
   redis:
     host: ${REDIS_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
     database: 0
