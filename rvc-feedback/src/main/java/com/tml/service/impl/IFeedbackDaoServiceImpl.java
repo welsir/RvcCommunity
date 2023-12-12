@@ -3,6 +3,7 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tml.constant.QueryType;
 import com.tml.constant.dbTableConfig;
+import com.tml.exception.RvcSQLException;
 import com.tml.mapper.FeedbackMapper;
 import com.tml.pojo.FeedbackDO;
 import com.tml.pojo.vo.FeedbackVO;
@@ -32,7 +33,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
     @Override
     public IPage<FeedbackVO> feedbackPageVO(int page, int limit, String order) {
-        List<String> orders = !orderColumns.contains(order) ? List.of("fb_id") : List.of("fb_id",order);
+        List<String> orders = !orderColumns.contains(order) ? List.of("fb_id") : List.of(order,"fb_id");
 
         JoinSection typeJoin = JoinSection.builder()
                 .type(JoinSection.JoinType.LEFT)
@@ -77,7 +78,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
                 .build();
 
         FeedbackVO feedbackVO = this.getBeanVO(
-                queryParamGroup.getQueryParams(QueryType.FEEDBACK_LIST,"t."),
+                queryParamGroup.getQueryParams(QueryType.FEEDBACK_LIST,"t"),
                 Map.of("fb_id", fb_id,"has_show",1),
                 List.of(typeJoin,statusJoin),
                 FeedbackVO.class
@@ -101,9 +102,17 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
     }
 
     @Override
-    @Transactional
-    public Boolean feedbackCommentAdd(String fb_id) {
-        return update().setSql("comment_num = comment_num+1").update();
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Boolean feedbackCommentAdd(Long fb_id) throws RvcSQLException {
+        if(!update().setSql("comment_num = comment_num+1").eq("fb_id",fb_id).update()){
+            throw new RvcSQLException("更新评论数失败");
+        }
+        return true;
+    }
+
+    @Override
+    public Boolean hasFeedback(Long fb_id) {
+        return query().select("fb_id").eq("fb_id",fb_id).count()>0;
     }
 
     @Override

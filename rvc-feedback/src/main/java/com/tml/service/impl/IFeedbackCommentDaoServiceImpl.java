@@ -2,15 +2,19 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tml.constant.QueryType;
+import com.tml.constant.dbTableConfig;
+import com.tml.exception.RvcSQLException;
 import com.tml.mapper.FeedbackCommentMapper;
 import com.tml.pojo.FeedbackCommentDO;
 import com.tml.pojo.vo.FeedbackCommentVO;
 import com.tml.pojo.vo.FeedbackVO;
 import com.tml.service.IFeedbackCommentDaoService;
+import io.github.common.JoinSection;
 import io.github.query.QueryParamGroup;
 import io.github.service.AssistantMJPServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -22,24 +26,47 @@ public class IFeedbackCommentDaoServiceImpl extends AssistantMJPServiceImpl<Feed
     @Resource
     QueryParamGroup queryParamGroup;
 
-    @Value("${rvc.feedback.feedback_order_column}")
+    @Value("${rvc.feedback.comment_order_column}")
     List<String> orderColumns;
 
     @Override
-    public Boolean addComment(FeedbackCommentDO commentDO) {
-        return mapper.insert(commentDO)==1;
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Boolean addComment(FeedbackCommentDO commentDO) throws RvcSQLException {
+        try {
+            return mapper.insert(commentDO)==1;
+        }catch (Exception e){
+            throw new RvcSQLException("添加评论失败");
+        }
+
     }
 
     @Override
-    public IPage<FeedbackCommentVO> getCommentList(int page, int limit, String order) {
+    public IPage<FeedbackCommentVO> getCommentList(Long fb_id,int page, int limit, String order) {
 
-        List<String> orders = !orderColumns.contains(order) ? List.of("fb_id") : List.of("fb_id",order);
+        List<String> orders = !orderColumns.contains(order) ? List.of("cm_id") : List.of(order,"cm_id");
+
+        JoinSection section = JoinSection.builder()
+                .selectSQL("r.uid as reply_uid,r.comment as reply_comment")
+                .table(dbTableConfig.RVC_FEEDBACK_COMMENT)
+                .asName("r")
+                .type(JoinSection.JoinType.LEFT)
+                .connectColumn("t.reply_cm_id", "r.cm_id")
+                .build();
 
         return this.BeanPageVOList(
                 page,limit,
-                queryParamGroup.getQueryParams(QueryType.FEEDBACK_COMMENT),
-                Map.of("has_show",1),
-                orders, FeedbackCommentVO.class,true
+                queryParamGroup.getQueryParams(QueryType.FEEDBACK_COMMENT,"t"),
+                Map.of("t.reply_fb_id",fb_id,"t.has_show",1),
+                List.of(section),
+                orders, FeedbackCommentVO.class,false
         );
+    }
+
+    @Override
+    public Boolean hasComment(Long replyFbId,Long replyCmId) {
+        return query().select("cm_id")
+                .eq("cm_id",replyCmId)
+                .eq("reply_fb_id",replyFbId)
+                .count()>0;
     }
 }
