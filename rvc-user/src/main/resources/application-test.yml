@@ -1,6 +1,8 @@
 spring:
   application:
     name: tml-user-service
+  config:
+    import: calsspath:you-cant-see-that.yml
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
@@ -19,11 +21,6 @@ spring:
     port: ${REDIS_PORT:ENC(vZrw6ItoyBBaKAHqyYi6zzoVUc8BRiM+)}
     password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)}
     timeout: 3000ms
-
-jasypt:
-  encryptor:
-    algorithm: PBEWithMD5AndDES
-    password: ${JASYPT_PASSWORD:}
 
 user:
   retry:
