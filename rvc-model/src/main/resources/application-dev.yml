@@ -59,3 +59,7 @@ server:
   port: 9100
 page:
   size: ${DEFAULT_SIZE:ENC(247Kmy9z8U5mzJ2r/ZBKAuHF3/cxGaGW)}
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    password: ${JASYPT_PASSWORD:}
