@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModel;
+import com.tml.pojo.VO.SingleModelVO;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -19,7 +19,7 @@ public interface ModelService {
 
     Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid);
 
-    SingleModel queryOneModel(String modelId,String uid);
+    SingleModelVO queryOneModel(String modelId, String uid);
 
     void insertOneModel(ModelInsertVO model);
 

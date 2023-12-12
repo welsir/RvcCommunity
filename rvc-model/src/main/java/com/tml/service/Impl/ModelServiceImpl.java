@@ -8,7 +8,6 @@ import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
-import com.tml.core.client.UserServiceClient;
 import com.tml.mapper.ModelMapper;
 import com.tml.mapper.ModelTypeMapper;
 import com.tml.pojo.DO.ModelCollectionDO;
@@ -21,20 +20,17 @@ import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModel;
+import com.tml.pojo.VO.SingleModelVO;
 import com.tml.service.ModelService;
 import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,10 +85,10 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public SingleModel queryOneModel(String modelId,String uid) {
+    public SingleModelVO queryOneModel(String modelId, String uid) {
         try {
             ModelDO model = mapper.selectById(modelId);
-            SingleModel singleModel = new SingleModel();
+            SingleModelVO singleModel = new SingleModelVO();
             BeanUtils.copyProperties(model,singleModel);
             singleModel.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
             singleModel.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");

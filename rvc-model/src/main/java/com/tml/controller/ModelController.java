@@ -5,7 +5,7 @@ import com.tml.common.Result;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModel;
+import com.tml.pojo.VO.SingleModelVO;
 import com.tml.service.ModelService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +50,7 @@ public class ModelController {
     @GetMapping("/one/{modelId}")
     public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
                                  @RequestHeader(value = "uid", required = false) String uid){
-        SingleModel model = modelService.queryOneModel(modelId,uid);
+        SingleModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
     }
 
