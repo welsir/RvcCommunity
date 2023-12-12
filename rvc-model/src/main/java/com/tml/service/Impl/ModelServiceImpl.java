@@ -16,9 +16,7 @@ import com.tml.pojo.DO.ModelDO;
 
 import com.tml.pojo.DO.ModelLikeDO;
 import com.tml.pojo.DO.ModelTypeDO;
-import com.tml.pojo.DTO.ReceiveUploadModelDTO;
-import com.tml.pojo.DTO.UploadModelForm;
-import com.tml.pojo.DTO.UserRelativeRequestForm;
+import com.tml.pojo.DTO.*;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
@@ -129,9 +127,9 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public String downloadModel(String modelId,String isPrivate) {
-        //todo:调用文件服务模块接口返回url
-//        fileServiceClient.downloadModel(modelId,isPrivate);
-        return null;
+        Result<ModelDownloadDTO> result = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().modelId(modelId).isPrivate(isPrivate).build());
+        return result.getData().getUrl();
     }
 
     @Override

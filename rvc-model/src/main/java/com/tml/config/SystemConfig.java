@@ -18,5 +18,4 @@ public class SystemConfig {
     @Value("${page.size}")
     private String size;
 
-
 }

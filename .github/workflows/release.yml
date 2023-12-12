@@ -168,6 +168,3 @@ jobs:
                  docker stop $stop_docker_name
               fi
               docker rm ${{ env.MODULE }}-${{ env.VERSION }}
-            
-              docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
-            fi
