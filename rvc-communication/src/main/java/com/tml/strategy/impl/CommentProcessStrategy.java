@@ -24,9 +24,13 @@ public class CommentProcessStrategy implements DetectionProcessStrategy {
     private final CommentMapper commentMapper;
     @Override
     public void process(DetectionStatusDto detectionStatusDto) {
+        System.out.println(detectionStatusDto);
+
         Comment comment = commentMapper.selectById(detectionStatusDto.getId());
         comment.setViolationInformation(detectionStatusDto.getViolationInformation());
         comment.setDetectionStatus(detectionStatusDto.getStatus());
         commentMapper.updateById(comment);
+        System.out.println(comment);
+        System.out.println(LocalDate.now());
     }
 }

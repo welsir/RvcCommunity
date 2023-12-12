@@ -56,7 +56,7 @@ public class CommentController {
      * @param
      * @return
      */
-    @PostMapping("/favorite")
+    @GetMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
     public Result favorite(@RequestBody CoinDto coinDto){
         commentService.favorite(coinDto);

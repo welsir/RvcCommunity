@@ -18,35 +18,6 @@
     </properties>
 
     <dependencies>
-        <!--        redis-->
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-redis</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.lettuce</groupId>
-            <artifactId>lettuce-core</artifactId>
-        </dependency>
-
-
-
-        <!--        Assistant框架-->
-        <dependency>
-            <groupId>io.github.geniusay</groupId>
-            <artifactId>assistant-boot-start</artifactId>
-            <version>1.0.4</version>
-        </dependency>
 
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
