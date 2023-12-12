@@ -63,3 +63,4 @@ jasypt:
   encryptor:
     algorithm: PBEWithMD5AndDES
     password: ${JASYPT_PASSWORD:}
+
