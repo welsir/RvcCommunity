@@ -63,7 +63,3 @@ jasypt:
   encryptor:
     algorithm: PBEWithMD5AndDES
     password: ${JASYPT_PASSWORD:}
-logging:
-  level:
-    com:
-      tml: debug

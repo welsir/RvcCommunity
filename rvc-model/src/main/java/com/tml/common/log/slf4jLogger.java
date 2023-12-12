@@ -25,7 +25,7 @@ public class slf4jLogger implements BaseLoggerInterface{
     }
 
     @Override
-    public void debug(String msg, Object... args) {
+    public void trace(String msg, Object... args) {
         FILE_SYSTEM.debug(String.format(msg, args));
     }
 

@@ -11,7 +11,7 @@ public interface BaseLoggerInterface {
 
     void warn(String msg,Object ...arg);
 
-    void debug(String msg,Object ...arg);
+    void trace(String msg,Object ...arg);
 
     void error(String msg,Object ...arg);
 

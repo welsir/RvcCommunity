@@ -20,4 +20,17 @@ public class ModelVO {
     private String collectionNum;
     private String isLike;
     private String isCollection;
+    private String viewNum;
+
+    public static ModelVO modelDOToModelVO(ModelDO modelDO){
+        ModelVO modelVO = new ModelVO();
+        modelVO.setId(String.valueOf(modelDO.getId()));
+        modelVO.setName(modelDO.getName());
+        modelVO.setPicture(modelVO.getPicture());
+        modelVO.setLikesNum(modelDO.getLikesNum());
+        modelVO.setCollectionNum(modelDO.getCollectionNum());
+        modelVO.setDescription(modelDO.getDescription());
+        modelVO.setViewNum(modelVO.getViewNum());
+        return modelVO;
+    }
 }

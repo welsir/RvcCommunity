@@ -24,13 +24,13 @@ public class ModelDO {
     private String fileId;
     private String name;
     private String authorId;
-    private String type;
+    private String typeId;
     private String collectionNum;
     private String likesNum;
     private String viewNum;
     private String description;
     private String picture;
-    private Date createTime;
-    private Date updateTime;
+    private String createTime;
+    private String updateTime;
     private boolean hasShow;
 }

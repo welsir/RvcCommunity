@@ -10,8 +10,12 @@ import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
 import com.tml.core.client.UserServiceClient;
 import com.tml.mapper.ModelMapper;
+import com.tml.mapper.ModelTypeMapper;
+import com.tml.pojo.DO.ModelCollectionDO;
 import com.tml.pojo.DO.ModelDO;
 
+import com.tml.pojo.DO.ModelLikeDO;
+import com.tml.pojo.DO.ModelTypeDO;
 import com.tml.pojo.DTO.ReceiveUploadModelDTO;
 import com.tml.pojo.DTO.UploadModelForm;
 import com.tml.pojo.DTO.UserRelativeRequestForm;
@@ -21,10 +25,12 @@ import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
 import com.tml.pojo.VO.SingleModel;
 import com.tml.service.ModelService;
+import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -46,6 +52,8 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     ModelMapper mapper;
     @Resource
+    ModelTypeMapper typeMapper;
+    @Resource
     FileServiceClient fileServiceClient;
     @Resource
     AbstractLogger logger;
@@ -54,14 +62,14 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     AsyncService asyncService;
     @Resource
-    UserServiceClient userServiceClient;
+    DateUtil dateUtil;
     private HashMap<String,String> modelStatus = new HashMap<>();
 
     @Override
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("is_show", "2");
+                    .eq("has_show", "2");
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -73,7 +81,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("is_show", "1")
+                    .eq("has_show", "2")
                     .eq("type",type);
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
@@ -88,11 +96,8 @@ public class ModelServiceImpl implements ModelService {
             ModelDO model = mapper.selectById(modelId);
             SingleModel singleModel = new SingleModel();
             BeanUtils.copyProperties(model,singleModel);
-            UserRelativeRequestForm form = new UserRelativeRequestForm(uid, modelId);
-            List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId).eq("authorId", uid));
-
-            singleModel.setIsCollection(userServiceClient.isCollection(form));
-            singleModel.setIsLike(userServiceClient.isCollection(form));
+            singleModel.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
+            singleModel.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
             asyncService.asyncAddModelViewNums(singleModel.getModelId());
             return singleModel;
         }catch (BaseException e){
@@ -104,12 +109,13 @@ public class ModelServiceImpl implements ModelService {
     public void insertOneModel(ModelInsertVO model) {
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
-        modelDO.setUpdateTime(new Date(System.currentTimeMillis()));
-        modelDO.setCreateTime(new Date(System.currentTimeMillis()));
+        modelDO.setUpdateTime(dateUtil.formatDate());
+        modelDO.setCreateTime(dateUtil.formatDate());
         modelDO.setLikesNum("0");
         modelDO.setCollectionNum("0");
         modelDO.setViewNum("0");
         int insert = mapper.insert(modelDO);
+        typeMapper.insertModelTypeRelative(String.valueOf(modelDO.getId()),modelDO.getTypeId());
         if(insert!=1){
             throw new BaseException(ResultCodeEnum.ADD_MODEL_FAIL);
         }
@@ -151,17 +157,49 @@ public class ModelServiceImpl implements ModelService {
         }
     }
 
+    @Override
+    public void insertRelative(String type, String modelId,String uid,String isClick) {
+        if("collection".equals(type)){
+            if("false".equals(isClick)){
+                ModelCollectionDO build = ModelCollectionDO.builder()
+                        .modelId(modelId)
+                        .uid(uid)
+                        .build();
+                mapper.insertModelUserCollection(
+                        build);
+            }else{
+                mapper.delModelCollection(uid,modelId);
+            }
+        }else {
+            if("false".equals(isClick)){
+                ModelLikeDO build =  ModelLikeDO.builder()
+                        .modelId(modelId)
+                        .uid(uid)
+                        .build();
+                mapper.insertModelUserLikes(
+                        build
+                );
+            }else{
+                mapper.delModelLikes(uid,modelId);
+            }
+        }
+    }
+
+    @Override
+    public void insertType(String type) {
+        typeMapper.insert(ModelTypeDO.builder().type(type).build());
+    }
+
     private ModelVO convertToModelVO(ModelDO model, String uid) {
-        ModelVO modelVO = new ModelVO();
-        BeanUtils.copyProperties(model, modelVO);
-        UserRelativeRequestForm form = new UserRelativeRequestForm(uid, String.valueOf(model.getId()));
-        modelVO.setIsLike(String.valueOf(userServiceClient.isLike(form)));
-        modelVO.setIsCollection(String.valueOf(userServiceClient.isCollection(form)));
+        ModelVO modelVO = ModelVO.modelDOToModelVO(model);
+        modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelVO.getId())==null?"0":"1");
+        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelVO.getId())==null?"0":"1");
         return modelVO;
     }
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
-        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size)), queryWrapper);
+
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(model -> convertToModelVO(model, uid))
                 .collect(Collectors.toList());
@@ -174,7 +212,7 @@ public class ModelServiceImpl implements ModelService {
                 queryWrapper.orderByDesc("create_time");
                 break;
             case "likes":
-                queryWrapper.orderByDesc("like_count");
+                queryWrapper.orderByDesc("likes_num");
                 break;
             case "views":
                 queryWrapper.orderByDesc("view_num");

@@ -27,8 +27,8 @@ public class AbstractLogger {
         loggerHandler.warn(msg,args);
     }
 
-    public void debug(String msg,Object... args){
-        loggerHandler.debug(msg,args);
+    public void trace(String msg,Object... args){
+        loggerHandler.trace(msg,args);
     }
 
 

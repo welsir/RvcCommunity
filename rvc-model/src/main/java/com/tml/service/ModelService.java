@@ -28,4 +28,9 @@ public interface ModelService {
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO);
 
     String uploadModel(MultipartFile file);
+
+    void insertRelative(String type,String modelId,String uid,String isClick);
+
+    void insertType(String type);
+
 }

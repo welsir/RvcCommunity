@@ -77,4 +77,12 @@ public class ModelController {
         return Result.success(modelService.uploadModel(file));
     }
 
+    @PostMapping("/relative")
+    public Result<?> modelUserRelative(@RequestParam("type") String type,
+                                       @RequestParam("modelId")String modelId,
+                                       @RequestHeader(value = "uid", required = false) String uid,
+                                       @RequestParam("status") String status){
+        modelService.insertRelative(type,modelId,uid,status);
+        return Result.success();
+    }
 }
