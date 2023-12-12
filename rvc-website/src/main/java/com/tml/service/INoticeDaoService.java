@@ -2,8 +2,7 @@ package com.tml.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tml.pojo.NoticeDO;
-import com.tml.pojo.vo.NoticeVO;
-import io.github.common.web.PageVO;
+import com.tml.pojo.VO.NoticeVO;
 
 public interface INoticeDaoService {
 
