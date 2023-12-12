@@ -3,17 +3,19 @@ package com.tml;
 import com.tml.mapper.CommentMapper;
 import com.tml.mapper.CoverMapper;
 import com.tml.mapper.PostMapper;
-import com.tml.pojo.entity.Post;
+
+import com.tml.utils.RedisCache;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
 import org.springframework.test.context.junit4.SpringRunner;
 
 
 import javax.annotation.Resource;
-
+import java.util.Map;
 
 
 @SpringBootTest
@@ -30,6 +32,9 @@ class ProdcerTopicsSpringbootApplicationTests {
 
     @Autowired
     private PostMapper postMapper;
+
+    @Autowired
+    private RedisCache redisCache;
 
 
     @Test
@@ -70,6 +75,9 @@ class ProdcerTopicsSpringbootApplicationTests {
 
 //        System.out.println(coverMapper.selectById("1732366351294660608"));
 //        System.out.println(commentMapper.selectById("1732345167421243392"));
+        redisCache.setCacheObject("user",101);
+        Object cacheObject = redisCache.getCacheObject("user");
+        System.out.println(cacheObject);
 
     }
 

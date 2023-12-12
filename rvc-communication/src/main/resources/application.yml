@@ -9,7 +9,7 @@ spring:
     host: localhost # Redis服务器地址
     database: 0 # Redis数据库索引（默认为0）
     port: 6379 # Redis服务器连接端口
-    password: root # Redis服务器连接密码（默认为空）
+
     timeout: 3000ms # 连接超时时间（毫秒）
   cloud:
     nacos:
@@ -19,10 +19,14 @@ spring:
       config:
         file-extension: yaml
   rabbitmq:
-    host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
+#    host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
+    host: 1.94.28.8
     port:  ${RABBITMQ_PORT:5672}
-    username: ENC(cz1NwvIQDGEjCqPzHKG8UqOk0gUEeOr7)
-    password: ENC(cIRXIjYpvlEUV3XsBSYx8EU+AQJZJn0NsIB+64adduNXJXYGBwIUmQ==)
+#    username: ENC(cz1NwvIQDGEjCqPzHKG8UqOk0gUEeOr7)
+    username: root
+#    password: ENC(cIRXIjYpvlEUV3XsBSYx8EU+AQJZJn0NsIB+64adduNXJXYGBwIUmQ==)
+    password: genius_server_0704
+
     virtualHost: /
   config:
     import: classpath:you-cant-see-that.yml

@@ -60,7 +60,6 @@ public class ReceiveHandler {
 
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
-
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
 
 ////处理逻辑  更新数据库
@@ -71,7 +70,6 @@ public class ReceiveHandler {
         }
 ////处理逻辑  更新数据库
         detectionProcessStrategy.process(detectionTaskDto);
-
     }
 
 
@@ -112,7 +110,7 @@ public class ReceiveHandler {
         ObjectMapper objectMapper = new ObjectMapper();
 
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
-        System.out.println(detectionTaskDto);
+
 //        DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
 ////处理逻辑  更新数据库
 //        detectionProcessStrategy.process(detectionTaskDto);
