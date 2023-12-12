@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Date 2023/12/11
@@ -28,7 +29,7 @@ public class EmailUtil {
         if(result.getCode() != 200){
             throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
         }
-        redisTemplate.opsForValue().set(msg + ":" + email, result.getData().get("code"));
+        redisTemplate.opsForValue().set(msg + ":" + email, result.getData().get("code"), 5, TimeUnit.MINUTES);
     }
 
     public boolean verify(String email, String msg, String code){
