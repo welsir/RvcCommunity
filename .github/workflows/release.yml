@@ -1,4 +1,3 @@
-
 name: Genius 多模块项目部署 [CI|CD]流
 
 on:
@@ -170,5 +169,6 @@ jobs:
               fi
               docker rm ${{ env.MODULE }}-${{ env.VERSION }}
             
-              docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
+              docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -e JASYPT_PASSWORD=${{ secrets.JASYPT_PWD }} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
             fi
+      
