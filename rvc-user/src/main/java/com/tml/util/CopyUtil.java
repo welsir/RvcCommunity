@@ -12,8 +12,8 @@ import java.util.Objects;
  */
 public class CopyUtil{
     public static <T, W> void copyPropertiesForList(List<T> source, List<W> target, Class<W> clazz){
-        if (source == null || target == null || source.size() != target.size()) {
-            throw new IllegalArgumentException("Lists are null or have different sizes");
+        if (source == null) {
+            throw new IllegalArgumentException("Source lists are null");
         }
 
         try {
