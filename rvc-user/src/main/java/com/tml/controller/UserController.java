@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Date 2023/12/10
@@ -43,6 +44,6 @@ public class UserController {
 
     @PostMapping("/list")
     public Result list(@RequestBody List<String> uidList){
-        return Result.success(userService.list(uidList));
+        return Result.success(Map.of("userList", userService.list(uidList)));
     }
 }
