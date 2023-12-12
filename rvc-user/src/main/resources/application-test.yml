@@ -1,8 +1,6 @@
 spring:
   application:
     name: tml-user-service
-  config:
-    import: calsspath:you-cant-see-that.yml
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
