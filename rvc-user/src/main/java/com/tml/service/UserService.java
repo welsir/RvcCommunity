@@ -1,6 +1,5 @@
 package com.tml.service;
 
-import com.tml.pojo.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.vo.UserInfoVO;

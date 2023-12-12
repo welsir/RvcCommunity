@@ -1,8 +1,7 @@
 package com.tml.common;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.tml.exception.ServerException;
-import com.tml.pojo.AuthUser;
+import com.tml.pojo.DO.AuthUser;
 import com.tml.pojo.enums.ResultEnums;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;

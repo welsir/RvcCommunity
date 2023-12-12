@@ -1,4 +1,4 @@
-package com.tml.pojo;
+package com.tml.pojo.DO;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;

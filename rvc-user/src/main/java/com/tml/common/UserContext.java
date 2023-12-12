@@ -1,6 +1,6 @@
 package com.tml.common;
 
-import com.tml.pojo.AuthUser;
+import com.tml.pojo.DO.AuthUser;
 
 /**
  * @Date 2023/12/12

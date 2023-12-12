@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ServerException.class)
     public Result handleException(ServerException e){
         logger.error("数据错误：" + e.getMessage());
+        e.printStackTrace();
         return Result.error(e.getCode(), e.getMessage());
     }
 

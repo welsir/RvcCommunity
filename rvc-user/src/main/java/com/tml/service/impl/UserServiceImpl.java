@@ -4,7 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserInfoMapper;
-import com.tml.pojo.UserInfo;
+import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.enums.ResultEnums;
@@ -14,14 +14,12 @@ import com.tml.util.CopyUtil;
 import com.tml.util.EmailUtil;
 import com.tml.util.RandomStringUtil;
 import com.tml.util.TokenUtil;
-import org.apache.catalina.User;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -107,8 +105,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void sendCode(String email, boolean type) {
-        System.out.println("发送了一个邮件");
-
         try {
             if (type) {
                 emailUtil.sendCode(email, "Login");

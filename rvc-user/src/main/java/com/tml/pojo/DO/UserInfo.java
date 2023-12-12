@@ -1,4 +1,4 @@
-package com.tml.pojo;
+package com.tml.pojo.DO;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

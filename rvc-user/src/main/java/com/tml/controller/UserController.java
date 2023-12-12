@@ -19,6 +19,7 @@ public class UserController {
     @Resource
     UserService userService;
 
+
     @PostMapping("/login")
     public Result login(@RequestBody LoginDTO loginDTO){
         return Result.success(userService.login(loginDTO));
@@ -40,8 +41,8 @@ public class UserController {
         return Result.success(userService.one(uid));
     }
 
-    @GetMapping("/list")
-    public Result list(@RequestParam List<String> uidList){
+    @PostMapping("/list")
+    public Result list(@RequestBody List<String> uidList){
         return Result.success(userService.list(uidList));
     }
 }

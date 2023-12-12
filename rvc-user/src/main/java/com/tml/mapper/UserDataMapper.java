@@ -1,7 +1,7 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.pojo.UserData;
+import com.tml.pojo.DO.UserData;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

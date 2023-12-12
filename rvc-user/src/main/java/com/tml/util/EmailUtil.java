@@ -1,5 +1,9 @@
 package com.tml.util;
 
+import com.tml.common.captcha.Result;
+import com.tml.exception.ServerException;
+import com.tml.pojo.enums.ResultEnums;
+import com.tml.service.CaptchaService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +19,16 @@ public class EmailUtil {
     @Resource
     RedisTemplate<String, String> redisTemplate;
 
-    public Map<String, String> sendCode(String email, String msg){
-        redisTemplate.opsForValue().set(msg + ":" + email, "1111");
-        // 利用fegin发送邮件
-        return null;
+    @Resource
+    CaptchaService captchaService;
+
+
+    public void sendCode(String email, String msg){
+        Result<Map<String, String>> result = captchaService.email(email);
+        if(result.getCode() != 200){
+            throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
+        }
+        redisTemplate.opsForValue().set(msg + ":" + email, result.getData().get("code"));
     }
 
     public boolean verify(String email, String msg, String code){
