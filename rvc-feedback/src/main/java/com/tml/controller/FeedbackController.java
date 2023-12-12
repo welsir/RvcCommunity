@@ -1,20 +1,22 @@
 package com.tml.controller;
 
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackTypeDO;
+import com.tml.pojo.form.FeedbackCommentForm;
 import com.tml.pojo.form.FeedbackForm;
+import com.tml.pojo.vo.FeedbackCommentVO;
 import com.tml.pojo.vo.FeedbackVO;
+import com.tml.service.FeedbackCommentService;
 import com.tml.service.FeedbackService;
 import com.tml.service.FeedbackStatusService;
 import com.tml.service.FeedbackTypeService;
 import io.github.common.PageVO;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeRegisterException;
-import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +32,9 @@ public class FeedbackController {
 
     @Resource
     FeedbackStatusService statusService;
+
+    @Resource
+    FeedbackCommentService commentService;
 
     @GetMapping("/list")
     public Result<PageVO<FeedbackVO>> getFeedbackList(@RequestHeader(required = false)String uid,
@@ -61,13 +66,29 @@ public class FeedbackController {
         return feedbackService.updateFeedback(form,uid);
     }
 
-    @GetMapping("/typeList")
+    @GetMapping("/type/list")
     public Result<?> getTypeList(){
         return Result.success(Map.of("list",typeService.queryAll()));
     }
 
-    @GetMapping("/statusList")
+    @GetMapping("/status/list")
     public Result<?> getStatusList(){
         return Result.success(Map.of("list",statusService.queryAll()));
     }
+
+    @GetMapping("/comment/list")
+    public Result<PageVO<FeedbackCommentVO>> getCommentList(@RequestHeader(required = false)String uid,
+                                                            @RequestParam Long fbid,
+                                                            @RequestParam Integer page,
+                                                            @RequestParam Integer limit,
+                                                            @RequestParam(required = false,value = "") String order){
+        return commentService.getCommentList(fbid,uid,page,limit,order);
+    }
+
+    @PostMapping("/comment/add")
+    public Result<?> addComment(@RequestBody @Validated FeedbackCommentForm commentForm,
+                                @RequestHeader String uid) throws SnowflakeRegisterException, RvcSQLException {
+        return commentService.addComment(commentForm,uid);
+    }
+
 }

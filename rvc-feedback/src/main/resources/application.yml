@@ -13,7 +13,7 @@ assistant:
     query-group:
       feedback_list: fb_id,uid,title,type,status,comment_num,up_num,create_at
       feedback_detail: fb_id,uid,title,content,type,status,comment_num,up_num,create_at
-      feedback_comment: cm_id,reply_fb_id,uid,reply_uid,comment,like_num,create_at
+      feedback_comment: cm_id,reply_fb_id,reply_cm_id,uid,comment,like_num,create_at
 
 
 rvc:

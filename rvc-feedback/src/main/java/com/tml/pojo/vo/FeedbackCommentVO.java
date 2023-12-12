@@ -24,6 +24,8 @@ public class FeedbackCommentVO {
 
     private Long replyFbId;
 
+    private Long replyCmId;
+
     private String uid;
 
     private String username;
@@ -39,6 +41,8 @@ public class FeedbackCommentVO {
     private String replyNickname;
 
     private String replyAvatar;
+
+    private String replyComment;
 
     private String comment;
 

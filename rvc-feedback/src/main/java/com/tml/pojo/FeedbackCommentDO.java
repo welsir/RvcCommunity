@@ -36,7 +36,7 @@ public class FeedbackCommentDO {
     private String uid;
 
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private String replyUid;
+    private Long replyCmId;
 
     private String comment;
 

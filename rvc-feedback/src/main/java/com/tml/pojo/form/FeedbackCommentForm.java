@@ -19,7 +19,7 @@ public class FeedbackCommentForm {
     private Long replyFbId;
 
 
-    private String replyUid;
+    private Long replyCmId;
 
     @NotBlank(message = "comment Invalid")
     @Size(min = 1, max = 600, message = "comment length must be between 1 and 600 characters")
