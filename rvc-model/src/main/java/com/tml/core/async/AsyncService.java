@@ -42,6 +42,8 @@ public class AsyncService {
             listener.sendMsgToMQ(build,"text");
             build.setContent(modelDO.getName());
             listener.sendMsgToMQ(build,"text");
+            build.setContent(modelDO.getNote());
+            listener.sendMsgToMQ(build,"text");
             build.setContent(modelDO.getPicture());
             listener.sendMsgToMQ(build,"image");
             logger.info("异步审核完毕");
@@ -57,6 +59,10 @@ public class AsyncService {
         List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId));
         ModelDO modelDO = list.get(0);
         mapper.update(modelDO,new UpdateWrapper<ModelDO>().set("view_num",modelDO.getViewNum()+1));
+    }
+
+    private boolean listenerMq(List<String> listenList){
+        return false;
     }
 
 }

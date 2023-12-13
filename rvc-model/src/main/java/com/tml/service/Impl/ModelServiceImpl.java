@@ -9,13 +9,12 @@ import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
+import com.tml.core.client.UserServiceClient;
+import com.tml.core.rabbitmq.ModelListener;
+import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
-import com.tml.mapper.ModelTypeMapper;
-import com.tml.pojo.DO.ModelCollectionDO;
-import com.tml.pojo.DO.ModelDO;
+import com.tml.pojo.DO.*;
 
-import com.tml.pojo.DO.ModelLikeDO;
-import com.tml.pojo.DO.ModelTypeDO;
 import com.tml.pojo.DTO.*;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.ModelInsertVO;
@@ -27,6 +26,7 @@ import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -49,9 +49,11 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     ModelMapper mapper;
     @Resource
-    ModelTypeMapper typeMapper;
+    LabelMapper labelMapper;
     @Resource
     FileServiceClient fileServiceClient;
+    @Resource
+    UserServiceClient userServiceClient;
     @Resource
     AbstractLogger logger;
     @Resource
@@ -66,7 +68,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS);
+                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -113,11 +115,9 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setViewNum("0");
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         int insert = mapper.insert(modelDO);
-        typeMapper.insertModelTypeRelative(String.valueOf(modelDO.getId()),modelDO.getTypeId());
         if(insert!=1){
             throw new BaseException(ResultCodeEnum.ADD_MODEL_FAIL);
         }
-        logger.info("方法执行完毕");
         try {
             asyncService.processModelAsync(modelDO);
         } catch (InterruptedException e) {
@@ -138,21 +138,28 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String uploadModel(MultipartFile file) {
+    public ReceiveUploadFileDTO uploadModel(MultipartFile file) {
         try {
             UploadModelForm form = UploadModelForm.builder()
                     .file(file)
-                    .path(ModelConstant.DEFAULT_PATH)
+                    .path(ModelConstant.DEFAULT_MODEL_PATH)
                     .bucket(ModelConstant.DEFAULT_BUCKET)
                     .md5(fileUtil.getMD5Checksum(file.getInputStream()))
                     .build();
-            Result<ReceiveUploadModelDTO> model = fileServiceClient.uploadModel(form);
-            return model.getData().getFileId();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+            return res.getData();
+        } catch (NoSuchAlgorithmException | IOException e) {
+            logger.error("%s:"+e.getStackTrace()[0],e);
+            throw new BaseException();
         }
+    }
+
+    @Override
+    public ReceiveUploadFileDTO uploadImage(MultipartFile file) {
+        if(fileUtil.isImageFile(file.getOriginalFilename())&&fileUtil.imageSizeIsAviable(file)){
+            return this.uploadModel(file);
+        }
+        return null;
     }
 
     @Override
@@ -184,12 +191,29 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public void insertType(String type) {
-        typeMapper.insert(ModelTypeDO.builder().type(type).build());
+    public String insertLabel(String label, String uid) {
+        Assert.notNull(uid,"用户未登录");
+        ModelLabelDO modelLabelDO = new ModelLabelDO();
+        modelLabelDO.setLabel(label);
+        modelLabelDO.setCreateTime(dateUtil.formatDate());
+        labelMapper.insert(modelLabelDO);
+        return String.valueOf(modelLabelDO.getId());
     }
 
     private ModelVO convertToModelVO(ModelDO model, String uid) {
         ModelVO modelVO = ModelVO.modelDOToModelVO(model);
+        try {
+            Object userInfo = userServiceClient.getUserInfo(uid);
+            logger.info((String) userInfo);
+        }catch (RuntimeException e){
+            logger.error("调用用户服务错误:%s:%s",e.getMessage(),e.getStackTrace()[0]);
+            throw new RuntimeException(e);
+        }
+        if(uid==null){
+            modelVO.setIsLike("0");
+            modelVO.setIsCollection("0");
+            return modelVO;
+        }
         modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelVO.getId())==null?"0":"1");
         modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelVO.getId())==null?"0":"1");
         return modelVO;

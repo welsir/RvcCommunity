@@ -9,7 +9,9 @@ public class ModelConstant {
 
     public static final String DEFAULT_BUCKET = "rvc1";
 
-    public static final String DEFAULT_PATH = "model/";
+    public static final String DEFAULT_MODEL_PATH = "model/";
+
+    public static final String DEFAULT_IMAGE_PATH = "image/";
 
     public static final String UPLOAD_MODEL_SUCCESS = "2";
 

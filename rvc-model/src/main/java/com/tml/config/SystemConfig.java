@@ -18,4 +18,7 @@ public class SystemConfig {
     @Value("${page.size}")
     private String size;
 
+    @Value("${file.image-file-size}")
+    private String imageSize;
+
 }

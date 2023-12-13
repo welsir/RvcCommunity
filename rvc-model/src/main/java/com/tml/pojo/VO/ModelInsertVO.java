@@ -21,14 +21,14 @@ public class ModelInsertVO {
     @NotBlank(message = "名称不能为空")
     @Length(max = 10,message = "模型名称不能超过5个字")
     private String name;
-    @Size(max = 19, message = "ID长度不能超过19")
-    private String authorId;
     @NotBlank(message = "模型类型不能为空")
-    private String type;
+    private String typeId;
+    @NotBlank(message = "模型标签不能为空")
+    private String labelId;
     @NotNull(message = "不能传入空字符")
     private String description;
+    @NotNull(message = "不能传入空字符")
+    private String note;
     @NotBlank(message = "不能传入空字符")
     private String picture;
-    private String bucket;
-    private String path;
 }

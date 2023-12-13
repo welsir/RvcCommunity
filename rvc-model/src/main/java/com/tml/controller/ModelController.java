@@ -28,20 +28,20 @@ public class ModelController {
     @Resource
     ModelService modelService;
 
-    @GetMapping("/list/{size}/{page}/{sortType}")
-    public Result<?> getModelList(@PathVariable @NotBlank String page,
-                                  @PathVariable  @Size(max = 10) String size,
-                                  @PathVariable String sortType,
+    @GetMapping("/list")
+    public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
+                                  @RequestParam("size")  @Size(max = 10) String size,
+                                  @RequestParam("sortType") String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(size,page,sortType,uid);
         return Result.success(modelList);
     }
 
-    @GetMapping("/list/{type}/{size}/{page}/{sortType}")
+    @GetMapping("/list/{type}")
     public Result<?> getModelListByType(@PathVariable @NotBlank String type,
-                                        @PathVariable @NotBlank String page,
-                                        @PathVariable @Size(max = 10) String size,
-                                        @PathVariable String sortType,
+                                        @RequestParam("page") @NotBlank String page,
+                                        @RequestParam("size")  @Size(max = 10) String size,
+                                        @RequestParam("sortType") String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(type,page,size,sortType,uid);
         return Result.success(modelList);
@@ -54,6 +54,7 @@ public class ModelController {
         return Result.success(model);
     }
 
+    //todo:考虑重复上传问题
     @PostMapping("/one")
     public Result<?> insertOneModel(@Validated ModelInsertVO model){
         modelService.insertOneModel(model);
@@ -74,9 +75,16 @@ public class ModelController {
         return Result.success(flag);
     }
 
-    @PostMapping("/upload")
-    public Result<?> uploadModel(MultipartFile file){
+    @PostMapping("/upload/model")
+    public Result<?> uploadModel(
+            MultipartFile file){
         return Result.success(modelService.uploadModel(file));
+    }
+
+    @PostMapping("/upload/image")
+    public Result<?> uploadImage(
+            MultipartFile file){
+        return Result.success(modelService.uploadImage(file));
     }
 
     @PostMapping("/relative")
@@ -87,4 +95,13 @@ public class ModelController {
         modelService.insertRelative(type,modelId,uid,status);
         return Result.success();
     }
+
+    @PostMapping("/label")
+    public Result<?> insertLabel(
+            @RequestParam("label") String label,
+            @RequestHeader(value = "uid",required = false) String uid
+    ){
+        return Result.success(modelService.insertLabel(label, uid));
+    }
+
 }

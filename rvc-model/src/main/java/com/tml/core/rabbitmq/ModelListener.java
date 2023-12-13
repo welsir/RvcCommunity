@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.constant.RabbitMQconstant;
+import com.tml.common.log.AbstractLogger;
 import com.tml.mapper.ModelMapper;
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.DetectionStatusDTO;
@@ -32,6 +33,8 @@ import java.nio.channels.Channel;
 public class ModelListener implements ListenerInterface{
 
     @Resource
+    AbstractLogger logger;
+    @Resource
     RabbitTemplate rabbitTemplate;
     @Resource
     RabbitMQConfig config;
@@ -55,6 +58,7 @@ public class ModelListener implements ListenerInterface{
         ObjectMapper mapper = new ObjectMapper();
         try {
             DetectionStatusDTO statusDTO = mapper.readValue(messageBody, DetectionStatusDTO.class);
+            logger.info(String.valueOf(statusDTO));
             if(!"model".equals(statusDTO.getName())){
                 return;
             }
@@ -62,11 +66,11 @@ public class ModelListener implements ListenerInterface{
             if(statusDTO.getStatus()==1){
                 wrapper
                         .eq("id",statusDTO.getId())
-                        .setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS);
+                        .setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
             }else {
                 wrapper
                         .eq("id",statusDTO.getId())
-                        .setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL);
+                        .setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
             }
             modelMapper.update(null,wrapper);
         } catch (JsonMappingException e) {
@@ -75,5 +79,38 @@ public class ModelListener implements ListenerInterface{
             throw new RuntimeException(e);
         }
 
+    }
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
+            key = "res.image"
+    ))
+    public void receiveImage(Message message){
+        String messageBody = new String(message.getBody());
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            DetectionStatusDTO statusDTO = mapper.readValue(messageBody, DetectionStatusDTO.class);
+            logger.info(String.valueOf(statusDTO));
+            if(!"model".equals(statusDTO.getName())){
+                return;
+            }
+            UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+            if(statusDTO.getStatus()==1){
+                wrapper
+                        .eq("id",statusDTO.getId())
+                        .setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
+            }else {
+                logger.warn("图片审核失败:%s",statusDTO);
+                wrapper
+                        .eq("id",statusDTO.getId())
+                        .setSql("has_show="+ DetectionStatusEnum.DETECTION_FAIL.getStatus());
+            }
+            modelMapper.update(null,wrapper);
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

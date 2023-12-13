@@ -8,7 +8,4 @@ spring:
     import: classpath:you-cant-see-that.yml
   profiles:
     active: ${ACTIVE:dev}
-file:
-  logger:
-    handler: ${Logger:slf4j}
-    enable: true
+

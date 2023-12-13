@@ -5,7 +5,7 @@ import com.tml.config.FeignConfig;
 import com.tml.constant.RemoteModuleURL;
 import com.tml.pojo.DTO.DownloadModelForm;
 import com.tml.pojo.DTO.ModelDownloadDTO;
-import com.tml.pojo.DTO.ReceiveUploadModelDTO;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.DTO.UploadModelForm;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FileServiceClient {
 
     @PostMapping(value = RemoteModuleURL.UPLOAD_FILE_TO_OSS,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Result<ReceiveUploadModelDTO> uploadModel(@RequestBody UploadModelForm form);
+    Result<ReceiveUploadFileDTO> uploadModel(@RequestBody UploadModelForm form);
 
     @PostMapping(value = RemoteModuleURL.DOWNLOAD_FILE_TO_OSS,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     Result<String> downloadModel(@RequestBody DownloadModelForm form);
