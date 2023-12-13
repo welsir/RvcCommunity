@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tml.common.DetectionStatusEnum;
 import com.tml.common.constant.RabbitMQconstant;
 import com.tml.mapper.ModelMapper;
 import com.tml.pojo.DO.ModelDO;
@@ -58,9 +59,15 @@ public class ModelListener implements ListenerInterface{
                 return;
             }
             UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
-            wrapper
-                    .eq("id",statusDTO.getId())
-                    .setSql("has_show="+statusDTO.getStatus());
+            if(statusDTO.getStatus()==1){
+                wrapper
+                        .eq("id",statusDTO.getId())
+                        .setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS);
+            }else {
+                wrapper
+                        .eq("id",statusDTO.getId())
+                        .setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL);
+            }
             modelMapper.update(null,wrapper);
         } catch (JsonMappingException e) {
             throw new RuntimeException(e);

@@ -23,7 +23,7 @@ public interface ModelService {
 
     void insertOneModel(ModelInsertVO model);
 
-    String downloadModel(String modelId,String isPrivate);
+    String downloadModel(String modelId,String isPrivate,String bucket);
 
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO);
 

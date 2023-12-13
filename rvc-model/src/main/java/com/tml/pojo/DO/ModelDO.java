@@ -32,5 +32,5 @@ public class ModelDO {
     private String picture;
     private String createTime;
     private String updateTime;
-    private boolean hasShow;
+    private String hasShow;
 }

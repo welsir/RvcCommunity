@@ -12,7 +12,8 @@ import lombok.Data;
 @Builder
 public class DownloadModelForm {
 
-    private String modelId;
+    private String fileId;
     private String isPrivate;
+    private String bucket;
 
 }

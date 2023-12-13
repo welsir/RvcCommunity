@@ -2,6 +2,7 @@ package com.tml.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.common.DetectionStatusEnum;
 import com.tml.common.Result;
 import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.BaseException;
@@ -35,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
+
 /**
  * @Description
  * @Author welsir
@@ -63,7 +66,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", "2");
+                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS);
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -75,7 +78,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", "2")
+                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS)
                     .eq("type",type);
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
@@ -108,6 +111,7 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setLikesNum("0");
         modelDO.setCollectionNum("0");
         modelDO.setViewNum("0");
+        modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         int insert = mapper.insert(modelDO);
         typeMapper.insertModelTypeRelative(String.valueOf(modelDO.getId()),modelDO.getTypeId());
         if(insert!=1){
@@ -122,10 +126,10 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String downloadModel(String modelId,String isPrivate) {
-        Result<ModelDownloadDTO> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().modelId(modelId).isPrivate(isPrivate).build());
-        return result.getData().getUrl();
+    public String downloadModel(String modelId,String isPrivate,String bucket) {
+        Result<String> result = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelId).isPrivate(isPrivate).bucket(bucket==null?"rvc2":bucket).build());
+        return result.getData();
     }
 
     @Override
