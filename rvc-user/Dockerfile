@@ -30,4 +30,5 @@ EXPOSE ${SERVER_PORT}
 
 ENTRYPOINT ["java","-jar","/rvc-user.jar"]
 
+
 #<Auto> -e:test -m:rvc-user -v:1.0 -rp:9000 -de:<-e ACTIVE=test -e SERVER_PORT=9000>
