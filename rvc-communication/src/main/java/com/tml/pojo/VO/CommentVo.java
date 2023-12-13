@@ -1,4 +1,4 @@
-package com.tml.pojo.vo;
+package com.tml.pojo.VO;
 
 /**
  * @NAME: CommentVo

@@ -5,7 +5,7 @@ import com.google.protobuf.ServiceException;
 import com.tml.common.handler.AbstractStrategyFactory;
 import com.tml.config.PageLimitConfiguration;
 import com.tml.pojo.NoticeDO;
-import com.tml.pojo.vo.NoticeVO;
+import com.tml.pojo.VO.NoticeVO;
 import com.tml.service.INoticeDaoService;
 import com.tml.service.NoticeService;
 import com.tml.utils.PageUtil;

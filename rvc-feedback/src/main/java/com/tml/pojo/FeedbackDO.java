@@ -81,7 +81,6 @@ public class FeedbackDO {
     /**
      * 最近更新时间
      */
-    @TableField(updateStrategy = FieldStrategy.NEVER)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")

@@ -3,7 +3,7 @@ package com.tml.mq.producer.simplefactory.detectionImpl;
 
 import com.tml.mq.producer.handler.ProducerHandler;
 import com.tml.mq.producer.simplefactory.Detection;
-import com.tml.pojo.dto.DetectionTaskDto;
+import com.tml.pojo.DTO.DetectionTaskDto;
 import com.tml.utils.BeanUtils;
 import org.springframework.stereotype.Component;
 
