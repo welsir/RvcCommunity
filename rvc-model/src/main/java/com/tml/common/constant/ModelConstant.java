@@ -7,7 +7,7 @@ package com.tml.common.constant;
  */
 public class ModelConstant {
 
-    public static final String DEFAULT_BUCKET = "rvc1";
+    public static final String DEFAULT_BUCKET = "rvc2";
 
     public static final String DEFAULT_MODEL_PATH = "model/";
 

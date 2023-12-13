@@ -126,9 +126,9 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String downloadModel(String modelId,String isPrivate,String bucket) {
+    public String downloadModel(String modelId) {
         Result<String> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().fileId(modelId).isPrivate(isPrivate).bucket(bucket==null?"rvc2":bucket).build());
+                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build());
         return result.getData();
     }
 

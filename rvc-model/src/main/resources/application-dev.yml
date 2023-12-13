@@ -59,8 +59,9 @@ server:
   port: 9100
 page:
   size: ${DEFAULT_SIZE:ENC(247Kmy9z8U5mzJ2r/ZBKAuHF3/cxGaGW)}
+
 file:
   logger:
     handler: ${Logger:slf4j}
     enable: true
-  image-file-size: ${IMAGE_FILE_SIZE:iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa}
+  image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}

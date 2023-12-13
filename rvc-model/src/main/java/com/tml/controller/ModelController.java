@@ -62,10 +62,8 @@ public class ModelController {
     }
 
     @PostMapping("/download/{modelId}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
-                                   @RequestParam("isPrivate") String isOpen,
-                                   @RequestParam("bucket") String bucket){
-        String modelUrl = modelService.downloadModel(modelId,isOpen,bucket);
+    public Result<?> downloadModel(@PathVariable @NotBlank String modelId){
+        String modelUrl = modelService.downloadModel(modelId);
         return Result.success(modelUrl);
     }
 
