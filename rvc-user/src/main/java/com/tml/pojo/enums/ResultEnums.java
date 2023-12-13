@@ -18,7 +18,9 @@ public enum ResultEnums implements Serializable {
     TOKEN_EXPIRED("523", "token已过期"),
     VER_CODE_ERROR("524", "验证码错误"),
     USERNAME_EXIST("525", "用户名已存在"),
-    WRONG_USERNAME_OR_PASSWORD("526", "用户名或密码错误");
+    WRONG_USERNAME_OR_PASSWORD("526", "用户名或密码错误"),
+    UID_NOT_EIXST("620", "uid不存在"),
+    USER_NOT_EXIST("621", "用户不存在");
 
     private final String code;
 

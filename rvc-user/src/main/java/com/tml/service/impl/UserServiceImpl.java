@@ -121,7 +121,11 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", uid);
         UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(userInfoMapper.selectOne(queryWrapper), userInfoVO);
+        UserInfo user = userInfoMapper.selectOne(queryWrapper);
+        if(user == null){
+            throw new ServerException(ResultEnums.UID_NOT_EIXST);
+        }
+        BeanUtils.copyProperties(user, userInfoVO);
         return userInfoVO;
     }
 
@@ -141,11 +145,10 @@ public class UserServiceImpl implements UserService {
 
         UserInfo userInfo = userInfoMapper.selectOne(queryWrapper);
 
-        if(!userInfo.getPassword().equals(password)){
+        if(userInfo == null || !userInfo.getPassword().equals(password)){
             throw new ServerException(ResultEnums.WRONG_USERNAME_OR_PASSWORD);
         }
-
-        return StpUtil.getTokenValueByLoginId(userInfo.getUid() + "|" + userInfo.getUsername());
+        return TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername());
     }
 
     private String loginByCode(String email, String code){

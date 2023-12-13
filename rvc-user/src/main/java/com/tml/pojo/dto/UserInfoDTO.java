@@ -1,26 +1,22 @@
-package com.tml.pojo.vo;
+package com.tml.pojo.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 /**
- * @Date 2023/12/10
+ * @Date 2023/12/13
  * @Author xiaochun
  */
 @Data
-public class UserInfoVO {
-    private String uid;
-
-    private String username;
-
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserInfoDTO {
     private LocalDateTime birthday;
 
     private String nickname;
-
-    private int followNum;
-
-    private int fansNum;
 
     private String sex;
 
