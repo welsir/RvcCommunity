@@ -26,7 +26,7 @@ public enum ResultCodeEnum {
     QUERY_MODEL_FAIL(512,"查询模型失败"),
     QUERY_MODEL_LIST_FAIL(513,"获取模型列表失败"),
     UPLOAD_MODEL_FAIL(514,"上传模型失败"),
-    UPLOAD_IMAGE_FAIL(515,"图片大小超过最大限制");
+    UPLOAD_IMAGE_FAIL(515,"图片上传失败");
 
 
     /**
