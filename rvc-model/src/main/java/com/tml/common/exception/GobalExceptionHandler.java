@@ -35,8 +35,8 @@ public class GobalExceptionHandler {
             if (resultCode == null) {
                 result = Result.fail(se.getMessage());
             } else {
-                result = new Result(resultCode.getCode(),
-                        StringUtils.isEmpty(se.getMessage()) ? se.getMessage() : resultCode.getMsg());
+                result = Result.fail(resultCode.getCode(),
+                        StringUtils.isEmpty(se.getMessage()) ? resultCode.getMsg():se.getMessage());
             }
         }
         //参数错误

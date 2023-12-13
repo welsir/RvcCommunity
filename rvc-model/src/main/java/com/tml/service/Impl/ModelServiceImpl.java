@@ -72,7 +72,7 @@ public class ModelServiceImpl implements ModelService {
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
-            throw new BaseException(ResultCodeEnum.QUERT_MODEL_LIST_FAIL);
+            throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
         }
     }
 
@@ -85,7 +85,7 @@ public class ModelServiceImpl implements ModelService {
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
-            throw new BaseException(ResultCodeEnum.QUERT_MODEL_LIST_FAIL);
+            throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
         }
     }
 
@@ -158,8 +158,9 @@ public class ModelServiceImpl implements ModelService {
     public ReceiveUploadFileDTO uploadImage(MultipartFile file) {
         if(fileUtil.isImageFile(file.getOriginalFilename())&&fileUtil.imageSizeIsAviable(file)){
             return this.uploadModel(file);
+        }else{
+            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
         }
-        return null;
     }
 
     @Override
