@@ -3,6 +3,7 @@ package com.tml.filter;
 import com.tml.pojo.DO.RequestRecordDO;
 import com.tml.service.RequestRecordService;
 import com.tml.util.SnowflakeIdGenerator;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -42,5 +43,6 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     public int getOrder() {
         return -1;
     }
+
 }
 

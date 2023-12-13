@@ -5,7 +5,9 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -27,7 +29,8 @@ import java.util.HashSet;
 @RefreshScope
 @ConfigurationProperties(prefix = "api")
 @Data
-public class AuthorizeFilter implements GlobalFilter, Ordered {
+@Slf4j
+public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
     private static final String AUTHORIZE_TOKEN = "token";
 
@@ -42,13 +45,13 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
 
         URL url = new URL(request.getURI().toString());
-        String path = url.getPath();
+        String requestUrl = url.getFile();
         // 获取请求头
         HttpHeaders headers = request.getHeaders();
         // 请求头中获取令牌
         String token = headers.getFirst(AUTHORIZE_TOKEN);
 
-        if(whiteApi.contains(path)){
+        if(whiteApi.contains(requestUrl)){
             // 判断请求头中是否有令牌
             if (StringUtils.isEmpty(token)) {
                 //7. 响应中放入返回的状态吗, 没有权限访问
@@ -84,5 +87,10 @@ public class AuthorizeFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return 0;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        log.info("whiteApi="+whiteApi);
     }
 }
