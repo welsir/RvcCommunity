@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class IFeedbackCommentDaoServiceImpl extends AssistantMJPServiceImpl<Feed
         return this.BeanPageVOList(
                 page,limit,
                 queryParamGroup.getQueryParams(QueryType.FEEDBACK_COMMENT,"t"),
-                Map.of("t.reply_fb_id",fb_id,"t.has_show",1),
+                new LinkedHashMap<>(Map.of("t.reply_fb_id",fb_id,"t.has_show",1)),
                 List.of(section),
                 orders, FeedbackCommentVO.class,false
         );

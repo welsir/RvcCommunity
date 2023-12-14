@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
         return this.BeanPageVOList(page,limit,
                 queryParamGroup.getQueryParams(QueryType.FEEDBACK_LIST,"t"),
-                Map.of("has_show",1),
+                new LinkedHashMap<>(Map.of("has_show",1)),
                 List.of(typeJoin,statusJoin),
                 orders, FeedbackVO.class,true);
     }
@@ -79,7 +80,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
         FeedbackVO feedbackVO = this.getBeanVO(
                 queryParamGroup.getQueryParams(QueryType.FEEDBACK_LIST,"t"),
-                Map.of("fb_id", fb_id,"has_show",1),
+                new LinkedHashMap<>(Map.of("fb_id", fb_id,"has_show",1)),
                 List.of(typeJoin,statusJoin),
                 FeedbackVO.class
         );
