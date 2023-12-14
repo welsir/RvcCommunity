@@ -13,6 +13,7 @@ import com.tml.core.client.UserServiceClient;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
+import com.tml.mapper.ModelUserMapper;
 import com.tml.pojo.DO.*;
 
 import com.tml.pojo.DTO.*;
@@ -32,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,6 +52,8 @@ public class ModelServiceImpl implements ModelService {
     ModelMapper mapper;
     @Resource
     LabelMapper labelMapper;
+    @Resource
+    ModelUserMapper modelUserMapper;
     @Resource
     FileServiceClient fileServiceClient;
     @Resource
@@ -105,7 +109,7 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public void insertOneModel(ModelInsertVO model) {
+    public void insertOneModel(ModelInsertVO model,String uid) {
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
         modelDO.setUpdateTime(dateUtil.formatDate());
@@ -118,6 +122,10 @@ public class ModelServiceImpl implements ModelService {
         if(insert!=1){
             throw new BaseException(ResultCodeEnum.ADD_MODEL_FAIL);
         }
+        ModelUserDO modelUserDO = new ModelUserDO();
+        modelUserDO.setModelId(String.valueOf(modelDO.getId()));
+        modelUserDO.setUid(uid);
+        modelUserMapper.insert(modelUserDO);
         try {
             asyncService.processModelAsync(modelDO);
         } catch (InterruptedException e) {
@@ -201,11 +209,14 @@ public class ModelServiceImpl implements ModelService {
         return String.valueOf(modelLabelDO.getId());
     }
 
-    private ModelVO convertToModelVO(ModelDO model, String uid) {
-        ModelVO modelVO = ModelVO.modelDOToModelVO(model);
+    private ModelVO convertToModelVO(ModelDO model) {
+        ModelVO modelVO;
+        String uid;
         try {
-            Object userInfo = userServiceClient.getUserInfo(uid);
-            logger.info((String) userInfo);
+            ModelUserDO modelUserDO = modelUserMapper.selectById(model.getId());
+            uid = modelUserDO.getUid();
+            Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
+            modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData());
         }catch (RuntimeException e){
             logger.error("调用用户服务错误:%s:%s",e.getMessage(),e.getStackTrace()[0]);
             throw new RuntimeException(e);
@@ -221,11 +232,12 @@ public class ModelServiceImpl implements ModelService {
     }
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
-
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
+        Date date = new Date(System.currentTimeMillis());
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(model -> convertToModelVO(model, uid))
+                .map(this::convertToModelVO)
                 .collect(Collectors.toList());
+        logger.info("封装VO耗时:%s",(new Date(System.currentTimeMillis()).getTime()-date.getTime())/1000);
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 

@@ -56,39 +56,44 @@ public class ModelController {
 
     //todo:考虑重复上传问题
     @PostMapping("/one")
-    public Result<?> insertOneModel(@Validated ModelInsertVO model){
-        modelService.insertOneModel(model);
+    public Result<?> insertOneModel(@Validated ModelInsertVO model,
+                                    @RequestHeader(value = "uid") String uid){
+        modelService.insertOneModel(model,uid);
         return Result.success();
     }
 
     @PostMapping("/download/{modelId}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId){
+    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
+                                   @RequestHeader(value = "uid") String uid){
         String modelUrl = modelService.downloadModel(modelId);
         return Result.success(modelUrl);
     }
 
     @PostMapping("/update")
-    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO){
+    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
+                               @RequestHeader(value = "uid") String uid){
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO);
         return Result.success(flag);
     }
 
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
-            MultipartFile file){
+            MultipartFile file,
+            @RequestHeader(value = "uid") String uid){
         return Result.success(modelService.uploadModel(file));
     }
 
     @PostMapping("/upload/image")
     public Result<?> uploadImage(
-            MultipartFile file){
+            MultipartFile file,
+            @RequestHeader(value = "uid") String uid){
         return Result.success(modelService.uploadImage(file));
     }
 
     @PostMapping("/relative")
     public Result<?> modelUserRelative(@RequestParam("type") String type,
                                        @RequestParam("modelId")String modelId,
-                                       @RequestHeader(value = "uid", required = false) String uid,
+                                       @RequestHeader(value = "uid") String uid,
                                        @RequestParam("status") String status){
         modelService.insertRelative(type,modelId,uid,status);
         return Result.success();
@@ -97,7 +102,7 @@ public class ModelController {
     @PostMapping("/label")
     public Result<?> insertLabel(
             @RequestParam("label") String label,
-            @RequestHeader(value = "uid",required = false) String uid
+            @RequestHeader(value = "uid") String uid
     ){
         return Result.success(modelService.insertLabel(label, uid));
     }

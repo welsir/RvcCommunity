@@ -21,4 +21,6 @@ public class SystemConfig {
     @Value("${file.image-file-size}")
     private String imageSize;
 
+
+
 }

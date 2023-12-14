@@ -23,6 +23,15 @@
             <artifactId>rvc-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+<!--        httpClient-->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-httpclient</artifactId>
+        </dependency>
 <!--        nacos-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

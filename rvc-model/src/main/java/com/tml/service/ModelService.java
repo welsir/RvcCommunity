@@ -22,7 +22,7 @@ public interface ModelService {
 
     SingleModelVO queryOneModel(String modelId, String uid);
 
-    void insertOneModel(ModelInsertVO model);
+    void insertOneModel(ModelInsertVO model,String uid);
 
     String downloadModel(String modelId);
 
