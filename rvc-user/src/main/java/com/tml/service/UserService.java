@@ -19,7 +19,9 @@ public interface UserService {
 
     Map<String, String> register(RegisterDTO registerDTO);
 
-    void sendCode(String email,String code, int type);
+    Map<String, String> preCode();
+
+    void sendCode(String email,String code, String uuid, int type);
 
     UserInfoVO one(String uid);
 

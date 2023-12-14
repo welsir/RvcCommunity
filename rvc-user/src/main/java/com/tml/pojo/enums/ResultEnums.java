@@ -22,6 +22,9 @@ public enum ResultEnums implements Serializable {
     WRONG_USERNAME_OR_PASSWORD("526", "用户名或密码错误"),
     NO_ONE_EXIST("527", "没有一个用户存在"),
     UID_LIST_IS_EMPTY("528", "uid列表为空"),
+    PRE_CODE_ERROR("529", "前置验证码错误"),
+    ACCOUNT_NOT_EXIST("530", "用户不存在"),
+    FAIL_GET_IMAGE_CODE("531", "获取图片验证码失败"),
     UID_NOT_EIXST("620", "uid不存在"),
     USER_NOT_EXIST("621", "用户不存在");
 

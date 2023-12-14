@@ -55,6 +55,11 @@ public class UserController {
         return Result.success(userService.register(registerDTO));
     }
 
+    @GetMapping("/preCode")
+    public Result preCode(){
+        return Result.success(userService.preCode());
+    }
+
     /**
      * @param email String
      * @param type boolean
@@ -73,9 +78,13 @@ public class UserController {
                             @NotNull(message = "前置验证码不为空")
                             String code,
                         @RequestParam
+                            @Valid
+                            @NotNull(message = "前置验证码标识不能为空")
+                            String uuid,
+                        @RequestParam
                             @NotNull(message = "验证码类型不能为空")
                             int type){
-        userService.sendCode(email, code, type);
+        userService.sendCode(email, code, uuid, type);
         return Result.success();
     }
 
