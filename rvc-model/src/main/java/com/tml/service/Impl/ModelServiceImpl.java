@@ -14,14 +14,12 @@ import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
 import com.tml.mapper.ModelUserMapper;
+import com.tml.mapper.TypeMapper;
 import com.tml.pojo.DO.*;
 
 import com.tml.pojo.DTO.*;
 import com.tml.pojo.ResultCodeEnum;
-import com.tml.pojo.VO.ModelInsertVO;
-import com.tml.pojo.VO.ModelUpdateFormVO;
-import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModelVO;
+import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
 import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
@@ -33,9 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
@@ -52,6 +49,8 @@ public class ModelServiceImpl implements ModelService {
     ModelMapper mapper;
     @Resource
     LabelMapper labelMapper;
+    @Resource
+    TypeMapper typeMapper;
     @Resource
     ModelUserMapper modelUserMapper;
     @Resource
@@ -99,6 +98,9 @@ public class ModelServiceImpl implements ModelService {
             ModelDO model = mapper.selectById(modelId);
             ModelVO modelVO = ModelVO.builder().build();
             BeanUtils.copyProperties(model,modelVO);
+            modelVO.setId(String.valueOf(model.getId()));
+            modelVO.setType(typeMapper.selectById(model.getTypeId()).getType());
+            modelVO.setLabel(labelMapper.selectById(model.getLabelId()).getLabel());
             modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
             modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
             Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
@@ -151,6 +153,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO) {
+
         return null;
     }
 
@@ -212,11 +215,68 @@ public class ModelServiceImpl implements ModelService {
     public String insertLabel(String label, String uid) {
         Assert.notNull(uid,"用户未登录");
         ModelLabelDO modelLabelDO = new ModelLabelDO();
-        modelLabelDO.setLabel(label);
-        modelLabelDO.setCreateTime(dateUtil.formatDate());
-        labelMapper.insert(modelLabelDO);
+        try {
+            modelLabelDO.setLabel(label);
+            modelLabelDO.setCreateTime(dateUtil.formatDate());
+            labelMapper.insert(modelLabelDO);
+        }catch (RuntimeException e){
+            logger.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
+            throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
+        }
         return String.valueOf(modelLabelDO.getId());
     }
+
+    @Override
+    public List<UserLikesModelVO> getUserLikesList(String uid) {
+        List<ModelLikeDO> modelLikeDOList = mapper.getUserLikesModel(uid);
+        List<String> modelIds = modelLikeDOList.stream()
+                .map(ModelLikeDO::getModelId)
+                .collect(Collectors.toList());
+
+        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
+                .stream()
+                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
+
+        List<UserLikesModelVO> list = new ArrayList<>();
+        for (ModelLikeDO modelLikeDO : modelLikeDOList) {
+            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelLikeDO.getModelId()));
+            if (modelDO != null) {
+                UserLikesModelVO modelVO = new UserLikesModelVO();
+                modelVO.setName(modelDO.getName());
+                modelVO.setPicture(modelDO.getPicture());
+                modelVO.setLikesNum(modelDO.getLikesNum());
+                modelVO.setCollectionNum(modelDO.getCollectionNum());
+                list.add(modelVO);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<UserCollectionModelVO> getUserCollectionList(String uid) {
+        List<ModelCollectionDO> modelCollectionDOList = mapper.getUserCollectionModel(uid);
+        List<String> modelIds = modelCollectionDOList.stream()
+                .map(ModelCollectionDO::getModelId)
+                .collect(Collectors.toList());
+        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
+                .stream()
+                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
+
+        List<UserCollectionModelVO> list = new ArrayList<>();
+        for (ModelCollectionDO modelCollectionDO : modelCollectionDOList) {
+            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelCollectionDO.getModelId()));
+            if (modelDO != null) {
+                UserCollectionModelVO modelVO = new UserCollectionModelVO();
+                modelVO.setName(modelDO.getName());
+                modelVO.setPicture(modelDO.getPicture());
+                modelVO.setLikesNum(modelDO.getLikesNum());
+                modelVO.setCollectionNum(modelDO.getCollectionNum());
+                list.add(modelVO);
+            }
+        }
+        return list;
+    }
+
 
     private ModelVO convertToModelVO(ModelDO model) {
         ModelVO modelVO;
@@ -235,8 +295,8 @@ public class ModelServiceImpl implements ModelService {
             modelVO.setIsCollection("0");
             return modelVO;
         }
-        modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelVO.getFileId())==null?"0":"1");
-        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelVO.getFileId())==null?"0":"1");
+        modelVO.setIsLike(mapper.queryUserModelLikes(uid,model.getFileId())==null?"0":"1");
+        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,model.getFileId())==null?"0":"1");
         return modelVO;
     }
 

@@ -16,10 +16,10 @@ import org.springframework.beans.BeanUtils;
 @Builder
 public class ModelVO {
 
-    private String fileId;
+    private String id;
     private String name;
-    private String typeId;
-    private String labelId;
+    private String type;
+    private String label;
     private String picture;
     private String description;
     private String note;
@@ -35,7 +35,7 @@ public class ModelVO {
 
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO result){
         return ModelVO.builder()
-                .fileId(String.valueOf(modelDO.getFileId()))
+                .id(String.valueOf(modelDO.getFileId()))
                 .name(modelDO.getName())
                 .picture(modelDO.getPicture())
                 .likesNum(modelDO.getLikesNum())
@@ -43,8 +43,6 @@ public class ModelVO {
                 .description(modelDO.getDescription())
                 .viewNum(modelDO.getViewNum())
                 .note(modelDO.getNote())
-                .typeId(modelDO.getTypeId())
-                .labelId(modelDO.getLabelId())
                 .uid(result.getUid())
                 .avatar(result.getAvatar())
                 .nickname(result.getNickname())

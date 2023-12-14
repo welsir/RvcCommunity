@@ -108,4 +108,17 @@ public class ModelController {
         return Result.success(modelService.insertLabel(label, uid));
     }
 
+    @GetMapping("/likes")
+    public Result<?> getUserModelLikesList(
+            @RequestHeader(value = "uid") String uid
+    ){
+        return Result.success(modelService.getUserLikesList(uid));
+    }
+
+    @GetMapping("/collection")
+    public Result<?> getUserModelCollectionList(
+            @RequestHeader(value = "uid") String uid
+    ){
+        return Result.success(modelService.getUserCollectionList(uid));
+    }
 }

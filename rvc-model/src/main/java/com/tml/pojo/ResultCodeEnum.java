@@ -28,7 +28,8 @@ public enum ResultCodeEnum {
     UPLOAD_MODEL_FAIL(514,"上传模型失败"),
     UPLOAD_IMAGE_FAIL(515,"图片上传失败"),
     GET_USER_INFO_FAIL(516,"获取对应用户失败"),
-    UPDATE_MODEL_VIEWS_FAIL(517,"更新模型浏览量失败");
+    UPDATE_MODEL_VIEWS_FAIL(517,"更新模型浏览量失败"),
+    ADD_MODEL_LABEL_FAIL(518,"添加模型标签失败");
 
 
     /**

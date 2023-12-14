@@ -4,11 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
-import com.tml.pojo.VO.ModelInsertVO;
-import com.tml.pojo.VO.ModelUpdateFormVO;
-import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModelVO;
+import com.tml.pojo.VO.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * @Description
@@ -36,5 +35,9 @@ public interface ModelService {
     void insertRelative(String type,String modelId,String uid,String isClick);
 
     String insertLabel(String label,String uid);
+
+    List<UserLikesModelVO> getUserLikesList(String uid);
+
+    List<UserCollectionModelVO> getUserCollectionList(String uid);
 
 }

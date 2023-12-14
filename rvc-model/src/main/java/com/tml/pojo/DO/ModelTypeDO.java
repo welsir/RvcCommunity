@@ -19,5 +19,5 @@ public class ModelTypeDO {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private String type;
-
+    private String createTime;
 }

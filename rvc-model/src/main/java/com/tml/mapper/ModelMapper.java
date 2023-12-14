@@ -8,6 +8,8 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author welsir
@@ -32,4 +34,10 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
 
     @Delete("delete from rvc_model_likes where uid = #{uid} and model_id = #{modelId}")
     int delModelLikes(String uid,String modelId);
+
+    @Select("select * from rvc_model_likes where uid = #{uid}")
+    List<ModelLikeDO> getUserLikesModel(String uid);
+
+    @Select("select * from rvc_model_collection where uid = #{uid}")
+    List<ModelCollectionDO> getUserCollectionModel(String uid);
 }
