@@ -2,6 +2,7 @@ package com.tml.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
@@ -20,7 +21,7 @@ public interface ModelService {
 
     Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid);
 
-    SingleModelVO queryOneModel(String modelId, String uid);
+    ModelVO queryOneModel(String modelId, String uid);
 
     void insertOneModel(ModelInsertVO model,String uid);
 

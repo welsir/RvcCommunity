@@ -2,11 +2,13 @@ package com.tml.core.async;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.ModelMapper;
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.DetectionTaskDTO;
+import com.tml.pojo.ResultCodeEnum;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -56,9 +58,15 @@ public class AsyncService {
 
     @Async
     public void asyncAddModelViewNums(String modelId){
-        List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId));
-        ModelDO modelDO = list.get(0);
-        mapper.update(modelDO,new UpdateWrapper<ModelDO>().set("view_num",modelDO.getViewNum()+1));
+        try {
+            List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId));
+            ModelDO modelDO = list.get(0);
+            mapper.update(modelDO,new UpdateWrapper<ModelDO>().set("view_num",modelDO.getViewNum()+1));
+        }catch (RuntimeException e){
+            logger.error("%s:"+e.getStackTrace()[0],e);
+            throw new BaseException(ResultCodeEnum.UPDATE_MODEL_VIEWS_FAIL);
+        }
+
     }
 
     private boolean listenerMq(List<String> listenList){

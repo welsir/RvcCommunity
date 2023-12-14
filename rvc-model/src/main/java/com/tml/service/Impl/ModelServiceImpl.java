@@ -94,15 +94,24 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public SingleModelVO queryOneModel(String modelId, String uid) {
+    public ModelVO queryOneModel(String modelId, String uid) {
         try {
             ModelDO model = mapper.selectById(modelId);
-            SingleModelVO singleModel = new SingleModelVO();
-            BeanUtils.copyProperties(model,singleModel);
-            singleModel.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
-            singleModel.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
-            asyncService.asyncAddModelViewNums(singleModel.getModelId());
-            return singleModel;
+            ModelVO modelVO = ModelVO.builder().build();
+            BeanUtils.copyProperties(model,modelVO);
+            modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
+            modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
+            Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
+            UserInfoDTO dto = userInfo.getData();
+            if(dto==null){
+                throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
+            }
+            modelVO.setUid(userInfo.getData().getUid());
+            modelVO.setUsername(userInfo.getData().getUsername());
+            modelVO.setNickname(userInfo.getData().getNickname());
+            modelVO.setAvatar(userInfo.getData().getAvatar());
+            asyncService.asyncAddModelViewNums(modelId);
+            return modelVO;
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_FAIL);
         }
@@ -218,7 +227,7 @@ public class ModelServiceImpl implements ModelService {
             Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
             modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData());
         }catch (RuntimeException e){
-            logger.error("调用用户服务错误:%s:%s",e.getMessage(),e.getStackTrace()[0]);
+            logger.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
             throw new RuntimeException(e);
         }
         if(uid==null){
@@ -226,8 +235,8 @@ public class ModelServiceImpl implements ModelService {
             modelVO.setIsCollection("0");
             return modelVO;
         }
-        modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelVO.getId())==null?"0":"1");
-        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelVO.getId())==null?"0":"1");
+        modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelVO.getFileId())==null?"0":"1");
+        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelVO.getFileId())==null?"0":"1");
         return modelVO;
     }
 
@@ -237,7 +246,7 @@ public class ModelServiceImpl implements ModelService {
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(this::convertToModelVO)
                 .collect(Collectors.toList());
-        logger.info("封装VO耗时:%s",(new Date(System.currentTimeMillis()).getTime()-date.getTime())/1000);
+
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 

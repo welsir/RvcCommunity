@@ -16,8 +16,8 @@ import org.springframework.beans.BeanUtils;
 @Builder
 public class ModelVO {
 
-    private String id;
-    private String modelName;
+    private String fileId;
+    private String name;
     private String typeId;
     private String labelId;
     private String picture;
@@ -35,8 +35,8 @@ public class ModelVO {
 
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO result){
         return ModelVO.builder()
-                .id(String.valueOf(modelDO.getId()))
-                .modelName(modelDO.getName())
+                .fileId(String.valueOf(modelDO.getFileId()))
+                .name(modelDO.getName())
                 .picture(modelDO.getPicture())
                 .likesNum(modelDO.getLikesNum())
                 .collectionNum(modelDO.getCollectionNum())

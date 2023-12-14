@@ -2,6 +2,7 @@ package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.Result;
+import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
@@ -49,8 +50,8 @@ public class ModelController {
 
     @GetMapping("/one/{modelId}")
     public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
-                                 @RequestHeader(value = "uid", required = false) String uid){
-        SingleModelVO model = modelService.queryOneModel(modelId,uid);
+                                 @RequestHeader(value = "uid") String uid){
+        ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
     }
 

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class SingleModelVO {
 
     private String modelId;
+    private String name;
     private String uid;
     private String username;
     private String nickname;
@@ -22,9 +23,10 @@ public class SingleModelVO {
     private String modelName;
     private String description;
     private String note;
+    private String viewNum;
     private String collectionNum;
     private String likesNum;
-    private String modelPicture;
+    private String picture;
     private String isLike;
     private String isCollection;
     private String createTime;
