@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.tml.annotation.SystemLog;
+import com.tml.feign.user.RvcUserServiceFeignClient;
 import com.tml.pojo.entity.PostType;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -25,11 +27,13 @@ public class PostTypeController {
 
     private final PostTypeService postTypeService;
 
+
+
     @GetMapping("/list")
     @SystemLog(businessName = "获取所有交流类型列表")
     public Result list(){
-        List<PostType> list = postTypeService.list();
-        return Result.success(list);
+        List<Object> listType = postTypeService.listType();
+        return Result.success(listType);
     }
 
 }

@@ -24,8 +24,8 @@ public class PostType {
     @TableId(value = "tag_id", type = IdType.AUTO)
     private String id;
 
-    private String tagName;
-
     private String tagImg;
+
+    private String tagName;
 
 }

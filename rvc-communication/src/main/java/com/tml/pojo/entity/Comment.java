@@ -38,6 +38,6 @@ public class Comment {
     private String toUserId;
     //修改时间
     private LocalDateTime updateAt;
-//    违规原因
-    private String violationInformation;
+//    标签
+    private String labels;
 }

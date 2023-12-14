@@ -6,14 +6,13 @@ import lombok.Data;
 public class DetectionStatusDto {
 
 
-    private String id;
-    //展示状态(是否违规) 1：展示，0：不可展示
-    private Integer status;
 
-    private String violationInformation;
-//
-//    private String labels;
+    private Long id;
+
+    //由调用者来判断是否违规
+    private String labels;
 
     private String name;
+
 
 }

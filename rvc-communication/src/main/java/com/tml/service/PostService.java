@@ -24,4 +24,10 @@ public interface PostService {
     void add(PostDto postDto);
 
     void update(PostDto postDto);
+
+    List<PostVo> userFavorite(PageInfo<String> params);
+
+    List<PostVo> userCollect(PageInfo<String> params);
+
+    List<PostVo> userCreate(PageInfo<String> params);
 }

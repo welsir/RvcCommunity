@@ -1,8 +1,11 @@
 package com.tml;
 
+import com.alibaba.fastjson.JSON;
+import com.tml.feign.user.RvcUserServiceFeignClient;
 import com.tml.mapper.CommentMapper;
 import com.tml.mapper.CoverMapper;
 import com.tml.mapper.PostMapper;
+import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.entity.Post;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 
+import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 
 
 @SpringBootTest
@@ -51,6 +55,8 @@ class ProdcerTopicsSpringbootApplicationTests {
         String audioUrl = "http://downsc.chinaz.net/Files/DownLoad/sound1/201906/11582.mp3";
         String imageUrl = "https://ts1.cn.mm.bing.net/th/id/R-C.748160bf925a7acb3ba1c9514bbc60db?rik=AYY%2bJ9WcXYIMgw&riu=http%3a%2f%2fseopic.699pic.com%2fphoto%2f50017%2f0822.jpg_wh1200.jpg&ehk=CMVcdZMU6xxsjVjafO70cFcmJvD62suFC1ytk8UuAUk%3d&risl=&pid=ImgRaw&r=0";
 
+        //违规音频
+        String adurl = "https://s1.aigei.com/src/aud/mp3/da/da83cab34cd840e3a63f0be7b1d14f48.mp3?e=1702590840&token=P7S2Xpzfz11vAkASLTkfHN7Fw-oOZBecqeJaxypL:aCDF_d5dX4nAtD1uJAJhfC33Pqc=";
 
         /**
          * 参数：
@@ -61,19 +67,13 @@ class ProdcerTopicsSpringbootApplicationTests {
 
         String exchangeName ="detection.topic";
         String msg = "hello";
+        DetectionTaskDto audio = DetectionTaskDto.builder()
+                .id("1")
+                .content(adurl)
+                .name("cover")
+                .build();
 
-
-//        rabbitTemplate.convertAndSend(exchangeName, "china.news", msg);
-//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.text", message);
-//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.image", imageUrl);
-//        rabbitTemplate.convertAndSend(EXCHANGE_TOPICS_INFORM, "inform.audio", audioUrl);
-
-//        System.out.println(coverMapper.selectById("1732366351294660608"));
-//        System.out.println(commentMapper.selectById("1732345167421243392"));
+        rabbitTemplate.convertAndSend(DETECTION_EXCHANGE_NAME, "detection." + "audio", JSON.toJSONString(audio));
 
     }
-
-
- 
- 
 }

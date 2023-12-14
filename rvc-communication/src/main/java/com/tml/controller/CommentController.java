@@ -12,8 +12,10 @@ import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
@@ -27,6 +29,7 @@ import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 @RestController
 @RequestMapping("/communication/comment")
 @RequiredArgsConstructor
+@Validated
 public class CommentController {
 
     private final CommentService commentService;
@@ -34,7 +37,8 @@ public class CommentController {
 
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
-    public Result list(PageInfo<String> params){
+    public Result list(
+            @Valid PageInfo<String> params){
         List<CommentVo> commentListPage = commentService.list(params);
         return Result.success(commentListPage);
     }
@@ -43,22 +47,18 @@ public class CommentController {
 
     @PostMapping("/add")
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
-    public Result add(@RequestBody CommentDto commentDto){
+    public Result add(@RequestBody
+                          @Valid CommentDto commentDto){
         commentService.comment(commentDto);
         return Result.success();
     }
 
 
 
-
-    /**
-     * 先不实现
-     * @param
-     * @return
-     */
     @PostMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
-    public Result favorite(@RequestBody CoinDto coinDto){
+    public Result favorite(@RequestBody
+                               @Valid CoinDto coinDto){
         commentService.favorite(coinDto);
         return Result.success();
     }

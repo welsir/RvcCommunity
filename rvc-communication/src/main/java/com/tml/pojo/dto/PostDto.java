@@ -2,6 +2,7 @@ package com.tml.pojo.dto;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 /**
@@ -13,14 +14,17 @@ import java.time.LocalDateTime;
 @Data
 public class PostDto {
 
-    private String uid;
     //        帖子类型
+    @NotBlank(message = "参数不能为空")
     private String tagId;
     //        帖子标题
+    @NotBlank(message = "参数不能为空")
     private String title;
     //        帖子内容
+    @NotBlank(message = "参数不能为空")
     private String content;
     //        帖子封面
+    @NotBlank(message = "参数不能为空")
     private String coverId;
 
 }

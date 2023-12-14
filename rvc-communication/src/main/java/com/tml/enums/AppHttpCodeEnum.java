@@ -6,6 +6,8 @@ public enum AppHttpCodeEnum {
     // 登录
     NEED_LOGIN("401","需要登录后操作"),
 
+    QUERY_ERROR("303","参数校验出错"),
+
     SYSTEM_ERROR("500","出现错误");
 
     private String code;

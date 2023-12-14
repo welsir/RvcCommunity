@@ -8,4 +8,7 @@ package com.tml.constant;
  */
 public class DBConstant {
     public static final String RVC_COMMUNICATION_POST_TYPE = "rvc_communication_post_type";
+
+    public static final String RVC_COMMUNICATION_POST_WATCH = "rvc_communication_post_watch";
+
 }

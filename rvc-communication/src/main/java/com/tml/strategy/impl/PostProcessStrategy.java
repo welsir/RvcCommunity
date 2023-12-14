@@ -22,9 +22,13 @@ public class PostProcessStrategy implements DetectionProcessStrategy {
     private final PostMapper postMapper;
     @Override
     public void process(DetectionStatusDto detectionStatusDto) {
-        Post post = postMapper.selectById(detectionStatusDto.getId());
-        post.setViolationInformation(detectionStatusDto.getViolationInformation());
-        post.setDetectionStatus(detectionStatusDto.getStatus());
+        Post post =  postMapper.selectById(detectionStatusDto.getId());
+        post.setLabels(detectionStatusDto.getLabels());
+        if (detectionStatusDto.getLabels().equals("nonLabel")){
+            post.setDetectionStatus(1);
+        }else{
+            post.setDetectionStatus(2);
+        }
         postMapper.updateById(post);
     }
 }

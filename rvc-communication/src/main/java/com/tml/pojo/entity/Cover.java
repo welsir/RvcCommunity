@@ -22,5 +22,5 @@ public class Cover {
     private String createAt;
     //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
     private Integer detectionStatus;
-    private String violationInformation;
+    private String labels;
 }

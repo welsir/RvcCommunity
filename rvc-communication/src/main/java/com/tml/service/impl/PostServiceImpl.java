@@ -1,10 +1,13 @@
 package com.tml.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tml.feign.user.RvcUserServiceFeignClient;
 import com.tml.mapper.CollectPostMapper;
 import com.tml.mapper.CoverMapper;
 import com.tml.mapper.LikePostMapper;
@@ -23,7 +26,9 @@ import com.tml.strategy.impl.TimeSortStrategy;
 import com.tml.strategy.impl.ViewSortStrategy;
 import com.tml.utils.BeanCopyUtils;
 import com.tml.utils.BeanUtils;
+import com.tml.utils.RedisCache;
 import com.tml.utils.Uuid;
+import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -36,9 +41,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
 import static com.tml.constant.DetectionConstants.UN_DETECTION;
 
@@ -57,6 +64,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final CoverMapper coverMapper;
     private final PostMapper postMapper;
     private final ThreadPoolTaskExecutor executor;
+    private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
+    private final RedisCache redisCache;
 //    private final RedisCache redisCache;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
@@ -73,11 +82,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         /**
          * 模拟获取uuid
          */
-        String uuid = "1";
-//        如果请求Header中uid不为null，要返回该用户对各个帖子的是否点赞和收藏
+        String uuid = "1734949820388646914";
 
-
-//分页获
+        //分页
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<Post> page = new Page<>(pageNum,pageSize);
@@ -88,10 +95,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             queryWrapper.eq(Post::getTagId,tagId);
         }
         Page<Post> list = this.page(page,queryWrapper);
-//获取的分页结果
+        //获取的分页结果
         List<Post> records = list.getRecords();
 
-//对帖子内容进行限制（200字以内）
+        //对帖子内容进行限制（200字以内）
         List<Post> truncatedPosts = records.stream()
                 .peek(post -> {
                     String content = post.getContent();
@@ -102,29 +109,33 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .collect(Collectors.toList());
 
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(truncatedPosts, PostVo.class);
-//如果uuid 不为空 去关系表进行查询 是否点赞和收藏
+        //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
         if (!Strings.isBlank(uuid)){
-            postVos.stream().forEach(postVo -> {
+            for (PostVo postVo : postVos) {
                 LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-                collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
+                collectPostQueryWrapper.eq(CollectPost::getUid, uuid);
                 LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-                likePostQueryWrapper.eq(LikePost::getUid,uuid);
+                likePostQueryWrapper.eq(LikePost::getUid, uuid);
 
-                boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
-                boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
+                boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
+                boolean like = likePostMapper.selectCount(likePostQueryWrapper) > 0;
                 postVo.setLike(like);
                 postVo.setCollect(collect);
-            });
+
+                //获取 作者用户名  作者昵称  作者头像
+                Object data = rvcUserServiceFeignClient.one(uuid).getData();
+                UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
+                System.out.println(userInfoVO);
+
+                postVo.setUsername(userInfoVO.getUsername());
+                postVo.setNickname(userInfoVO.getNickname());
+                postVo.setAvatar(userInfoVO.getAvatar());
+            }
         }
 
-//        排序
-        SortStrategy sortStrategy = strategyMap.get(params.getData());
-        sortStrategy.sort(postVos);
-
-        /**
-         * 获取 作者用户名  作者昵称  作者头像
-         * 调用用户接口
-         */
+        // 排序
+//        SortStrategy sortStrategy = strategyMap.get(params.getData());
+//        sortStrategy.sort(postVos);
 
 
         return postVos;
@@ -132,13 +143,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public PostVo details(String postId) {
-        if (Strings.isBlank(postId)){
-            throw new RuntimeException("参数为空");
-        }
+
         /**
          * 模拟获取uuid
          */
-        String uuid = "1";
+        String uuid = "2";
+
+
+//        更具id获取数据
         Post post = this.getById(postId);
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
 
@@ -197,6 +209,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void favorite(CoinDto coinDto) {
+//        模拟获取uid
+        String uid = "1";
+
         /**
          * 判断用户和评论是否存在
          */
@@ -204,11 +219,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
         if (coinDto.getType().equals("1")){
             String uuid = Uuid.getUuid();
-            LikePost likePost = new LikePost(uuid,  coinDto.getId(),coinDto.getUid());
+            LikePost likePost = new LikePost(uuid,  coinDto.getId(),uid);
             try {
                 likePostMapper.insert(likePost);
             } catch (Exception e) {
-                throw new RuntimeException("操作失败");
+                throw new RuntimeException("不允许重复点赞");
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -216,11 +231,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             postMapper.update(null,updateWrapper);
         } else if (coinDto.getType().equals("0")) {
             LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            likePostLambdaQueryWrapper.eq(LikePost::getUid,coinDto.getUid())
+            likePostLambdaQueryWrapper.eq(LikePost::getUid,uid)
                             .eq(LikePost::getPostId,coinDto.getId());
             int delete = likePostMapper.delete(likePostLambdaQueryWrapper);
               if (delete == 0){
-                  throw new RuntimeException("操作失败");
+                  throw new RuntimeException("不允许重复取消点赞");
               }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -231,6 +246,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void collection(CoinDto coinDto) {
+        String uid = "1";
         /**
          * 判断用户和评论是否存在
          */
@@ -238,7 +254,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         //0、取消收藏    删除关系表中的记录       post表 colletc_num -1
         if (coinDto.getType().equals("1")){
             String uuid = Uuid.getUuid();
-            CollectPost collectPost = new CollectPost(coinDto.getId(), coinDto.getUid(), uuid);
+            CollectPost collectPost = new CollectPost(coinDto.getId(), uid, uuid);
             try {
                 collectPostMapper.insert(collectPost);
             } catch (Exception e) {
@@ -250,7 +266,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             postMapper.update(null,updateWrapper);
         } else if (coinDto.getType().equals("0")) {
             LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            likePostLambdaQueryWrapper.eq(CollectPost::getUid,coinDto.getUid())
+            likePostLambdaQueryWrapper.eq(CollectPost::getUid,uid)
                     .eq(CollectPost::getPostId,coinDto.getId());
             int delete = collectPostMapper.delete(likePostLambdaQueryWrapper);
             if (delete == 0){
@@ -294,16 +310,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         coverMapper.updateById(cover);
 
-
-
-        //对内容进行审核
-        //        审核
         DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
                 .id(uuid)
                 .content(post.getContent())
                 .name("post.text")
                 .build();
-
         ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
         producerHandler.submit(textDetectionTaskDto,"text");
     }
@@ -338,34 +349,61 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //        producerHandler.submit(textDetectionTaskDto,"text");
     }
 
+    @Override
+    public List<PostVo> userFavorite(PageInfo<String> params) {
+
+        String uuid = "1";
+
+        Integer pageNum = params.getPage();
+        Integer pageSize = params.getLimit();
+        Page<LikePost> page = new Page<>(pageNum,pageSize);
+        LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        likePostLambdaQueryWrapper.eq(LikePost::getUid, uuid);
+        Page<LikePost> likePostPage = likePostMapper.selectPage(page, likePostLambdaQueryWrapper);
+        List<String> collect = likePostPage.getRecords().stream()
+                .map(likePost -> likePost.getPostId())
+                .collect(Collectors.toList());
+
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("post_id",collect);
+        List<Post> posts = postMapper.selectList(queryWrapper);
+
+        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+
+        return postVos;
+    }
+
+    @Override
+    public List<PostVo> userCollect(PageInfo<String> params) {
+        return null;
+    }
+
+    @Override
+    public List<PostVo> userCreate(PageInfo<String> params) {
+        return null;
+    }
+
 
     public void watchPost(String userId,String postId){
-    /**
-     * 模拟从redishuoqu时间
-     */
-//        Map<String, Object> cacheMap = redisCache.getCacheMap(POST_WATCH_TIME + ":" + userId + ":" + postId);
-//        System.out.println(cacheMap);
-        LocalDateTime now = LocalDateTime.now();
-//        这是从redis获取的时间
-        LocalDateTime oneHourBefore = now.minus(1, ChronoUnit.HOURS);
 
-
-        Duration between = Duration.between(oneHourBefore,now);
-//间隔大于等于一个小时
-        if (between.toHours() >=1){
+//        从redis获取上次浏览时间
+        Object cacheObject = redisCache.getCacheObject(RVC_COMMUNICATION_POST_WATCH + ":" + userId);
+        if (Objects.isNull(cacheObject)){
+//            如果没有获取到数据 说明是第一次浏览  保存标记到redis 设置失效时间为一小时  浏览次数直接+1
+            redisCache.setCacheObject(RVC_COMMUNICATION_POST_WATCH + ":" + userId,1,1, TimeUnit.HOURS);
 //            浏览量加1
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, postId)
                     .setSql("watch_num = watch_num + 1");
             postMapper.update(null,updateWrapper);
+            return;
+        }
 
+//    不为空更新redis失效时间
+        redisCache.setCacheObject(RVC_COMMUNICATION_POST_WATCH + ":" + userId,1,1, TimeUnit.HOURS);
             /**
              * 是否需要记录浏览信息
              */
         }
-
 //        if (now.compareTo(oneHourBefore))
-        System.out.println("执行");
-    }
-
 }

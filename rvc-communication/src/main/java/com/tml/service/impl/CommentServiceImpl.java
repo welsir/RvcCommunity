@@ -43,6 +43,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
     @Override
     public void comment(CommentDto commentDto) {
+        String uid = "1";
 
         if (commentDto.getPostId() == null)
         {
@@ -86,7 +87,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                 .postCommentId(uuid)
                 .content(commentDto.getContent())
                 .detectionStatus(UN_DETECTION)
-                .userId(commentDto.getUserId())
+                .userId(uid)
                 .postId(commentDto.getPostId())
                 .rootCommentId(commentDto.getRootCommentId())
                 .toUserId(commentDto.getToUserId())
@@ -149,6 +150,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
     @Override
     public void favorite(CoinDto coinDto) {
+        String uid = "1";
         /**
          * 判断用户和评论是否存在
          */
@@ -156,7 +158,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
         if (coinDto.getType().equals("1")){
             String uuid = Uuid.getUuid();
-            LikeComment likeComment = new LikeComment(uuid,  coinDto.getId(),coinDto.getUid());
+            LikeComment likeComment = new LikeComment(uuid,  coinDto.getId(),uid);
             try {
                 likeCommentMapper.insert(likeComment);
             } catch (Exception e) {
@@ -168,7 +170,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             commentMapper.update(null,updateWrapper);
         } else if (coinDto.getType().equals("0")) {
             LambdaQueryWrapper<LikeComment> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            likePostLambdaQueryWrapper.eq(LikeComment::getUid,coinDto.getUid())
+            likePostLambdaQueryWrapper.eq(LikeComment::getUid,uid)
                     .eq(LikeComment::getCommentId,coinDto.getId());
             int delete = likeCommentMapper.delete(likePostLambdaQueryWrapper);
             if (delete == 0){
