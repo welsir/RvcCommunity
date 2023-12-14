@@ -7,7 +7,7 @@ import com.github.yulichang.query.MPJQueryWrapper;
 import com.tml.config.QueryParamGroup;
 import com.tml.mapper.NoticeMapper;
 import com.tml.pojo.NoticeDO;
-import com.tml.pojo.vo.NoticeVO;
+import com.tml.pojo.VO.NoticeVO;
 import com.tml.service.INoticeDaoService;
 import org.springframework.stereotype.Service;
 

@@ -1,7 +1,7 @@
 package com.tml.service;
 
 import com.google.protobuf.ServiceException;
-import com.tml.pojo.vo.NoticeVO;
+import com.tml.pojo.VO.NoticeVO;
 import io.github.common.web.PageVO;
 import io.github.common.web.Result;
 
