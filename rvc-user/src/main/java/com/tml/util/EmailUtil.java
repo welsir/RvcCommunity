@@ -3,7 +3,7 @@ package com.tml.util;
 import com.tml.common.captcha.Result;
 import com.tml.exception.ServerException;
 import com.tml.pojo.enums.ResultEnums;
-import com.tml.service.CaptchaService;
+import com.tml.common.captcha.CaptchaService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 

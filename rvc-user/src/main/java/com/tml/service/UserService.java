@@ -2,6 +2,7 @@ package com.tml.service;
 
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
 
@@ -23,4 +24,8 @@ public interface UserService {
     UserInfoVO one(String uid);
 
     List<UserInfoVO> list(List<String> uidList);
+
+    void update(UserInfoDTO userInfoDTO);
+
+    void follow(String uid);
 }

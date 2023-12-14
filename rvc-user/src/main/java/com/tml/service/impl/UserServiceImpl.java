@@ -2,11 +2,16 @@ package com.tml.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.tml.common.UserContext;
 import com.tml.exception.ServerException;
+import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
+import com.tml.pojo.DO.AuthUser;
+import com.tml.pojo.DO.UserFollow;
 import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
@@ -14,6 +19,7 @@ import com.tml.util.CopyUtil;
 import com.tml.util.EmailUtil;
 import com.tml.util.RandomStringUtil;
 import com.tml.util.TokenUtil;
+import org.apache.catalina.User;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -39,6 +45,9 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     UserInfoMapper userInfoMapper;
+
+    @Resource
+    UserFollowMapper userFollowMapper;
 
     @Resource
     EmailUtil emailUtil;
@@ -131,11 +140,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserInfoVO> list(List<String> uidList) {
+        if(uidList.isEmpty()){
+            throw new ServerException(ResultEnums.UID_LIST_IS_EMPTY);
+        }
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("uid", uidList);
         List<UserInfoVO> userList = new ArrayList<>();
-        CopyUtil.copyPropertiesForList(userInfoMapper.selectList(queryWrapper), userList, UserInfoVO.class);
+        List<UserInfo> userInfoList = userInfoMapper.selectList(queryWrapper);
+        if(userInfoList.isEmpty()){
+            throw new ServerException(ResultEnums.NO_ONE_EXIST);
+        }
+        CopyUtil.copyPropertiesForList(userInfoList, userList, UserInfoVO.class);
         return userList;
+    }
+
+    @Override
+    public void update(UserInfoDTO userInfoDTO) {
+
+    }
+
+    @Override
+    public void follow(String uid) {
+        AuthUser authUser = UserContext.getCurrentUser();
+        QueryWrapper<UserInfo> userQuery = new QueryWrapper<>();
+        userQuery.eq("uid", uid);
+        if(userInfoMapper.selectCount(userQuery) <= 0){
+            throw new ServerException(ResultEnums.USER_NOT_EXIST);
+        }
+        UserFollow follow = new UserFollow();
+        follow.setFollowUid(authUser.getUid());
+        follow.setFollowedUid(uid);
+        try {
+            userFollowMapper.insert(follow);
+        } catch (Exception e){
+            throw new ServerException(ResultEnums.FAIL_FOLLOW);
+        }
     }
 
     private String loginByPsw(String email, String password){

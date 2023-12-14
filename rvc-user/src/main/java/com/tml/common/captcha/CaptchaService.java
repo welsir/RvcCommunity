@@ -1,4 +1,4 @@
-package com.tml.service;
+package com.tml.common.captcha;
 
 import com.tml.common.captcha.Result;
 import org.springframework.cloud.openfeign.FeignClient;

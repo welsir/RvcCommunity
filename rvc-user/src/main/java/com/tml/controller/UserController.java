@@ -1,10 +1,15 @@
 package com.tml.controller;
 
+import com.baomidou.mybatisplus.extension.api.R;
+import com.tml.common.ListElementSize;
+import com.tml.common.ListNotEmpty;
+import com.tml.common.Login;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.service.UserService;
 import io.github.common.web.Result;
+import org.apache.ibatis.annotations.Update;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -88,8 +93,10 @@ public class UserController {
      */
     @PostMapping("/list")
     public Result list(@RequestBody
-                       @NotNull(message = "uidList不能为空")
-                       List<String> uidList){
+                           @Valid
+                           @ListNotEmpty
+                           @ListElementSize(min = 19, max = 19, message = "list元素长度为19")
+                           List<String> uidList){
         return Result.success(Map.of("userList", userService.list(uidList)));
     }
 
@@ -98,12 +105,26 @@ public class UserController {
      * @return {@link Result} 待完成
      */
     @PostMapping("/update")
-    public Result update(@RequestBody UserInfoDTO userInfoDTO){
-
+    @Login
+    public Result update(@RequestBody
+                             @Valid
+                             UserInfoDTO userInfoDTO){
+        userService.update(userInfoDTO);
         return Result.success();
     }
 
-
-
-
+    /**
+     * @param uid String
+     * @return {@link Result}
+     */
+    @GetMapping ("/follow")
+    @Login
+    public Result follow(@RequestParam
+                             @Valid
+                             @Length(min = 19, max = 19, message = "uid长度为19")
+                             @NotNull(message = "uid不能为空")
+                             String uid){
+        userService.follow(uid);
+        return Result.success();
+    }
 }
