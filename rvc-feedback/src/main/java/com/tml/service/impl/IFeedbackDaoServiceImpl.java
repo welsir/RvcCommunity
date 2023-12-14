@@ -111,6 +111,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
         return true;
     }
 
+
     @Override
     public Boolean hasFeedback(Long fb_id) {
         return query().select("fb_id").eq("fb_id",fb_id).count()>0;
