@@ -22,7 +22,7 @@ public class LoginDTO {
     @Email( message = "参数必须为邮箱")
     String email;
 
-    @Length(min = 4, max = 10, message = "验证码长度必须在4到6之间")
+    @Length(min = 4, max = 10, message = "验证码长度必须在4到10之间")
     String emailCode;
 
     @Length(min = 8, max = 16, message = "密码长度必须在8到16之间")

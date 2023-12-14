@@ -68,9 +68,14 @@ public class UserController {
                             @Email( message = "参数必须为邮箱")
                             String email,
                         @RequestParam
+                            @Valid
+                            @Length(min = 4, max = 10, message = "验证码长度必须在4到6之间")
+                            @NotNull(message = "前置验证码不为空")
+                            String code,
+                        @RequestParam
                             @NotNull(message = "验证码类型不能为空")
-                            boolean type){
-        userService.sendCode(email, type);
+                            int type){
+        userService.sendCode(email, code, type);
         return Result.success();
     }
 
@@ -95,7 +100,7 @@ public class UserController {
     public Result list(@RequestBody
                            @Valid
                            @ListNotEmpty
-                           @ListElementSize(min = 19, max = 19, message = "list元素长度为19")
+                           @ListElementSize(min = 19, max = 19, message = "uid长度为19")
                            List<String> uidList){
         return Result.success(Map.of("userList", userService.list(uidList)));
     }
@@ -127,4 +132,6 @@ public class UserController {
         userService.follow(uid);
         return Result.success();
     }
+
+//    @PostMapping("/password")
 }

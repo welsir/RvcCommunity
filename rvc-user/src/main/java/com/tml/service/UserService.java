@@ -19,7 +19,7 @@ public interface UserService {
 
     Map<String, String> register(RegisterDTO registerDTO);
 
-    void sendCode(String email, boolean type);
+    void sendCode(String email,String code, int type);
 
     UserInfoVO one(String uid);
 

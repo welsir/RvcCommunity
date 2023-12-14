@@ -3,6 +3,7 @@ package com.tml.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.common.UserContext;
+import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
@@ -12,6 +13,7 @@ import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UserInfoDTO;
+import com.tml.pojo.enums.EmailEnums;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
@@ -20,8 +22,11 @@ import com.tml.util.EmailUtil;
 import com.tml.util.RandomStringUtil;
 import com.tml.util.TokenUtil;
 import org.apache.catalina.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -31,12 +36,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.tml.pojo.enums.EmailEnums.*;
+
 /**
  * @Date 2023/12/10
  * @Author xiaochun
  */
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @Value("${user.retry.max-retries}")
     int MAX_RETRIES;
 
@@ -78,7 +87,7 @@ public class UserServiceImpl implements UserService {
         String emailCode = registerDTO.getEmailCode();
         String password = registerDTO.getPassword();
 
-        if(!emailUtil.verify(email, "Register", emailCode)) {
+        if(!emailUtil.verify(email, REGISTER, emailCode)) {
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
 
@@ -94,14 +103,22 @@ public class UserServiceImpl implements UserService {
                 userInfo.setUsername(RandomStringUtil.generateRandomString());
                 userInfoMapper.insert(userInfo);
                 success = true;
-            } catch (DuplicateKeyException e) {
+            } catch (DataIntegrityViolationException e) {
                 e.printStackTrace();
-                if (retryCount < MAX_RETRIES - 1) {
-                    try {
-                        Thread.sleep(RETRY_INTERVAL);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
+                String errorMessage = e.getMessage();
+                if(errorMessage.contains("username_UNIQUE")){
+                    logger.error("生成用户名相同，正在重试...");
+                    if (retryCount < MAX_RETRIES - 1) {
+                        try {
+                            Thread.sleep(RETRY_INTERVAL);
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
                     }
+                } else if(errorMessage.contains("email_UNIQUE")){
+                    throw new ServerException(ResultEnums.EMAIL_EXIST);
+                } else {
+                    throw new ServerException("500", "数据库插入错误");
                 }
             }
             retryCount++;
@@ -113,16 +130,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendCode(String email, boolean type) {
-        try {
-            if (type) {
-                emailUtil.sendCode(email, "Login");
-            } else {
-                emailUtil.sendCode(email, "Register");
+    public void sendCode(String email,String code, int type) {
+//        if() //
+            switch (type){
+                case 0:
+                    emailUtil.sendCode(email, REGISTER);
+                    break;
+                case 1:
+                    emailUtil.sendCode(email, LOGIN);
+                    break;
+                case 2:
+                    emailUtil.sendCode(email, PASSWORD);
+                    break;
+                default:
+                    throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
             }
-        } catch (Exception e){
-            throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
-        }
     }
 
     @Override
@@ -191,7 +213,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private String loginByCode(String email, String code){
-        if (!emailUtil.verify(email, "Login",code)) {
+        if (!emailUtil.verify(email, LOGIN,code)) {
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();

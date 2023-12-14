@@ -17,7 +17,6 @@ public class UserContext {
         } catch (Exception e){
             throw new ServerException(ResultEnums.NO_LOGIN);
         }
-
         return authUser;
     }
 }
