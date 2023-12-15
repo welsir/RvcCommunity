@@ -1,5 +1,8 @@
 package com.tml.pojo.vo;
 
+import com.tml.pojo.entity.PostType;
+import com.tml.pojo.entity.User;
+import com.tml.pojo.entity.UserInfoVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,16 +21,21 @@ import java.time.LocalDateTime;
 public class PostVo {
     //          帖子id
     private String postId;
-    //        创建帖子用户id
-    private String uid;
-//作者用户名
-    private String username;
-//    作者昵称
-    private String nickname;
-//    作者头像
-    private String avatar;
+//    //        创建帖子用户id
+//    private String uid;
+
+    private UserInfoVO userInfoVO;
+
+    private PostType postType;
+
+////作者用户名
+//    private String username;
+////    作者昵称
+//    private String nickname;
+////    作者头像
+//    private String avatar;
     //        帖子类型
-    private String tagId;
+//    private String tagId;
     //        帖子标题
     private String title;
     //        帖子内容

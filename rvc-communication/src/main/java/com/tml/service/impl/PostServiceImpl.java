@@ -8,10 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.feign.user.RvcUserServiceFeignClient;
-import com.tml.mapper.CollectPostMapper;
-import com.tml.mapper.CoverMapper;
-import com.tml.mapper.LikePostMapper;
-import com.tml.mapper.PostMapper;
+import com.tml.mapper.*;
 import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.DetectionTaskDto;
@@ -33,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -66,6 +64,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final ThreadPoolTaskExecutor executor;
     private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
+    private final PostTypeMapper postTypeMapper;
 //    private final RedisCache redisCache;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
@@ -82,14 +81,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         /**
          * 模拟获取uuid
          */
-        String uuid = "1734949820388646914";
+        String uuid = "1735241323452608514";
 
         //分页
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<Post> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS); // hasshow 等于 1 的条件
+        queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS)  // 审核通过
+                .eq(Post::getHasDelete,0);       //没有被删除
         //tagId 不为空
         if (!Strings.isBlank(tagId)){
             queryWrapper.eq(Post::getTagId,tagId);
@@ -98,7 +98,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         //获取的分页结果
         List<Post> records = list.getRecords();
 
-        //对帖子内容进行限制（200字以内）
+//        List<String> userIds = records.stream()
+//                .map(post -> post.getUid())
+//                .collect(Collectors.toList());
+        //获取作者
+//        Object authors = rvcUserServiceFeignClient.list(userIds).getData();
+
+        //遍历postvo
+            //插入作者
+            //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
+
         List<Post> truncatedPosts = records.stream()
                 .peek(post -> {
                     String content = post.getContent();
@@ -122,23 +131,23 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 postVo.setLike(like);
                 postVo.setCollect(collect);
 
-                //获取 作者用户名  作者昵称  作者头像
                 Object data = rvcUserServiceFeignClient.one(uuid).getData();
                 UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
-                System.out.println(userInfoVO);
+                postVo.setUserInfoVO(userInfoVO);
 
-                postVo.setUsername(userInfoVO.getUsername());
-                postVo.setNickname(userInfoVO.getNickname());
-                postVo.setAvatar(userInfoVO.getAvatar());
+
+                //获取user和tag
+
             }
         }
 
-        // 排序
+//         排序
 //        SortStrategy sortStrategy = strategyMap.get(params.getData());
 //        sortStrategy.sort(postVos);
 
 
         return postVos;
+
     }
 
     @Override
@@ -147,12 +156,21 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         /**
          * 模拟获取uuid
          */
-        String uuid = "2";
+        String uuid = "1734216713637244929";
 
 
 //        更具id获取数据
         Post post = this.getById(postId);
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
+
+        //获取作者和tag
+        Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
+        UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
+        postVo.setUserInfoVO(userInfoVO);
+
+        PostType postType = postTypeMapper.selectById(post.getTagId());
+        postVo.setPostType(postType);
+
 
 //        如果用户未登录直接返回vo对象
         if (Objects.isNull(uuid)){
@@ -295,11 +313,17 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void add(PostDto postDto) {
+/**
+ * 模拟获取userid
+ */
+        String userid = "1734216713637244929";
 
 
         String uuid = Uuid.getUuid();
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
+        post.setUid(userid);
+        post.setHasDelete(0);
         save(post);
 
         //更新cover表映射

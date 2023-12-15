@@ -6,10 +6,10 @@ spring:
   application:
     name: rvc-communication-service
   redis:
-    host: ENC(uajVh4s7dGIRUT5FJvQO2as0rP2ESoAaZLUu5oECIaM=) # Redis服务器地址
+    host: ENC(/z6pqjelPktpAX0Fw+NeDCjXv9B4uprwmIirqcvhArM=) # Redis服务器地址
     database: 0 # Redis数据库索引（默认为0）
     port: 6379 # Redis服务器连接端口
-    password: ENC(gJRvbosgR0E1eHpIoYIlFjpwNewLRB2XU9vBxqr4Cj2oiZSfYQgcww==) # Redis服务器连接密码（默认为空）
+    password: ENC(d6of1OpEAxvbUq33A5AX4VBHJR7DVsdasTfDHjag88GxRmmZdzvdnA==) # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
   cloud:
     nacos:
