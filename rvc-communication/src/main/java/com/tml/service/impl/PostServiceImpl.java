@@ -370,17 +370,84 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
 
-        return postVos;
+        //对帖子内容进行限制（200字以内）
+        List<PostVo> truncatedPosts = postVos.stream()
+                .peek(post -> {
+                    String content = post.getContent();
+                    if (content != null && content.length() > 200) {
+                        post.setContent(content.substring(0, 200));
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return truncatedPosts;
     }
 
     @Override
     public List<PostVo> userCollect(PageInfo<String> params) {
-        return null;
+
+        String uuid = "1";
+
+        Integer pageNum = params.getPage();
+        Integer pageSize = params.getLimit();
+        Page<CollectPost> page = new Page<>(pageNum,pageSize);
+        LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        likePostLambdaQueryWrapper.eq(CollectPost::getUid, uuid);
+        Page<CollectPost> likePostPage = collectPostMapper.selectPage(page, likePostLambdaQueryWrapper);
+        List<String> collect = likePostPage.getRecords().stream()
+                .map(likePost -> likePost.getPostId())
+                .collect(Collectors.toList());
+
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("post_id",collect);
+        List<Post> posts = postMapper.selectList(queryWrapper);
+
+        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+
+        //对帖子内容进行限制（200字以内）
+        List<PostVo> truncatedPosts = postVos.stream()
+                .peek(post -> {
+                    String content = post.getContent();
+                    if (content != null && content.length() > 200) {
+                        post.setContent(content.substring(0, 200));
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return truncatedPosts;
     }
 
     @Override
     public List<PostVo> userCreate(PageInfo<String> params) {
-        return null;
+        String uuid = "1";
+
+        Integer pageNum = params.getPage();
+        Integer pageSize = params.getLimit();
+        Page<Post> page = new Page<>(pageNum,pageSize);
+        LambdaQueryWrapper<Post> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        likePostLambdaQueryWrapper.eq(Post::getUid, uuid);
+        Page<Post> likePostPage = postMapper.selectPage(page, likePostLambdaQueryWrapper);
+        List<String> collect = likePostPage.getRecords().stream()
+                .map(likePost -> likePost.getPostId())
+                .collect(Collectors.toList());
+
+        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("post_id",collect);
+        List<Post> posts = postMapper.selectList(queryWrapper);
+
+        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+
+        //对帖子内容进行限制（200字以内）
+        List<PostVo> truncatedPosts = postVos.stream()
+                .peek(post -> {
+                    String content = post.getContent();
+                    if (content != null && content.length() > 200) {
+                        post.setContent(content.substring(0, 200));
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return truncatedPosts;
     }
 
 
