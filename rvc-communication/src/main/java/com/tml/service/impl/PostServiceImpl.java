@@ -276,7 +276,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             try {
                 collectPostMapper.insert(collectPost);
             } catch (Exception e) {
-                throw new RuntimeException("操作失败");
+                throw new RuntimeException("不允许重复收藏");
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
