@@ -6,10 +6,10 @@ spring:
   application:
     name: rvc-communication-service
   redis:
-    host: 1.94.28.8 # Redis服务器地址
+    host: ENC(uajVh4s7dGIRUT5FJvQO2as0rP2ESoAaZLUu5oECIaM=) # Redis服务器地址
     database: 0 # Redis数据库索引（默认为0）
     port: 6379 # Redis服务器连接端口
-    password: genius_server_0704 # Redis服务器连接密码（默认为空）
+    password: ENC(gJRvbosgR0E1eHpIoYIlFjpwNewLRB2XU9vBxqr4Cj2oiZSfYQgcww==) # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
   cloud:
     nacos:
@@ -19,7 +19,7 @@ spring:
       config:
         file-extension: yaml
       discovery:
-        ip: 1.94.28.8
+        ip: ENC(uajVh4s7dGIRUT5FJvQO2as0rP2ESoAaZLUu5oECIaM=)
   rabbitmq:
     host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
     port:  ${RABBITMQ_PORT:5672}
