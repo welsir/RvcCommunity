@@ -61,7 +61,11 @@ public class CodeUtil {
 
     public boolean emailVerify(String email, EmailEnums enums, String code){
         String c = redisTemplate.opsForValue().get(enums.getCodeHeader() + email);
-        return c != null && c.equals(code);
+        if(c != null && c.equals(code)){
+            redisTemplate.delete(enums.getCodeHeader() + email);
+            return true;
+        }
+        return false;
     }
 
     public Map<String, String> image(){
@@ -79,6 +83,10 @@ public class CodeUtil {
 
     public boolean preVerify(String uuid, String code){
         String c = redisTemplate.opsForValue().get(uuid);
-        return c != null && c.equals(code);
+        if(c != null && c.equals(code)){
+            redisTemplate.delete(uuid);
+            return true;
+        }
+        return false;
     }
 }

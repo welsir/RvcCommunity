@@ -2,6 +2,7 @@ package com.tml.service;
 
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.dto.UpdatePasswordDTO;
 import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,8 @@ import java.util.Map;
 public interface UserService {
     Map<String, String> login(LoginDTO loginDTO);
 
+    void logout();
+
     Map<String, String> register(RegisterDTO registerDTO);
 
     Map<String, String> preCode();
@@ -30,4 +33,8 @@ public interface UserService {
     void update(UserInfoDTO userInfoDTO);
 
     void follow(String uid);
+
+    void updatePassword(UpdatePasswordDTO updatePasswordDTO);
+
+    UserInfoVO getUserInfo();
 }

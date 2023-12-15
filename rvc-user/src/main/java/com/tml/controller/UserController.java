@@ -1,15 +1,14 @@
 package com.tml.controller;
 
-import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.common.ListElementSize;
 import com.tml.common.ListNotEmpty;
 import com.tml.common.Login;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.dto.UpdatePasswordDTO;
 import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.service.UserService;
 import io.github.common.web.Result;
-import org.apache.ibatis.annotations.Update;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +41,12 @@ public class UserController {
                             @Valid
                             LoginDTO loginDTO){
         return Result.success(userService.login(loginDTO));
+    }
+
+    @PostMapping("/logout")
+    public Result logout(){
+        userService.logout();
+        return Result.success();
     }
 
     /**
@@ -142,5 +147,18 @@ public class UserController {
         return Result.success();
     }
 
-//    @PostMapping("/password")
+    @PostMapping("/updatePassword")
+    @Login
+    public Result updatePassword(@RequestParam
+                                     @Valid
+                                     UpdatePasswordDTO updatePasswordDTO){
+        userService.updatePassword(updatePasswordDTO);
+        return Result.success();
+    }
+
+    @PostMapping("getUserInfo")
+    @Login
+    public Result getUserInfo(){
+        return Result.success(userService.getUserInfo());
+    }
 }

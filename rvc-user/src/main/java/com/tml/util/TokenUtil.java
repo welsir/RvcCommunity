@@ -12,4 +12,8 @@ public class TokenUtil {
         StpUtil.login(loginId);
         return StpUtil.getTokenValueByLoginId(loginId);
     }
+
+    public static void logout(String id, String username){
+        StpUtil.logout(id + "|" + username);
+    }
 }

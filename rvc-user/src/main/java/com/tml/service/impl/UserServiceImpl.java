@@ -4,13 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.common.UserContext;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
+import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
 import com.tml.pojo.DO.AuthUser;
+import com.tml.pojo.DO.UserData;
 import com.tml.pojo.DO.UserFollow;
 import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
+import com.tml.pojo.dto.UpdatePasswordDTO;
 import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
@@ -19,6 +22,7 @@ import com.tml.util.CopyUtil;
 import com.tml.util.CodeUtil;
 import com.tml.util.RandomStringUtil;
 import com.tml.util.TokenUtil;
+import org.apache.catalina.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -56,6 +60,9 @@ public class UserServiceImpl implements UserService {
     UserFollowMapper userFollowMapper;
 
     @Resource
+    UserDataMapper userDataMapper;
+
+    @Resource
     CodeUtil codeUtil;
 
     @Override
@@ -79,6 +86,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void logout() {
+        AuthUser authUser = UserContext.getCurrentUser();
+        TokenUtil.logout(authUser.getUid(), authUser.getUsername());
+    }
+
+    @Override
     public Map<String, String> register(RegisterDTO registerDTO) {
         String email = registerDTO.getEmail();
         String emailCode = registerDTO.getEmailCode();
@@ -89,6 +102,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserInfo userInfo = new UserInfo();
+        UserData userData = new UserData("0",0,0,0,0);
         userInfo.setEmail(email);
         userInfo.setPassword(password);
         userInfo.setRegisterData(LocalDateTime.now());
@@ -99,6 +113,8 @@ public class UserServiceImpl implements UserService {
             try {
                 userInfo.setUsername(RandomStringUtil.generateRandomString());
                 userInfoMapper.insert(userInfo);
+                userData.setUid(userInfo.getUid());
+                userDataMapper.insert(userData);
                 success = true;
             } catch (DataIntegrityViolationException e) {
                 e.printStackTrace();
@@ -169,20 +185,33 @@ public class UserServiceImpl implements UserService {
         if(uidList.isEmpty()){
             throw new ServerException(ResultEnums.UID_LIST_IS_EMPTY);
         }
-        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("uid", uidList);
+        UserInfo user;
+        UserInfoVO userInfoVO;
         List<UserInfoVO> userList = new ArrayList<>();
-        List<UserInfo> userInfoList = userInfoMapper.selectList(queryWrapper);
-        if(userInfoList.isEmpty()){
+        for (String uid: uidList){
+            user = userInfoMapper.selectById(uid);
+            if(user == null)continue;
+            userInfoVO = new UserInfoVO();
+            userInfoVO.setUid(user.getUid());
+            userInfoVO.setUsername(user.getUsername());
+            userInfoVO.setNickname(user.getUsername());
+            userInfoVO.setAvatar(userInfoVO.getAvatar());
+            userList.add(userInfoVO);
+        }
+        if(userList.isEmpty()){
             throw new ServerException(ResultEnums.NO_ONE_EXIST);
         }
-        CopyUtil.copyPropertiesForList(userInfoList, userList, UserInfoVO.class);
         return userList;
     }
 
     @Override
     public void update(UserInfoDTO userInfoDTO) {
-
+        AuthUser authUser = UserContext.getCurrentUser();
+        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
+        userWrapper.eq("uid", authUser.getUid());
+        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
+        BeanUtils.copyProperties(userInfoDTO, userInfo);
+        userInfoMapper.updateById(userInfo);
     }
 
     @Override
@@ -203,6 +232,34 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public void updatePassword(UpdatePasswordDTO updatePasswordDTO) {
+        if(!codeUtil.emailVerify(updatePasswordDTO.getEmail(), PASSWORD, updatePasswordDTO.getEmailCode())){
+            throw new ServerException(ResultEnums.VER_CODE_ERROR);
+        }
+
+        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
+        userWrapper.eq("email", updatePasswordDTO.getEmail());
+        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
+        userInfo.setPassword(updatePasswordDTO.getPassword());
+        userInfoMapper.updateById(userInfo);
+    }
+
+    @Override
+    public UserInfoVO getUserInfo() {
+        AuthUser authUser = UserContext.getCurrentUser();
+        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
+        userWrapper.eq("uid", authUser.getUid());
+        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
+        UserInfoVO userInfoVO = new UserInfoVO();
+        BeanUtils.copyProperties(userInfo, userInfoVO);
+        QueryWrapper<UserData> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("uid", authUser.getUid());
+        UserData userData = userDataMapper.selectOne(queryWrapper);
+        BeanUtils.copyProperties(userData, userInfoVO);
+        return userInfoVO;
+    }
+
     private String loginByPsw(String email, String password){
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
 
@@ -217,7 +274,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private String loginByCode(String email, String code){
-        if (!codeUtil.emailVerify(email, LOGIN,code)) {
+        if (!codeUtil.emailVerify(email, LOGIN, code)) {
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
         QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
