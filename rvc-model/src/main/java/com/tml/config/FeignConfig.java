@@ -32,4 +32,5 @@ public class FeignConfig {
         return new SpringFormEncoder(new SpringEncoder(messageConverters));
     }
 
+
 }

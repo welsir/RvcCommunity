@@ -1,21 +1,22 @@
 package com.tml.core.client;
 
+import com.tml.common.Result;
 import com.tml.constant.RemoteModuleURL;
-import com.tml.pojo.DTO.UserRelativeRequestForm;
+import com.tml.pojo.DTO.UserInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * @Description
  * @Author welsir
- * @Date 2023/12/10 21:35
+ * @Date 2023/12/13 23:24
  */
-@FeignClient(name = "user-service")
+@FeignClient(name = "tml-user-service")
 public interface UserServiceClient {
-    @PostMapping(RemoteModuleURL.IS_COLLECTION)
-    String isCollection(@RequestBody UserRelativeRequestForm userRelativeRequestForm);
 
-    @PostMapping(RemoteModuleURL.IS_LIKE)
-    String isLike(@RequestBody UserRelativeRequestForm userRelativeRequestForm);
+    @GetMapping(value = RemoteModuleURL.GET_USERINFO)
+    Result<UserInfoDTO> getUserInfo(@RequestParam("uid") String uid);
+
 }

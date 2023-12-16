@@ -2,17 +2,18 @@ package com.tml.pojo.DTO;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @Description
  * @Author welsir
  * @Date 2023/12/11 15:00
  */
 @Data
-public class DetectionStatusDTO {
+public class DetectionStatusDTO implements Serializable {
 
     private String id;
-    private Integer status;
-    private String violationInformation;
+    private String labels;
     private String name;
 
 }

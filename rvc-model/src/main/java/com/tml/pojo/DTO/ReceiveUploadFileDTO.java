@@ -8,7 +8,7 @@ import lombok.Data;
  * @Date 2023/12/6 16:02
  */
 @Data
-public class ReceiveUploadModelDTO {
+public class ReceiveUploadFileDTO {
 
     private String fileId;
     private String url;

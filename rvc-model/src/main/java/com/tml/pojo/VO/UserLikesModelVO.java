@@ -5,12 +5,14 @@ import lombok.Data;
 /**
  * @Description
  * @Author welsir
- * @Date 2023/12/4 17:55
+ * @Date 2023/12/14 17:21
  */
 @Data
-public class ModelUpdateFormVO {
+public class UserLikesModelVO {
+
     private String name;
-    private String description;
+    private String likesNum;
+    private String collectionNum;
     private String picture;
-    private String note;
+
 }

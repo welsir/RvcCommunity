@@ -2,10 +2,11 @@ package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.Result;
+import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.VO.ModelInsertVO;
 import com.tml.pojo.VO.ModelUpdateFormVO;
 import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModel;
+import com.tml.pojo.VO.SingleModelVO;
 import com.tml.service.ModelService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,20 +29,20 @@ public class ModelController {
     @Resource
     ModelService modelService;
 
-    @GetMapping("/list/{size}/{page}/{sortType}")
-    public Result<?> getModelList(@PathVariable @NotBlank String page,
-                                  @PathVariable  @Size(max = 10) String size,
-                                  @PathVariable String sortType,
+    @GetMapping("/list")
+    public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
+                                  @RequestParam("size")  @Size(max = 10) String size,
+                                  @RequestParam("sortType") String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(size,page,sortType,uid);
         return Result.success(modelList);
     }
 
-    @GetMapping("/list/{type}/{size}/{page}/{sortType}")
+    @GetMapping("/list/{type}")
     public Result<?> getModelListByType(@PathVariable @NotBlank String type,
-                                        @PathVariable @NotBlank String page,
-                                        @PathVariable @Size(max = 10) String size,
-                                        @PathVariable String sortType,
+                                        @RequestParam("page") @NotBlank String page,
+                                        @RequestParam("size")  @Size(max = 10) String size,
+                                        @RequestParam("sortType") String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(type,page,size,sortType,uid);
         return Result.success(modelList);
@@ -49,40 +50,75 @@ public class ModelController {
 
     @GetMapping("/one/{modelId}")
     public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
-                                 @RequestHeader(value = "uid", required = false) String uid){
-        SingleModel model = modelService.queryOneModel(modelId,uid);
+                                 @RequestHeader(value = "uid") String uid){
+        ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
     }
 
+    //todo:考虑重复上传问题
     @PostMapping("/one")
-    public Result<?> insertOneModel(@Validated ModelInsertVO model){
-        modelService.insertOneModel(model);
+    public Result<?> insertOneModel(@Validated ModelInsertVO model,
+                                    @RequestHeader(value = "uid") String uid){
+        modelService.insertOneModel(model,uid);
         return Result.success();
     }
 
-    @PostMapping("/file/{modelId}/{isOpen}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId, @PathVariable String isOpen){
-        String modelUrl = modelService.downloadModel(modelId,isOpen);
+    @PostMapping("/download/{modelId}")
+    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
+                                   @RequestHeader(value = "uid") String uid){
+        String modelUrl = modelService.downloadModel(modelId);
         return Result.success(modelUrl);
     }
 
     @PostMapping("/update")
-    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO){
+    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
+                               @RequestHeader(value = "uid") String uid){
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO);
         return Result.success(flag);
     }
 
-    @PostMapping("/upload")
-    public Result<?> uploadModel(MultipartFile file){
+    @PostMapping("/upload/model")
+    public Result<?> uploadModel(
+            MultipartFile file,
+            @RequestHeader(value = "uid") String uid){
         return Result.success(modelService.uploadModel(file));
+    }
+
+    @PostMapping("/upload/image")
+    public Result<?> uploadImage(
+            MultipartFile file,
+            @RequestHeader(value = "uid") String uid){
+        return Result.success(modelService.uploadImage(file));
     }
 
     @PostMapping("/relative")
     public Result<?> modelUserRelative(@RequestParam("type") String type,
                                        @RequestParam("modelId")String modelId,
-                                       @RequestHeader(value = "uid", required = false) String uid,
+                                       @RequestHeader(value = "uid") String uid,
                                        @RequestParam("status") String status){
         modelService.insertRelative(type,modelId,uid,status);
         return Result.success();
+    }
+
+    @PostMapping("/label")
+    public Result<?> insertLabel(
+            @RequestParam("label") String label,
+            @RequestHeader(value = "uid") String uid
+    ){
+        return Result.success(modelService.insertLabel(label, uid));
+    }
+
+    @GetMapping("/likes")
+    public Result<?> getUserModelLikesList(
+            @RequestHeader(value = "uid") String uid
+    ){
+        return Result.success(modelService.getUserLikesList(uid));
+    }
+
+    @GetMapping("/collection")
+    public Result<?> getUserModelCollectionList(
+            @RequestHeader(value = "uid") String uid
+    ){
+        return Result.success(modelService.getUserCollectionList(uid));
     }
 }
