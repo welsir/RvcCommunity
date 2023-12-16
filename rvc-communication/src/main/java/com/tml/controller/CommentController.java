@@ -55,7 +55,7 @@ public class CommentController {
 
 
 
-    @PostMapping("/favorite")
+    @PutMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
     public Result favorite(@RequestBody
                                @Valid CoinDto coinDto){

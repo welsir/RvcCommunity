@@ -11,6 +11,7 @@ import com.tml.strategy.impl.CommentProcessStrategy;
 import com.tml.strategy.impl.CoverProcessStrategy;
 
 import com.tml.strategy.impl.PostProcessStrategy;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -84,6 +86,7 @@ public class ReceiveHandler {
             key = "res.image"
     ))
     public void receive_image(Message message) throws Exception {
+        System.out.println(LocalDate.now());
 
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -95,6 +98,7 @@ public class ReceiveHandler {
         if(Objects.isNull(detectionProcessStrategy)){
             return;
         }
+
 ////处理逻辑  更新数据库
         detectionProcessStrategy.process(detectionTaskDto);
 
@@ -108,6 +112,7 @@ public class ReceiveHandler {
             key = "res.audio"
     ))
     public void receive_audio(Message message) throws Exception {
+        System.out.println(LocalDate.now());
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
 

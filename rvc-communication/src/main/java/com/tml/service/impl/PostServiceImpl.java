@@ -1,6 +1,7 @@
 package com.tml.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -15,6 +16,7 @@ import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
 import com.tml.pojo.entity.*;
+import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
 import com.tml.strategy.SortStrategy;
@@ -43,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
 import static com.tml.constant.DetectionConstants.UN_DETECTION;
@@ -97,53 +100,54 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Page<Post> list = this.page(page,queryWrapper);
         //获取的分页结果
         List<Post> records = list.getRecords();
+        List<PostVo> postVos = BeanCopyUtils.copyBeanList(records, PostVo.class);
 
-//        List<String> userIds = records.stream()
-//                .map(post -> post.getUid())
-//                .collect(Collectors.toList());
-        //获取作者
-//        Object authors = rvcUserServiceFeignClient.list(userIds).getData();
+        //        //获取作者
+        List<String> userIds = records.stream()
+                .map(post -> post.getUid())
+                .collect(Collectors.toList());
+        Result<Map<String, List<UserInfoVO>>> res = rvcUserServiceFeignClient.list(userIds);
+        List<UserInfoVO> userList = res.getData().get("userList");
+
+        //获取tag
+        List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
+        String jsonString = JSON.toJSONString(cacheList);
+        List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
+        Map<String, PostType> postTypeCollect = postTypes.stream()
+                .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
+
 
         //遍历postvo
             //插入作者
+            //插入tag
             //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
 
-        List<Post> truncatedPosts = records.stream()
-                .peek(post -> {
-                    String content = post.getContent();
-                    if (content != null && content.length() > 200) {
-                        post.setContent(content.substring(0, 200));
-                    }
-                })
-                .collect(Collectors.toList());
-
-        List<PostVo> postVos = BeanCopyUtils.copyBeanList(truncatedPosts, PostVo.class);
-        //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
+        for (int i=0;i<postVos.size();i++){
+            PostVo postVo = postVos.get(i);
+            //插入作者
+            postVo.setAuthor(userList.get(i));
+            //插入tag
+            postVo.setPostType(postTypeCollect.get(records.get(i).getTagId()));
+            //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
         if (!Strings.isBlank(uuid)){
-            for (PostVo postVo : postVos) {
                 LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-                collectPostQueryWrapper.eq(CollectPost::getUid, uuid);
+                collectPostQueryWrapper.eq(CollectPost::getUid, uuid)
+                        .eq(CollectPost::getPostId,postVo.getPostId());
                 LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-                likePostQueryWrapper.eq(LikePost::getUid, uuid);
+                likePostQueryWrapper.eq(LikePost::getUid, uuid)
+                        .eq(LikePost::getPostId,postVo.getPostId());
 
                 boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
                 boolean like = likePostMapper.selectCount(likePostQueryWrapper) > 0;
                 postVo.setLike(like);
                 postVo.setCollect(collect);
 
-                Object data = rvcUserServiceFeignClient.one(uuid).getData();
-                UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
-                postVo.setUserInfoVO(userInfoVO);
-
-
-                //获取user和tag
-
             }
         }
 
-//         排序
-//        SortStrategy sortStrategy = strategyMap.get(params.getData());
-//        sortStrategy.sort(postVos);
+        //         排序
+        SortStrategy sortStrategy = strategyMap.get(params.getData());
+        sortStrategy.sort(postVos);
 
 
         return postVos;
@@ -161,12 +165,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 //        更具id获取数据
         Post post = this.getById(postId);
+        if (Objects.isNull(post)){
+            throw new RuntimeException("帖子不存在");
+        }
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
 
         //获取作者和tag
         Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
         UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
-        postVo.setUserInfoVO(userInfoVO);
+        postVo.setAuthor(userInfoVO);
 
         PostType postType = postTypeMapper.selectById(post.getTagId());
         postVo.setPostType(postType);
@@ -230,9 +237,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //        模拟获取uid
         String uid = "1";
 
+
         /**
-         * 判断用户和评论是否存在
+         * 判断用户是否存在
          */
+        //帖子是否存在
+        Post post = postMapper.selectById(coinDto.getId());
+        if (Objects.isNull(post)){
+            throw new RuntimeException("帖子不存在");
+        }
+
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
         if (coinDto.getType().equals("1")){
@@ -268,6 +282,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         /**
          * 判断用户和评论是否存在
          */
+        //帖子是否存在
+        Post post = postMapper.selectById(coinDto.getId());
+        if (Objects.isNull(post)){
+            throw new RuntimeException("帖子不存在");
+        }
         //1、收藏    添加关系表中的记录       post表 colletc_num +1
         //0、取消收藏    删除关系表中的记录       post表 colletc_num -1
         if (coinDto.getType().equals("1")){
@@ -299,11 +318,27 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void delete(String postId) {
+
+        String uuid = "1735241323452608514";
+
+        //帖子是否存在
+        Post DBpost = postMapper.selectById(postId);
+        if (Objects.isNull(DBpost)){
+            throw new RuntimeException("帖子不存在");
+        }
+
+
+        Post post1 = postMapper.selectById(postId);
+//帖子不属于该用户
+        if (!post1.getUid().equals(uuid)){
+            throw new RuntimeException("无权限");
+        }
+
         Post post = Post.builder()
                 .postId(postId)
                 .hasDelete(1)
                 .build();
-        System.out.println(post);
+
         try {
             postMapper.updateById(post);
         } catch (Exception e) {
@@ -316,14 +351,28 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 /**
  * 模拟获取userid
  */
-        String userid = "1734216713637244929";
-
+        String userid = "1735241323452608514";
 
         String uuid = Uuid.getUuid();
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
         post.setUid(userid);
-        post.setHasDelete(0);
+
+        //判断tagid是否存在
+        PostType postType = postTypeMapper.selectById(post.getTagId());
+        if (Objects.isNull(postType)){
+            throw new RuntimeException("tag不存在");
+        }
+
+        //判断cover是否存在 并且审核通过
+        Cover dbCover = coverMapper.selectById(post.getCoverId());
+        if (Objects.isNull(dbCover)){
+            throw new RuntimeException("Cover不存在");
+        }
+        if (dbCover.getDetectionStatus() == 2){
+            throw new RuntimeException("违规封面");
+        }
+
         save(post);
 
         //更新cover表映射
@@ -332,8 +381,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .coverId(post.getCoverId())
                 .build();
 
-        coverMapper.updateById(cover);
+        int i = coverMapper.updateById(cover);
 
+        //提交审核
         DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
                 .id(uuid)
                 .content(post.getContent())
@@ -374,9 +424,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public List<PostVo> userFavorite(PageInfo<String> params) {
+    public List<PostSimpleVo> userFavorite(PageInfo<String> params) {
 
-        String uuid = "1";
+        String uuid = "1735662165315596290";
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -384,6 +434,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(LikePost::getUid, uuid);
         Page<LikePost> likePostPage = likePostMapper.selectPage(page, likePostLambdaQueryWrapper);
+        List<LikePost> records = likePostPage.getRecords();
+        if (records.size() == 0){
+            throw new RuntimeException("无喜欢");
+        }
+
+
         List<String> collect = likePostPage.getRecords().stream()
                 .map(likePost -> likePost.getPostId())
                 .collect(Collectors.toList());
@@ -392,25 +448,30 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         queryWrapper.in("post_id",collect);
         List<Post> posts = postMapper.selectList(queryWrapper);
 
-        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
+
+        //获取tag
+        List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
+        String jsonString = JSON.toJSONString(cacheList);
+        List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
+        Map<String, PostType> postTypeCollect = postTypes.stream()
+                .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
 
         //对帖子内容进行限制（200字以内）
-        List<PostVo> truncatedPosts = postVos.stream()
-                .peek(post -> {
-                    String content = post.getContent();
-                    if (content != null && content.length() > 200) {
-                        post.setContent(content.substring(0, 200));
-                    }
-                })
-                .collect(Collectors.toList());
+        for (int i=0;i<postSimpleVos.size();i++){
+            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            String content = postSimpleVo.getContent();
+            postSimpleVo.setContent(content.substring(0, 200));
+            postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+        }
 
-        return truncatedPosts;
+        return postSimpleVos;
     }
 
     @Override
-    public List<PostVo> userCollect(PageInfo<String> params) {
+    public List<PostSimpleVo> userCollect(PageInfo<String> params) {
 
-        String uuid = "1";
+        String uuid = "1735662165315596290";
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -418,6 +479,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(CollectPost::getUid, uuid);
         Page<CollectPost> likePostPage = collectPostMapper.selectPage(page, likePostLambdaQueryWrapper);
+
+
+        List<CollectPost> records = likePostPage.getRecords();
+        if (records.size() == 0){
+            throw new RuntimeException("无收藏");
+        }
+
         List<String> collect = likePostPage.getRecords().stream()
                 .map(likePost -> likePost.getPostId())
                 .collect(Collectors.toList());
@@ -426,24 +494,31 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         queryWrapper.in("post_id",collect);
         List<Post> posts = postMapper.selectList(queryWrapper);
 
-        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+
+
+        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
+
+        //获取tag
+        List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
+        String jsonString = JSON.toJSONString(cacheList);
+        List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
+        Map<String, PostType> postTypeCollect = postTypes.stream()
+                .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
 
         //对帖子内容进行限制（200字以内）
-        List<PostVo> truncatedPosts = postVos.stream()
-                .peek(post -> {
-                    String content = post.getContent();
-                    if (content != null && content.length() > 200) {
-                        post.setContent(content.substring(0, 200));
-                    }
-                })
-                .collect(Collectors.toList());
+        for (int i=0;i<postSimpleVos.size();i++){
+            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            String content = postSimpleVo.getContent();
+            postSimpleVo.setContent(content.substring(0, 200));
+            postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+        }
 
-        return truncatedPosts;
+        return postSimpleVos;
     }
 
     @Override
-    public List<PostVo> userCreate(PageInfo<String> params) {
-        String uuid = "1";
+    public List<PostSimpleVo> userCreate(PageInfo<String> params) {
+        String uuid = "1735662165315596290";
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -451,6 +526,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         LambdaQueryWrapper<Post> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(Post::getUid, uuid);
         Page<Post> likePostPage = postMapper.selectPage(page, likePostLambdaQueryWrapper);
+        List<Post> records = likePostPage.getRecords();
+        if (records.size() == 0){
+            throw new RuntimeException("无创建");
+        }
+
+
         List<String> collect = likePostPage.getRecords().stream()
                 .map(likePost -> likePost.getPostId())
                 .collect(Collectors.toList());
@@ -461,17 +542,24 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
 
-        //对帖子内容进行限制（200字以内）
-        List<PostVo> truncatedPosts = postVos.stream()
-                .peek(post -> {
-                    String content = post.getContent();
-                    if (content != null && content.length() > 200) {
-                        post.setContent(content.substring(0, 200));
-                    }
-                })
-                .collect(Collectors.toList());
+        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
 
-        return truncatedPosts;
+        //获取tag
+        List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
+        String jsonString = JSON.toJSONString(cacheList);
+        List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
+        Map<String, PostType> postTypeCollect = postTypes.stream()
+                .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
+
+        //对帖子内容进行限制（200字以内）
+        for (int i=0;i<postSimpleVos.size();i++){
+            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            String content = postSimpleVo.getContent();
+            postSimpleVo.setContent(content.substring(0, 200));
+            postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+        }
+
+        return postSimpleVos;
     }
 
 

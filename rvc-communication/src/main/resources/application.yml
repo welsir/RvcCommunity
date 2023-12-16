@@ -26,6 +26,7 @@ spring:
     username: ENC(cz1NwvIQDGEjCqPzHKG8UqOk0gUEeOr7)
     password: ENC(cIRXIjYpvlEUV3XsBSYx8EU+AQJZJn0NsIB+64adduNXJXYGBwIUmQ==)
     virtualHost: /
+
   config:
     import: classpath:you-cant-see-that.yml
   datasource:

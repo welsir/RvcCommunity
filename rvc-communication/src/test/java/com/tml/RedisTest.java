@@ -1,5 +1,8 @@
 package com.tml;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.tml.pojo.entity.Post;
 import com.tml.pojo.entity.PostType;
 import com.tml.utils.RedisCache;
 import org.junit.jupiter.api.Test;
@@ -10,6 +13,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
@@ -28,6 +34,11 @@ public class RedisTest {
     private RedisCache redisCache;
 
     @Test
+    public void  remove(){
+        redisCache.deleteObject("rvc_communication_post_type");
+    }
+
+    @Test
     public void  addPostType(){
         ArrayList<PostType> postTypes = new ArrayList<>();
         postTypes.add(new PostType("1","前端","/img/tool-person.png"));
@@ -35,6 +46,18 @@ public class RedisTest {
 
         redisCache.setCacheList(RVC_COMMUNICATION_POST_TYPE,postTypes);
     }
+
+    @Test
+    public void  getPostType(){
+        List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
+        String jsonString = JSON.toJSONString(cacheList);
+        List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
+        Map<String, PostType> collect = postTypes.stream()
+                .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
+        System.out.println(collect);
+
+    }
+
 
 
     @Test

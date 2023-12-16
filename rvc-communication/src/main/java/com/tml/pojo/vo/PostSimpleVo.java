@@ -1,41 +1,24 @@
 package com.tml.pojo.vo;
 
 import com.tml.pojo.entity.PostType;
-import com.tml.pojo.entity.User;
 import com.tml.pojo.entity.UserInfoVO;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 /**
- * @NAME: PostVo
+ * @NAME: PostSimpleVo
  * @USER: yuech
  * @Description:
- * @DATE: 2023/12/5
+ * @DATE: 2023/12/16
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PostVo {
+public class PostSimpleVo {
     //          帖子id
     private String postId;
-//    //        创建帖子用户id
-//    private String uid;
-
-    private UserInfoVO author;
 
     private PostType postType;
 
-////作者用户名
-//    private String username;
-////    作者昵称
-//    private String nickname;
-////    作者头像
-//    private String avatar;
-    //        帖子类型
-//    private String tagId;
     //        帖子标题
     private String title;
     //        帖子内容
@@ -54,10 +37,5 @@ public class PostVo {
     private LocalDateTime createAt;
     //        更新日期
     private LocalDateTime updateAt;
-
-    //是否点赞
-    private boolean like;
-    //是否收藏
-    private boolean collect;
 
 }

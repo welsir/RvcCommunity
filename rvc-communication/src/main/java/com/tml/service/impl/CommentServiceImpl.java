@@ -14,6 +14,7 @@ import com.tml.pojo.dto.DetectionTaskDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.entity.Comment;
 import com.tml.pojo.entity.LikeComment;
+import com.tml.pojo.entity.Post;
 import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import com.tml.utils.BeanCopyUtils;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import static com.tml.constant.DetectionConstants.*;
 
@@ -154,6 +156,12 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         /**
          * 判断用户和评论是否存在
          */
+
+        Comment comment = commentMapper.selectById(coinDto.getId());
+        if (Objects.isNull(comment)){
+            throw new RuntimeException("评论不存在");
+        }
+
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
         if (coinDto.getType().equals("1")){
@@ -162,7 +170,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             try {
                 likeCommentMapper.insert(likeComment);
             } catch (Exception e) {
-                throw new RuntimeException("操作失败");
+                throw new RuntimeException("不允许重复点赞");
             }
             LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
                     .eq(Comment::getPostCommentId, coinDto.getId())
@@ -174,7 +182,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                     .eq(LikeComment::getCommentId,coinDto.getId());
             int delete = likeCommentMapper.delete(likePostLambdaQueryWrapper);
             if (delete == 0){
-                throw new RuntimeException("操作失败");
+                throw new RuntimeException("不允许重复取消点赞");
             }
             LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
                     .eq(Comment::getPostCommentId, coinDto.getId())

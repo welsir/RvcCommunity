@@ -30,13 +30,7 @@ public class PostTypeServiceImpl extends ServiceImpl<PostTypeMapper, PostType> i
     public List<Object> listType(){
         //从redis获取数据
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
-
         return cacheList;
-
     }
-
-
-
-
 
 }

@@ -5,6 +5,7 @@ import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
 import com.tml.pojo.vo.CommentVo;
+import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
 import io.github.common.web.Result;
@@ -127,7 +128,8 @@ public class PostController {
     @SystemLog(businessName = "获取用户点赞的贴子")
     public Result userFavorite(
             @Valid PageInfo<String> params){
-        List<PostVo> postVoListPage = postService.userFavorite(params);
+
+        List<PostSimpleVo> postVoListPage = postService.userFavorite(params);
         return Result.success(postVoListPage);
     }
 
@@ -135,7 +137,7 @@ public class PostController {
     @SystemLog(businessName = "获取用户收藏的贴子")
     public Result userCollect(
             @Valid PageInfo<String> params){
-        List<PostVo> postVoListPage = postService.userCollect(params);
+        List<PostSimpleVo> postVoListPage = postService.userCollect(params);
         return Result.success(postVoListPage);
     }
 
@@ -143,7 +145,7 @@ public class PostController {
     @SystemLog(businessName = "获取用户创建的贴子")
     public Result userCreate(
             @Valid PageInfo<String> params){
-        List<PostVo> postVoListPage = postService.userCreate(params);
+        List<PostSimpleVo> postVoListPage = postService.userCreate(params);
         return Result.success(postVoListPage);
     }
 
