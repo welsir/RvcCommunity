@@ -17,6 +17,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.Map;
 
 @RestController
@@ -38,8 +40,8 @@ public class FeedbackController {
 
     @GetMapping("/list")
     public Result<PageVO<FeedbackVO>> getFeedbackList(@RequestHeader(required = false)String uid,
-                                                      @RequestParam Integer page,
-                                                      @RequestParam Integer limit,
+                                                      @RequestParam @Min(1) Integer page,
+                                                      @RequestParam @Min(1) @Max(42) Integer limit,
                                                       @RequestParam(required = false,value = "") String order){
         return feedbackService.getFeedbackPageVO(page, limit, uid, order);
     }
@@ -79,8 +81,8 @@ public class FeedbackController {
     @GetMapping("/comment/list")
     public Result<PageVO<FeedbackCommentVO>> getCommentList(@RequestHeader(required = false)String uid,
                                                             @RequestParam Long fbid,
-                                                            @RequestParam Integer page,
-                                                            @RequestParam Integer limit,
+                                                            @RequestParam @Min(1) Integer page,
+                                                            @RequestParam @Min(1) @Max(42) Integer limit,
                                                             @RequestParam(required = false,value = "") String order){
         return commentService.getCommentList(fbid,uid,page,limit,order);
     }

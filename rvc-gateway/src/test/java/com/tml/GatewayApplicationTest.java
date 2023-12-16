@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Unit test for simple App.
  */
 @SpringBootTest
-public class AppTest {
+public class GatewayApplicationTest {
     @Test
     public void test(){
         System.out.println("111");
