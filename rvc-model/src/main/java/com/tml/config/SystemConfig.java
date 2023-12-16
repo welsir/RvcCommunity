@@ -26,14 +26,4 @@ public class SystemConfig {
     @Value("${labels.allow_labels}")
     private String[] allowLabels;
 
-
-
-    @PostConstruct
-    public void init(){
-
-
-
-
-    }
-
 }
