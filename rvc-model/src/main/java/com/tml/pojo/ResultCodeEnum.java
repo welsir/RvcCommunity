@@ -27,9 +27,12 @@ public enum ResultCodeEnum {
     QUERY_MODEL_LIST_FAIL(513,"获取模型列表失败"),
     UPLOAD_MODEL_FAIL(514,"上传模型失败"),
     UPLOAD_IMAGE_FAIL(515,"图片上传失败"),
-    GET_USER_INFO_FAIL(516,"获取对应用户失败"),
+    GET_USER_INFO_FAIL(516,"获取用户信息异常"),
     UPDATE_MODEL_VIEWS_FAIL(517,"更新模型浏览量失败"),
-    ADD_MODEL_LABEL_FAIL(518,"添加模型标签失败");
+    ADD_MODEL_LABEL_FAIL(518,"添加模型标签失败"),
+    SORT_FAIL(519,"排序参数错误"),
+    PARAM_ID_IS_ERROR(520,"参数ID不正确"),
+    INSERT_MODEL_USER_RELATIVE_FAIL(521,"插入模型-用户关系表失败");
 
 
     /**

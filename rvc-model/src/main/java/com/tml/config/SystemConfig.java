@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 /**
  * @Description
  * @Author welsir
@@ -21,6 +23,17 @@ public class SystemConfig {
     @Value("${file.image-file-size}")
     private String imageSize;
 
+    @Value("${labels.allow_labels}")
+    private String[] allowLabels;
 
+
+
+    @PostConstruct
+    public void init(){
+
+
+
+
+    }
 
 }

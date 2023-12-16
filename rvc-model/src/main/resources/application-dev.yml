@@ -71,3 +71,9 @@ file:
     handler: ${Logger:slf4j}
     enable: true
   image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
+
+labels:
+  allow_labels: ${LABELS:ENC(ZGOcc9GZKPsDfP3fQ4xgMxdUr4FgsQAYKvY5MD6ePaEi/4HkZH5yAQ==)}
+
+mq:
+  enable: ${DEFAULT_MQ:rabbit}

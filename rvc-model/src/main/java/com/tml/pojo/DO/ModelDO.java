@@ -24,7 +24,6 @@ public class ModelDO {
     private String fileId;
     private String name;
     private String typeId;
-    private String labelId;
     private String collectionNum;
     private String likesNum;
     private String viewNum;

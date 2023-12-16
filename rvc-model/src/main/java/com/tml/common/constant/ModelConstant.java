@@ -15,4 +15,6 @@ public class ModelConstant {
 
     public static final String UPLOAD_MODEL_SUCCESS = "2";
 
+    public static final String SERVICE_NAME = "model";
+
 }

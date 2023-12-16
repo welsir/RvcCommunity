@@ -8,6 +8,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 /**
  * @Description
@@ -23,8 +24,7 @@ public class ModelInsertVO {
     private String name;
     @NotBlank(message = "模型类型不能为空")
     private String typeId;
-    @NotBlank(message = "模型标签不能为空")
-    private String labelId;
+    private List<String> labelId;
     @NotNull(message = "不能传入空字符")
     private String description;
     @NotNull(message = "不能传入空字符")

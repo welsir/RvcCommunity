@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
+import java.util.List;
+
 /**
  * @Description
  * @Author welsir
@@ -19,7 +21,7 @@ public class ModelVO {
     private String id;
     private String name;
     private String type;
-    private String label;
+    private List<String> label;
     private String picture;
     private String description;
     private String note;

@@ -10,7 +10,6 @@ import com.tml.common.log.AbstractLogger;
 import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
 import com.tml.core.client.UserServiceClient;
-import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
 import com.tml.mapper.ModelUserMapper;
@@ -25,6 +24,7 @@ import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -96,11 +96,24 @@ public class ModelServiceImpl implements ModelService {
     public ModelVO queryOneModel(String modelId, String uid) {
         try {
             ModelDO model = mapper.selectById(modelId);
+            if(model==null){
+                throw new BaseException(ResultCodeEnum.QUERY_MODEL_FAIL);
+            }
             ModelVO modelVO = ModelVO.builder().build();
             BeanUtils.copyProperties(model,modelVO);
             modelVO.setId(String.valueOf(model.getId()));
             modelVO.setType(typeMapper.selectById(model.getTypeId()).getType());
-            modelVO.setLabel(labelMapper.selectById(model.getLabelId()).getLabel());
+            List<String> labelList = labelMapper.selectListById(String.valueOf(model.getId()));
+            if(labelList!=null){
+                List<String> strings = new ArrayList<>();
+                for (String s : labelList) {
+                    String label = labelMapper.selectById(s).getLabel();
+                    strings.add(label);
+                    modelVO.setLabel(strings);
+                }
+            }else {
+                modelVO.setLabel(null);
+            }
             modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
             modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
             Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
@@ -114,11 +127,13 @@ public class ModelServiceImpl implements ModelService {
             modelVO.setAvatar(userInfo.getData().getAvatar());
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
-        }catch (BaseException e){
+        }catch (RuntimeException e){
+            logger.error(e);
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_FAIL);
         }
     }
 
+    @Transactional
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
         ModelDO modelDO = new ModelDO();
@@ -133,15 +148,24 @@ public class ModelServiceImpl implements ModelService {
         if(insert!=1){
             throw new BaseException(ResultCodeEnum.ADD_MODEL_FAIL);
         }
+        if(model.getLabelId()!=null){
+            try{
+                labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
+            }catch (RuntimeException e){
+                logger.error(e);
+                throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
+            }
+        }
         ModelUserDO modelUserDO = new ModelUserDO();
         modelUserDO.setModelId(String.valueOf(modelDO.getId()));
         modelUserDO.setUid(uid);
-        modelUserMapper.insert(modelUserDO);
         try {
-            asyncService.processModelAsync(modelDO);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            modelUserMapper.insert(modelUserDO);
+        }catch (RuntimeException e){
+            logger.error(e);
+            throw new BaseException(ResultCodeEnum.INSERT_MODEL_USER_RELATIVE_FAIL);
         }
+        asyncService.processModelAsync(modelDO);
     }
 
     @Override
@@ -214,16 +238,25 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public String insertLabel(String label, String uid) {
         Assert.notNull(uid,"用户未登录");
-        ModelLabelDO modelLabelDO = new ModelLabelDO();
+        LabelDO labelDO = new LabelDO();
         try {
-            modelLabelDO.setLabel(label);
-            modelLabelDO.setCreateTime(dateUtil.formatDate());
-            labelMapper.insert(modelLabelDO);
+            labelDO.setLabel(label);
+            labelDO.setCreateTime(dateUtil.formatDate());
+            labelDO.setHasShow(UN_DETECTION.getStatus().toString());
+            labelMapper.insert(labelDO);
+            DetectionTaskDTO dto = DetectionTaskDTO.builder()
+                    .id(String.valueOf(labelDO.getId()))
+                    .name("model-com.tml.pojo.DO.LabelDO").content(labelDO.getLabel()).
+                    build();
+            AsyncdetectionForm form = new AsyncdetectionForm();
+            form.setTaskDTO(dto);
+            form.setType("text");
+            asyncService.listenerMq(List.of(form));
         }catch (RuntimeException e){
-            logger.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
+            logger.error(e);
             throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
         }
-        return String.valueOf(modelLabelDO.getId());
+        return String.valueOf(labelDO.getId());
     }
 
     @Override
@@ -288,8 +321,12 @@ public class ModelServiceImpl implements ModelService {
             modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData());
         }catch (RuntimeException e){
             logger.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
-            throw new RuntimeException(e);
+            throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
         }
+        Long modelId = model.getId();
+        List<String> list = labelMapper.selectListById(modelId.toString());
+        List<String> labels = labelMapper.getLabels(list);
+        modelVO.setLabel(labels);
         if(uid==null){
             modelVO.setIsLike("0");
             modelVO.setIsCollection("0");
@@ -302,7 +339,6 @@ public class ModelServiceImpl implements ModelService {
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
-        Date date = new Date(System.currentTimeMillis());
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(this::convertToModelVO)
                 .collect(Collectors.toList());
@@ -322,8 +358,7 @@ public class ModelServiceImpl implements ModelService {
                 queryWrapper.orderByDesc("view_num");
                 break;
             default:
-                // 默认排序逻辑
-                break;
+                throw new BaseException(ResultCodeEnum.SORT_FAIL);
         }
     }
 
