@@ -1,14 +1,11 @@
 package com.tml.core.client;
 
 import com.tml.common.Result;
-import com.tml.config.FeignConfig;
 import com.tml.constant.RemoteModuleURL;
 import com.tml.pojo.DTO.UserInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-
-import javax.activation.MimeType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 /**
@@ -19,7 +16,7 @@ import javax.activation.MimeType;
 @FeignClient(name = "tml-user-service")
 public interface UserServiceClient {
 
-    @GetMapping(value = RemoteModuleURL.GET_USERINFO,consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = RemoteModuleURL.GET_USERINFO)
     Result<UserInfoDTO> getUserInfo(@RequestParam("uid") String uid);
 
 }
