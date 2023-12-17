@@ -27,8 +27,8 @@ spring:
     password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)}
     timeout: 3000ms
   rabbitmq:
-    host: ${MQ_ADDR:ENC(EdvVJoPyMDMWlcxJ/dKnRnP6hIH/eyyLo0pHab0HbWE=)} # rabbitMQµÄipµØÖ·
-    port: ${MQ_PORT:ENC(lA59hkbOPGfPYnd/ossrjwfdj1g+QKzy)} # ¶Ë¿Ú
+    host: ${MQ_ADDR:ENC(EdvVJoPyMDMWlcxJ/dKnRnP6hIH/eyyLo0pHab0HbWE=)}
+    port: ${MQ_PORT:ENC(lA59hkbOPGfPYnd/ossrjwfdj1g+QKzy)}
     username: ${MQ_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
     password: ${MQ_PWD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
     virtual-host: /
