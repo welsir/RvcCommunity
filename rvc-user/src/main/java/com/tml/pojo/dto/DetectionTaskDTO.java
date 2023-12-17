@@ -17,9 +17,9 @@ public class DetectionTaskDTO implements Serializable {
     private String content;
     private String name;
 
-    public static DetectionTaskDTO createDTO(String modelId, String content, String name) {
+    public static DetectionTaskDTO createDTO(String uid, String content, String name) {
         return DetectionTaskDTO.builder()
-                .id(modelId)
+                .id(uid)
                 .content(content)
                 .name(name)
                 .build();

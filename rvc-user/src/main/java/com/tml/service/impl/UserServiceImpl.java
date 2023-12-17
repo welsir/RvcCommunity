@@ -1,8 +1,10 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.tml.common.DetectionStatusEnum;
 import com.tml.common.fegin.file.FileForm;
 import com.tml.common.fegin.file.FileService;
+import com.tml.common.rabbitmq.UserRabbitMQListener;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
@@ -12,10 +14,7 @@ import com.tml.pojo.DO.AuthUser;
 import com.tml.pojo.DO.UserData;
 import com.tml.pojo.DO.UserFollow;
 import com.tml.pojo.DO.UserInfo;
-import com.tml.pojo.dto.LoginDTO;
-import com.tml.pojo.dto.RegisterDTO;
-import com.tml.pojo.dto.UpdatePasswordDTO;
-import com.tml.pojo.dto.UserInfoDTO;
+import com.tml.pojo.dto.*;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
@@ -63,6 +62,9 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     UserDataMapper userDataMapper;
+
+    @Resource
+    UserRabbitMQListener rabbitMQListener;
 
     @Resource
     CodeUtil codeUtil;
@@ -116,6 +118,7 @@ public class UserServiceImpl implements UserService {
         userInfo.setPassword(password);
         userInfo.setRegisterData(LocalDateTime.now());
         userInfo.setUpdatedAt(LocalDateTime.now());
+        userInfo.setHas_show(1);
         int retryCount = 0;
         boolean success = false;
         while (retryCount < MAX_RETRIES && !success) {
@@ -222,6 +225,14 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
+        userInfo.setHas_show(0);
+
+        rabbitMQListener.sendMsgToMQ(DetectionTaskDTO
+                .builder()
+                .content(userInfoDTO.getDescription())
+                .id(userInfo.getUid())
+                .name(userInfo.getUsername())
+                .build(), "txt");
         BeanUtils.copyProperties(userInfoDTO, userInfo);
         userInfoMapper.updateById(userInfo);
     }
@@ -282,6 +293,9 @@ public class UserServiceImpl implements UserService {
         queryWrapper.eq("uid", authUser.getUid());
         UserData userData = userDataMapper.selectOne(queryWrapper);
         BeanUtils.copyProperties(userData, userInfoVO);
+        if(userInfo.getHas_show() == DetectionStatusEnum.UN_DETECTION.getStatus()){
+            userInfoVO.setDescription("审核中");
+        }
         return userInfoVO;
     }
 

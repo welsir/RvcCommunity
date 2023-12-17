@@ -17,6 +17,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,7 @@ import java.nio.charset.StandardCharsets;
  * @Date 2023/12/17
  * @Author xiaochun
  */
+@Component
 public class UserRabbitMQListener implements ListenerInterface {
     private static final Logger logger = LoggerFactory.getLogger(UserRabbitMQListener.class);
 

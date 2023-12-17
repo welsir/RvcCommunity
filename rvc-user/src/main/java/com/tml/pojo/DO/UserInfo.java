@@ -42,4 +42,6 @@ public class UserInfo {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    private int has_show;
 }
