@@ -66,9 +66,10 @@ public class AsyncService {
     @Async
     public void asyncAddModelViewNums(String modelId){
         try {
-            List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId));
-            ModelDO modelDO = list.get(0);
-            mapper.update(modelDO,new UpdateWrapper<ModelDO>().set("view_num",modelDO.getViewNum()+1));
+            UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id",modelId)
+                            .setSql("likes_num = likes_num+1");
+            mapper.update(null,wrapper);
         }catch (RuntimeException e){
             logger.error("%s:"+e.getStackTrace()[0],e);
             throw new BaseException(ResultCodeEnum.UPDATE_MODEL_VIEWS_FAIL);

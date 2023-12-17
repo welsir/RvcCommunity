@@ -3,10 +3,7 @@ package com.tml.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.Result;
 import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.VO.ModelInsertVO;
-import com.tml.pojo.VO.ModelUpdateFormVO;
-import com.tml.pojo.VO.ModelVO;
-import com.tml.pojo.VO.SingleModelVO;
+import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,20 +28,20 @@ public class ModelController {
 
     @GetMapping("/list")
     public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
-                                  @RequestParam(value = "limit",required = false)  @Size(max = 10) String size,
-                                  @RequestParam("sortType") @NotBlank String sortType,
+                                  @RequestParam(value = "limit",required = false) String size,
+                                  @RequestParam(value = "sortType",required = false)  String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(size,page,sortType,uid);
         return Result.success(modelList);
     }
 
-    @GetMapping("/list/{type}")
-    public Result<?> getModelListByType(@PathVariable @NotBlank String type,
+    @GetMapping("/list/{typeId}")
+    public Result<?> getModelListByType(@PathVariable @NotBlank String typeId,
                                         @RequestParam("page") @NotBlank String page,
-                                        @RequestParam(value = "limit",required = false)  @Size(max = 10) String size,
-                                        @RequestParam("sortType") @NotBlank String sortType,
+                                        @RequestParam(value = "limit",required = false)  String size,
+                                        @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
-        Page<ModelVO> modelList = modelService.getModelList(type,page,size,sortType,uid);
+        Page<ModelVO> modelList = modelService.getModelList(typeId,page,size,sortType,uid);
         return Result.success(modelList);
     }
 
@@ -133,5 +130,17 @@ public class ModelController {
                                         @RequestParam("page") String page,
                                         @RequestParam(value = "limit",required = false)String limit){
         return Result.success(modelService.queryUserModelList(uid,page,limit));
+    }
+
+    @PostMapping("/comment")
+    public Result<?> addComment(@RequestBody @Validated CommentFormVO commentFormVO,
+                                     @RequestHeader("uid") String uid){
+        return Result.success(modelService.commentModel(commentFormVO,uid));
+    }
+
+    @PostMapping("/comment/likes")
+    public Result<?> likeComment(@RequestHeader("uid") String uid,
+                                 @RequestParam("id") @NotBlank String commentId){
+        return Result.success(modelService.likeComment(uid,commentId));
     }
 }

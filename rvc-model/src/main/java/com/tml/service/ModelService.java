@@ -18,7 +18,7 @@ public interface ModelService {
 
     Page<ModelVO> getModelList(String size, String page,String sortType,String uid);
 
-    Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid);
+    Page<ModelVO> getModelList(String type,String page,String size,String sortType,String uid);
 
     ModelVO queryOneModel(String modelId, String uid);
 
@@ -43,5 +43,10 @@ public interface ModelService {
     Boolean delSingleModel(String modelId);
 
     Page<ModelVO> queryUserModelList(String uid,String page,String limit);
+
+    String commentModel(CommentFormVO commentFormVO,String uid);
+
+    Boolean likeComment(String uid,String commentId);
+
 
 }

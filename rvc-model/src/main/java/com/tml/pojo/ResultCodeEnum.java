@@ -32,7 +32,9 @@ public enum ResultCodeEnum {
     ADD_MODEL_LABEL_FAIL(518,"添加模型标签失败"),
     SORT_FAIL(519,"排序参数错误"),
     PARAM_ID_IS_ERROR(520,"参数ID不正确"),
-    INSERT_MODEL_USER_RELATIVE_FAIL(521,"插入模型-用户关系表失败");
+    INSERT_MODEL_USER_RELATIVE_FAIL(521,"插入模型-用户关系表失败"),
+    ADD_COMMENT_FAIL(522,"评论失败"),
+    USER_COMMENT_FAIL(523,"无法重复点赞");
 
 
     /**

@@ -14,10 +14,7 @@ import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
 import com.tml.core.client.UserServiceClient;
 import com.tml.core.rabbitmq.ModelListener;
-import com.tml.mapper.LabelMapper;
-import com.tml.mapper.ModelMapper;
-import com.tml.mapper.ModelUserMapper;
-import com.tml.mapper.TypeMapper;
+import com.tml.mapper.*;
 import com.tml.pojo.DO.*;
 
 import com.tml.pojo.DTO.*;
@@ -59,6 +56,8 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     ModelUserMapper modelUserMapper;
     @Resource
+    CommentMapper commentMapper;
+    @Resource
     FileServiceClient fileServiceClient;
     @Resource
     UserServiceClient userServiceClient;
@@ -82,7 +81,7 @@ public class ModelServiceImpl implements ModelService {
                     .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                     .eq("has_delete",ModelConstant.UN_DELETE);
             setSortingCriteria(queryWrapper, sortType);
-            page = page==null? systemConfig.getSize():Long.parseLong(page)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():page;
+            size = (size==null|| "".equals(size))? systemConfig.getSize():Long.parseLong(size)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():size;
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
@@ -90,13 +89,13 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid) {
+    public Page<ModelVO> getModelList(String type,String page,String size,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
                     .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                     .eq("has_delete",ModelConstant.UN_DELETE)
                     .eq("type_id",type);
-            page = page==null? systemConfig.getSize():Long.parseLong(page)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():page;
+            size = (size==null|| "".equals(size))? systemConfig.getSize():Long.parseLong(size)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():size;
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -377,6 +376,48 @@ public class ModelServiceImpl implements ModelService {
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 
+    @Override
+    public String commentModel(CommentFormVO commentFormVO,String uid) {
+        try {
+            CommentDO commentDO = new CommentDO();
+            commentDO.setContent(commentFormVO.getContent());
+            commentDO.setModelId(commentFormVO.getModelId());
+            commentDO.setUid(uid);
+            commentDO.setHasShow(UN_DETECTION.getStatus().toString());
+            commentDO.setUpdateTime(dateUtil.formatDate());
+            commentDO.setCreateTime(dateUtil.formatDate());
+            commentDO.setReplyId(commentFormVO.getReplyId());
+            commentDO.setLikesNum("0");
+            commentMapper.insert(commentDO);
+            DetectionTaskDTO dto = DetectionTaskDTO.builder()
+                    .id(commentDO.getId().toString())
+                    .content(commentFormVO.getContent())
+                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO").build();
+            AsyncDetectionForm form = new AsyncDetectionForm();
+            form.setTaskDTO(dto);
+            form.setType(ModelConstant.TEXT_TYPE);
+            asyncService.listenerMq(List.of(form));
+            return commentDO.getId().toString();
+        }catch (RuntimeException e){
+            logger.error(e);
+            throw new BaseException(ResultCodeEnum.ADD_COMMENT_FAIL);
+        }
+    }
+
+    @Transactional
+    @Override
+    public Boolean likeComment(String uid, String commentId) {
+
+        if(commentMapper.selectDOById(commentId,uid)!=null){
+            throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
+        }
+        UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id",commentId)
+                .setSql("likes_num = likes_num + 1");
+        commentMapper.insertUserCommentRelative(commentId,uid);
+        return commentMapper.update(null,wrapper) == 1;
+    }
+
     private ModelVO convertToModelVO(ModelDO model,String myUid) {
         ModelVO modelVO;
         String uid;
@@ -413,14 +454,17 @@ public class ModelServiceImpl implements ModelService {
     }
 
     private void setSortingCriteria(QueryWrapper<ModelDO> queryWrapper, String sortType) {
+        if(sortType==null||"".equals(sortType)){
+            sortType = "1";
+        }
         switch (sortType) {
-            case "time":
+            case "1":
                 queryWrapper.orderByDesc("create_time");
                 break;
-            case "likes":
+            case "2":
                 queryWrapper.orderByDesc("likes_num");
                 break;
-            case "views":
+            case "3":
                 queryWrapper.orderByDesc("view_num");
                 break;
             default:
