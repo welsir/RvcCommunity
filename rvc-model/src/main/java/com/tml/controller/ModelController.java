@@ -140,7 +140,29 @@ public class ModelController {
 
     @PostMapping("/comment/likes")
     public Result<?> likeComment(@RequestHeader("uid") String uid,
+                                 @RequestParam("type") String type,
                                  @RequestParam("id") @NotBlank String commentId){
-        return Result.success(modelService.likeComment(uid,commentId));
+        return Result.success(modelService.likeComment(uid,commentId,type));
     }
+
+    @GetMapping("/comment/first")
+    public Result<?> queryFirstComments(@RequestParam("id")@NotBlank String commentId,
+                                        @RequestParam(value = "limit",required = false) String limit,
+                                        @RequestParam(value = "sortType",required = false) String sortType,
+                                        @RequestParam("page") @NotBlank String page,
+                                        @RequestHeader(value = "uid",required = false) String uid){
+        return Result.success(modelService.queryFirstCommentList(commentId,page,limit,sortType,uid));
+    }
+
+    @GetMapping("/comment/second")
+    public Result<?> querySecondComments(
+            @RequestParam("id") @NotBlank String commentId,
+            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam(value = "sortType",required = false) String sortType,
+            @RequestParam("page") @NotBlank String page,
+            @RequestHeader(value = "uid",required = false) String uid
+    ){
+        return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
+    }
+
 }

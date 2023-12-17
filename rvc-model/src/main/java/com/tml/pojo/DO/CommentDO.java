@@ -18,7 +18,7 @@ public class CommentDO {
     private String content;
     private String uid;
     private String modelId;
-    private String replyId;
+    private String parentId;
     private String likesNum;
     private String hasShow;
     private String createTime;

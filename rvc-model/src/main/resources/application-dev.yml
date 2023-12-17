@@ -66,6 +66,8 @@ server:
 
 page:
   size: ${DEFAULT_SIZE:ENC(247Kmy9z8U5mzJ2r/ZBKAuHF3/cxGaGW)}
+  first-comment-size: ${FIRST_COMMENT_SIZE:ENC(RtHVkEg8bCEwtMqRh6B/knAJOi+o1pH/)}
+  second-comment-size: ${SECOND_COMMENT_SIZE:ENC(aleeydE6I3CEYesZDCQPtRELxqvU/fYR)}
 
 file:
   logger:

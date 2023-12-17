@@ -1,6 +1,5 @@
 package com.tml.service.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -376,6 +375,7 @@ public class ModelServiceImpl implements ModelService {
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 
+    @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
         try {
@@ -386,9 +386,12 @@ public class ModelServiceImpl implements ModelService {
             commentDO.setHasShow(UN_DETECTION.getStatus().toString());
             commentDO.setUpdateTime(dateUtil.formatDate());
             commentDO.setCreateTime(dateUtil.formatDate());
-            commentDO.setReplyId(commentFormVO.getReplyId());
+            commentDO.setParentId(commentFormVO.getReplyId());
             commentDO.setLikesNum("0");
             commentMapper.insert(commentDO);
+            if(commentDO.getParentId()==null||"".equals(commentDO.getParentId())){
+                commentMapper.insertFirstModelComment(commentDO.getModelId(),commentDO.getId().toString());
+            }
             DetectionTaskDTO dto = DetectionTaskDTO.builder()
                     .id(commentDO.getId().toString())
                     .content(commentFormVO.getContent())
@@ -406,16 +409,85 @@ public class ModelServiceImpl implements ModelService {
 
     @Transactional
     @Override
-    public Boolean likeComment(String uid, String commentId) {
+    public Boolean likeComment(String uid, String commentId,String type) {
 
         if(commentMapper.selectDOById(commentId,uid)!=null){
-            throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
+            if("true".equals(type)){
+                throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
+            }
+            commentMapper.delUserCommentLikes(commentId,uid);
+            return true;
         }
         UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",commentId)
                 .setSql("likes_num = likes_num + 1");
         commentMapper.insertUserCommentRelative(commentId,uid);
         return commentMapper.update(null,wrapper) == 1;
+    }
+
+    @Override
+    public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
+        List<String> firsComments  = commentMapper.queryCommentIds(modelId);
+        QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
+        wrapper.in("id",firsComments);
+        limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
+        setSortingCriteria(wrapper,sortType);
+        return getFirstComment(wrapper,page,limit,uid);
+    }
+
+    @Override
+    public Page<SecondCommentVO> querySecondCommentList(String parentCommentId,String page,String limit,String sortType, String uid) {
+        List<String> secondComments  = commentMapper.querySecondComments(parentCommentId);
+        QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
+        wrapper.in("id",secondComments);
+        limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
+        setSortingCriteria(wrapper,sortType);
+        return getSecondCommentList(wrapper,page,limit,uid);
+    }
+
+    private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
+        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
+        List<FirstCommentVO> firstCommentVOList = commentDOPage.getRecords().stream()
+                .map(commentDO -> convertToFirstCommentVO(commentDO, uid))
+                .collect(Collectors.toList());
+        return new Page<FirstCommentVO>().setRecords(firstCommentVOList);
+    }
+
+    private FirstCommentVO convertToFirstCommentVO(CommentDO commentDO,String uid){
+        FirstCommentVO.FirstCommentVOBuilder builder = FirstCommentVO.builder();
+        if(uid==null||"".equals(uid)){
+            builder.isLikes("0");
+        }else{
+            builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
+        }
+        String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
+        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
+        builder.uid(commentUid)
+                .commentTime(commentDO.getCreateTime())
+                .content(commentDO.getContent())
+                .likesNum(commentDO.getLikesNum())
+                .picture(userInfo.getData().getAvatar())
+                .nickname(userInfo.getData().getNickname());
+        return builder.build();
+    }
+
+    private SecondCommentVO convertToSecondCommentVO(CommentDO commentDO,String uid){
+        SecondCommentVO.SecondCommentVOBuilder builder = SecondCommentVO.builder();
+        if(uid==null||"".equals(uid)){
+            builder.isLikes("0");
+        }else {
+            builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
+        }
+        String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
+        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
+        builder.uid(commentUid)
+                .parentId(commentDO.getParentId())
+                .commentTime(commentDO.getCreateTime())
+                .content(commentDO.getContent())
+                .likesNum(commentDO.getLikesNum())
+                .picture(userInfo.getData().getAvatar())
+                .nickname(userInfo.getData().getNickname());
+        return builder.build();
     }
 
     private ModelVO convertToModelVO(ModelDO model,String myUid) {
@@ -445,6 +517,14 @@ public class ModelServiceImpl implements ModelService {
         return modelVO;
     }
 
+    private Page<SecondCommentVO> getSecondCommentList(QueryWrapper<CommentDO> queryWrapper,String page,String size,String uid){
+        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size), false), queryWrapper);
+        List<SecondCommentVO> secondCommentVOS = commentDOPage.getRecords().stream()
+                .map(commentDO -> convertToSecondCommentVO(commentDO, uid))
+                .collect(Collectors.toList());
+        return new Page<SecondCommentVO>().setRecords(secondCommentVOS);
+    }
+
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
@@ -453,7 +533,7 @@ public class ModelServiceImpl implements ModelService {
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 
-    private void setSortingCriteria(QueryWrapper<ModelDO> queryWrapper, String sortType) {
+    private void setSortingCriteria(QueryWrapper queryWrapper, String sortType) {
         if(sortType==null||"".equals(sortType)){
             sortType = "1";
         }

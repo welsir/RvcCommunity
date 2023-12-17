@@ -26,4 +26,10 @@ public class SystemConfig {
     @Value("${labels.allow_labels}")
     private String[] allowLabels;
 
+    @Value("${page.first-comment-size}")
+    private String firstCommentLimit;
+
+    @Value("${page.second-comment-size}")
+    private String secondCommentLimit;
+
 }
