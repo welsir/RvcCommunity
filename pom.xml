@@ -27,6 +27,7 @@
         <module>rvc-admin</module>
         <module>rvc-chatroom</module>
         <module>rvc-communication</module>
+        <module>rvc-rpc</module>
     </modules>
 
     <properties>
