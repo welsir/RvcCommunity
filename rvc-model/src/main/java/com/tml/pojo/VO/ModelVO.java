@@ -37,7 +37,7 @@ public class ModelVO {
 
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO result){
         return ModelVO.builder()
-                .id(String.valueOf(modelDO.getFileId()))
+                .id(String.valueOf(modelDO.getId()))
                 .name(modelDO.getName())
                 .picture(modelDO.getPicture())
                 .likesNum(modelDO.getLikesNum())

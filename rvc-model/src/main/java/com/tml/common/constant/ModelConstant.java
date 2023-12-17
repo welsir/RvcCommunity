@@ -21,4 +21,8 @@ public class ModelConstant {
 
     public static final String IMAGE_TYPE = "image";
 
+    public static final boolean UN_DELETE = false;
+
+    public static final boolean DELETE = true;
+
 }

@@ -1,6 +1,8 @@
 package com.tml.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.Result;
@@ -69,13 +71,13 @@ public class ModelServiceImpl implements ModelService {
     ModelListener listener;
     @Resource
     DateUtil dateUtil;
-    private HashMap<String,String> modelStatus = new HashMap<>();
 
     @Override
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
+                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
+                    .eq("has_delete",ModelConstant.UN_DELETE);
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -87,8 +89,9 @@ public class ModelServiceImpl implements ModelService {
     public Page<ModelVO> getModelList(String type,String size,String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS)
-                    .eq("type",type);
+                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
+                    .eq("has_delete",ModelConstant.UN_DELETE)
+                    .eq("type_id",type);
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -336,8 +339,18 @@ public class ModelServiceImpl implements ModelService {
         return list;
     }
 
+    @Transactional
+    @Override
+    public Boolean delSingleModel(String modelId) {
+        UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id",modelId);
+        wrapper.set("has_delete",ModelConstant.DELETE);
+        mapper.deleteLikesByModelId(modelId);
+        mapper.deleteCollectionByModelId(modelId);
+        return mapper.update(null,wrapper)==1;
+    }
 
-    private ModelVO convertToModelVO(ModelDO model) {
+    private ModelVO convertToModelVO(ModelDO model,String myUid) {
         ModelVO modelVO;
         String uid;
         try {
@@ -346,29 +359,29 @@ public class ModelServiceImpl implements ModelService {
             Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
             modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData());
         }catch (RuntimeException e){
-            logger.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
+            logger.error(e);
             throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
         }
         Long modelId = model.getId();
         List<String> list = labelMapper.selectListById(modelId.toString());
         List<String> labels = labelMapper.getLabels(list);
         modelVO.setLabel(labels);
-        if(uid==null){
+        if(myUid==null){
             modelVO.setIsLike("0");
             modelVO.setIsCollection("0");
             return modelVO;
         }
-        modelVO.setIsLike(mapper.queryUserModelLikes(uid,model.getFileId())==null?"0":"1");
-        modelVO.setIsCollection(mapper.queryUserModelCollection(uid,model.getFileId())==null?"0":"1");
+        modelVO.setType(typeMapper.selectById(model.getTypeId()).getType());
+        modelVO.setIsLike(mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1");
+        modelVO.setIsCollection(mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1");
         return modelVO;
     }
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(this::convertToModelVO)
+                .map(modelDO -> convertToModelVO(modelDO,uid))
                 .collect(Collectors.toList());
-
         return new Page<ModelVO>().setRecords(modelVOList);
     }
 

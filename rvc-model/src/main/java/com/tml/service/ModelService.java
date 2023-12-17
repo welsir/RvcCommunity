@@ -40,4 +40,6 @@ public interface ModelService {
 
     List<UserCollectionModelVO> getUserCollectionList(String uid);
 
+    Boolean delSingleModel(String modelId);
+
 }

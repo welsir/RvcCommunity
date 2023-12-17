@@ -121,4 +121,10 @@ public class ModelController {
     ){
         return Result.success(modelService.getUserCollectionList(uid));
     }
+
+    @DeleteMapping("one")
+    public Result<?> delOneModel(@RequestParam("id") String modelId,
+                                 @RequestHeader("uid") String uid){
+        return Result.success(modelService.delSingleModel(modelId));
+    }
 }
