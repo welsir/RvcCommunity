@@ -65,6 +65,9 @@ public class ReceiveHandler {
 
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
 
+        System.out.println(detectionTaskDto);
+
+
 ////处理逻辑  更新数据库
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
         //如果没有的话就是其他服务的处理  直接放行

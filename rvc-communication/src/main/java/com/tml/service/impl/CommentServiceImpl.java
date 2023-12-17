@@ -5,13 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.CommentMapper;
 import com.tml.mapper.LikeCommentMapper;
 import com.tml.mq.handler.ProducerHandler;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.CommentDto;
-import com.tml.pojo.dto.DetectionTaskDto;
-import com.tml.pojo.dto.PageInfo;
+import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.Comment;
 import com.tml.pojo.entity.LikeComment;
 import com.tml.pojo.entity.Post;
@@ -45,7 +43,8 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
     @Override
     public void comment(CommentDto commentDto) {
-        String uid = "1";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uid = loginInfoDTO.getId();
 
         if (commentDto.getPostId() == null)
         {
@@ -152,7 +151,8 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
     @Override
     public void favorite(CoinDto coinDto) {
-        String uid = "1";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uid = loginInfoDTO.getId();
         /**
          * 判断用户和评论是否存在
          */

@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class DetectionStatusDto {
 
-
+//    private String uuid;
 
     private Long id;
 

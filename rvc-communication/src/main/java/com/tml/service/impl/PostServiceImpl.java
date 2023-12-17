@@ -9,12 +9,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.feign.user.RvcUserServiceFeignClient;
+import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.*;
 import com.tml.mq.handler.ProducerHandler;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.DetectionTaskDto;
-import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.dto.PostDto;
+import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
@@ -68,7 +66,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
-//    private final RedisCache redisCache;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
@@ -80,11 +77,17 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public List<PostVo> list(PageInfo<String> params,String tagId) {
-
         /**
-         * 模拟获取uuid
+         * 1、分页获取数据（如果有tagId 添加条件）
+         * 2、调用用户服务获取作者信息
+         * 3、从redis获取tag信息
+         * 4、将所有信息封装
+         * 5、如果用户登录去关系表查询 是否关联的信息
+         * 6、排序返回结果
          */
-        String uuid = "1735241323452608514";
+
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
         //分页
         Integer pageNum = params.getPage();
@@ -93,7 +96,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS)  // 审核通过
                 .eq(Post::getHasDelete,0);       //没有被删除
-        //tagId 不为空
+        //tagId 不为空  更具tagId 查询
         if (!Strings.isBlank(tagId)){
             queryWrapper.eq(Post::getTagId,tagId);
         }
@@ -156,14 +159,18 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public PostVo details(String postId) {
-
         /**
-         * 模拟获取uuid
+         * 1、判断要查询的帖子是否存在
+         * 2、调用用户服务获取作者信息
+         * 3、从redis获取tag信息
+         * 4、如果用户未登录 直接返回结果    否则异步浏览次数+1
+         * 5、用户登录  返回 关联信息
          */
-        String uuid = "1734216713637244929";
+
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
 
-//        更具id获取数据
         Post post = this.getById(postId);
         if (Objects.isNull(post)){
             throw new RuntimeException("帖子不存在");
@@ -206,8 +213,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public String cover(String coverUrl) {
         /**
-         * 判断用户是否登录
+         * 需要改
+         * 不走前端上传文件
          */
+
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
 //        数据库添加记录
         String coverId = Uuid.getUuid();
@@ -215,6 +226,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .coverId(coverId)
                 .detectionStatus(UN_DETECTION)
                 .coverUrl(coverUrl)
+                .uid(uuid)
                 .build();
         coverMapper.insert(cover);
 
@@ -234,9 +246,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void favorite(CoinDto coinDto) {
-//        模拟获取uid
-        String uid = "1";
-
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uid = loginInfoDTO.getId();
 
         /**
          * 判断用户是否存在
@@ -278,7 +289,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void collection(CoinDto coinDto) {
-        String uid = "1";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uid = loginInfoDTO.getId();
         /**
          * 判断用户和评论是否存在
          */
@@ -319,7 +331,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public void delete(String postId) {
 
-        String uuid = "1735241323452608514";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
         //帖子是否存在
         Post DBpost = postMapper.selectById(postId);
@@ -351,7 +364,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 /**
  * 模拟获取userid
  */
-        String userid = "1735241323452608514";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String userid = loginInfoDTO.getId();
 
         String uuid = Uuid.getUuid();
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
@@ -426,7 +440,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public List<PostSimpleVo> userFavorite(PageInfo<String> params) {
 
-        String uuid = "1735662165315596290";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -471,7 +486,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public List<PostSimpleVo> userCollect(PageInfo<String> params) {
 
-        String uuid = "1735662165315596290";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -518,7 +534,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public List<PostSimpleVo> userCreate(PageInfo<String> params) {
-        String uuid = "1735662165315596290";
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String uuid = loginInfoDTO.getId();
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
