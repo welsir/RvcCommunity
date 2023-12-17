@@ -17,4 +17,8 @@ public class ModelConstant {
 
     public static final String SERVICE_NAME = "model";
 
+    public static final String TEXT_TYPE = "text";
+
+    public static final String IMAGE_TYPE = "image";
+
 }

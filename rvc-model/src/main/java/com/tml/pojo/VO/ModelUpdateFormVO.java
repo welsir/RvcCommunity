@@ -9,6 +9,7 @@ import lombok.Data;
  */
 @Data
 public class ModelUpdateFormVO {
+    private String id;
     private String name;
     private String description;
     private String picture;

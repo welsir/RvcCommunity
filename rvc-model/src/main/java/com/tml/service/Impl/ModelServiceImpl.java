@@ -10,6 +10,7 @@ import com.tml.common.log.AbstractLogger;
 import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
 import com.tml.core.client.UserServiceClient;
+import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
 import com.tml.mapper.ModelUserMapper;
@@ -34,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
 
@@ -63,6 +65,8 @@ public class ModelServiceImpl implements ModelService {
     FileUtil fileUtil;
     @Resource
     AsyncService asyncService;
+    @Resource
+    ModelListener listener;
     @Resource
     DateUtil dateUtil;
     private HashMap<String,String> modelStatus = new HashMap<>();
@@ -177,8 +181,30 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO) {
-
-        return null;
+        String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
+        List<DetectionTaskDTO> dtos = Arrays.asList(
+                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
+                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
+                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
+                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getPicture(), name)
+        );
+        List<String> types = Arrays.asList(
+                ModelConstant.TEXT_TYPE,
+                ModelConstant.TEXT_TYPE,
+                ModelConstant.TEXT_TYPE,
+                ModelConstant.IMAGE_TYPE
+        );
+        List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
+                .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
+                .collect(Collectors.toList());
+        HashMap<String, String> map = new HashMap<>();
+        map.put("description",modelUpdateFormVO.getDescription());
+        map.put("name",modelUpdateFormVO.getName());
+        map.put("note",modelUpdateFormVO.getNote());
+        map.put("picture",modelUpdateFormVO.getPicture());
+        listener.setMap(modelUpdateFormVO.getId(),map);
+        asyncService.listenerMq(forms);
+        return true;
     }
 
     @Override
@@ -248,7 +274,7 @@ public class ModelServiceImpl implements ModelService {
                     .id(String.valueOf(labelDO.getId()))
                     .name("model-com.tml.pojo.DO.LabelDO").content(labelDO.getLabel()).
                     build();
-            AsyncdetectionForm form = new AsyncdetectionForm();
+            AsyncDetectionForm form = new AsyncDetectionForm();
             form.setTaskDTO(dto);
             form.setType("text");
             asyncService.listenerMq(List.of(form));

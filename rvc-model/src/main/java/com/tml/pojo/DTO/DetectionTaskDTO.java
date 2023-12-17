@@ -18,4 +18,19 @@ public class DetectionTaskDTO implements Serializable {
     private String content;
     private String name;
 
+    public static DetectionTaskDTO createDTO(String modelId, String content, String name) {
+        return DetectionTaskDTO.builder()
+                .id(modelId)
+                .content(content)
+                .name(name)
+                .build();
+    }
+
+    public static AsyncDetectionForm createAsyncDetectionForm(DetectionTaskDTO dto, String type) {
+        AsyncDetectionForm form = new AsyncDetectionForm();
+        form.setTaskDTO(dto);
+        form.setType(type);
+        return form;
+    }
+
 }

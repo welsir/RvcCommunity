@@ -8,7 +8,7 @@ import lombok.Data;
  * @Date 2023/12/14 18:16
  */
 @Data
-public class AsyncdetectionForm {
+public class AsyncDetectionForm {
 
     private DetectionTaskDTO taskDTO;
     private String type;
