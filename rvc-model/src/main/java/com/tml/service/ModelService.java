@@ -42,4 +42,6 @@ public interface ModelService {
 
     Boolean delSingleModel(String modelId);
 
+    Page<ModelVO> queryUserModelList(String uid,String page,String limit);
+
 }

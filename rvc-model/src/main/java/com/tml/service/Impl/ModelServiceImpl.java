@@ -9,6 +9,7 @@ import com.tml.common.Result;
 import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
+import com.tml.config.SystemConfig;
 import com.tml.core.async.AsyncService;
 import com.tml.core.client.FileServiceClient;
 import com.tml.core.client.UserServiceClient;
@@ -71,6 +72,8 @@ public class ModelServiceImpl implements ModelService {
     ModelListener listener;
     @Resource
     DateUtil dateUtil;
+    @Resource
+    SystemConfig systemConfig;
 
     @Override
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
@@ -79,6 +82,7 @@ public class ModelServiceImpl implements ModelService {
                     .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                     .eq("has_delete",ModelConstant.UN_DELETE);
             setSortingCriteria(queryWrapper, sortType);
+            page = page==null? systemConfig.getSize():Long.parseLong(page)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():page;
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
@@ -92,6 +96,7 @@ public class ModelServiceImpl implements ModelService {
                     .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                     .eq("has_delete",ModelConstant.UN_DELETE)
                     .eq("type_id",type);
+            page = page==null? systemConfig.getSize():Long.parseLong(page)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():page;
             setSortingCriteria(queryWrapper, sortType);
             return getModelListCommon(queryWrapper, page, size, uid);
         }catch (BaseException e){
@@ -348,6 +353,28 @@ public class ModelServiceImpl implements ModelService {
         mapper.deleteLikesByModelId(modelId);
         mapper.deleteCollectionByModelId(modelId);
         return mapper.update(null,wrapper)==1;
+    }
+
+
+    @Override
+    public Page<ModelVO> queryUserModelList(String uid,String page,String limit) {
+        QueryWrapper<ModelUserDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("uid",uid);
+        List<String> modelIds = modelUserMapper.selectModelIdByUid(uid);
+        long maxLimit;
+        if(limit!=null){
+            maxLimit = Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?Long.parseLong(systemConfig.getSize()):Long.parseLong(limit);
+        }else {
+            maxLimit = Long.parseLong(systemConfig.getSize());
+        }
+        QueryWrapper<ModelDO> q = new QueryWrapper<>();
+        q.in("id",modelIds);
+        setSortingCriteria(q,ModelConstant.DEFAULT_SORT);
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit,false),q);
+        List<ModelVO> modelVOList = modelPage.getRecords().stream()
+                .map(modelDO -> convertToModelVO(modelDO,uid))
+                .collect(Collectors.toList());
+        return new Page<ModelVO>().setRecords(modelVOList);
     }
 
     private ModelVO convertToModelVO(ModelDO model,String myUid) {

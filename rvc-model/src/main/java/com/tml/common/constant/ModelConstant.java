@@ -25,4 +25,6 @@ public class ModelConstant {
 
     public static final boolean DELETE = true;
 
+    public static final String DEFAULT_SORT = "time";
+
 }

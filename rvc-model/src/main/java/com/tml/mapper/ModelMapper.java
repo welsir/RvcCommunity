@@ -47,4 +47,5 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
     @Delete("DELETE FROM rvc_model_collection WHERE model_id = #{modelId}")
     int deleteCollectionByModelId(String modelId);
 
+
 }

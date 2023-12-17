@@ -31,8 +31,8 @@ public class ModelController {
 
     @GetMapping("/list")
     public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
-                                  @RequestParam("size")  @Size(max = 10) String size,
-                                  @RequestParam("sortType") String sortType,
+                                  @RequestParam(value = "limit",required = false)  @Size(max = 10) String size,
+                                  @RequestParam("sortType") @NotBlank String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(size,page,sortType,uid);
         return Result.success(modelList);
@@ -41,8 +41,8 @@ public class ModelController {
     @GetMapping("/list/{type}")
     public Result<?> getModelListByType(@PathVariable @NotBlank String type,
                                         @RequestParam("page") @NotBlank String page,
-                                        @RequestParam("size")  @Size(max = 10) String size,
-                                        @RequestParam("sortType") String sortType,
+                                        @RequestParam(value = "limit",required = false)  @Size(max = 10) String size,
+                                        @RequestParam("sortType") @NotBlank String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(type,page,size,sortType,uid);
         return Result.success(modelList);
@@ -126,5 +126,12 @@ public class ModelController {
     public Result<?> delOneModel(@RequestParam("id") String modelId,
                                  @RequestHeader("uid") String uid){
         return Result.success(modelService.delSingleModel(modelId));
+    }
+
+    @GetMapping("user/model")
+    public Result<?> queryUserModelList(@RequestHeader("uid") String uid,
+                                        @RequestParam("page") String page,
+                                        @RequestParam(value = "limit",required = false)String limit){
+        return Result.success(modelService.queryUserModelList(uid,page,limit));
     }
 }
