@@ -429,6 +429,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
         List<String> firsComments  = commentMapper.queryCommentIds(modelId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
         wrapper.in("id",firsComments);
         limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
         setSortingCriteria(wrapper,sortType);
@@ -439,6 +440,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<SecondCommentVO> querySecondCommentList(String parentCommentId,String page,String limit,String sortType, String uid) {
         List<String> secondComments  = commentMapper.querySecondComments(parentCommentId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
+        wrapper.eq("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
         wrapper.in("id",secondComments);
         limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
         setSortingCriteria(wrapper,sortType);
