@@ -1,7 +1,8 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.tml.common.UserContext;
+import com.tml.common.fegin.file.FileForm;
+import com.tml.common.fegin.file.FileService;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
@@ -18,24 +19,25 @@ import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
-import com.tml.util.CopyUtil;
 import com.tml.util.CodeUtil;
 import com.tml.util.RandomStringUtil;
 import com.tml.util.TokenUtil;
-import org.apache.catalina.User;
+import com.tml.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
 
 import static com.tml.pojo.enums.EmailEnums.*;
 
@@ -65,6 +67,12 @@ public class UserServiceImpl implements UserService {
     @Resource
     CodeUtil codeUtil;
 
+    @Resource
+    FileService fileService;
+
+    @Resource
+    UserUtil userUtil;
+
     @Override
     public Map<String, String> login(LoginDTO loginDTO) {
         String emailCode = loginDTO.getEmailCode();
@@ -87,7 +95,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void logout() {
-        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = UserContext.getCurrentUser();
+        AuthUser authUser = userUtil.getCurrentUser();
         TokenUtil.logout(authUser.getUid(), authUser.getUsername());
     }
 
@@ -190,23 +199,26 @@ public class UserServiceImpl implements UserService {
         List<UserInfoVO> userList = new ArrayList<>();
         for (String uid: uidList){
             user = userInfoMapper.selectById(uid);
-            if(user == null)continue;
             userInfoVO = new UserInfoVO();
-            userInfoVO.setUid(user.getUid());
-            userInfoVO.setUsername(user.getUsername());
-            userInfoVO.setNickname(user.getUsername());
-            userInfoVO.setAvatar(userInfoVO.getAvatar());
+            if(user == null) {
+                userInfoVO.setUid(uid);
+                userInfoVO.setUsername("用户不存在");
+                userInfoVO.setNickname("用户不存在");
+            } else {
+                userInfoVO.setUid(user.getUid());
+                userInfoVO.setUsername(user.getUsername());
+                userInfoVO.setNickname(user.getUsername());
+                userInfoVO.setAvatar(userInfoVO.getAvatar());
+            }
             userList.add(userInfoVO);
-        }
-        if(userList.isEmpty()){
-            throw new ServerException(ResultEnums.NO_ONE_EXIST);
         }
         return userList;
     }
 
     @Override
     public void update(UserInfoDTO userInfoDTO) {
-        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = UserContext.getCurrentUser();
+        AuthUser authUser = userUtil.getCurrentUser();
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
@@ -216,11 +228,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void follow(String uid) {
-        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = UserContext.getCurrentUser();
+        AuthUser authUser = userUtil.getCurrentUser();
+        if(Objects.equals(uid, authUser.getUid())){
+            throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
+        }
         QueryWrapper<UserInfo> userQuery = new QueryWrapper<>();
         userQuery.eq("uid", uid);
         if(userInfoMapper.selectCount(userQuery) <= 0){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
+        }
+        QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
+        followWrapper
+                .eq("follow_uid", authUser.getUid())
+                .eq("followed_uid", uid);
+        if(userFollowMapper.selectCount(followWrapper) > 0){
+            userFollowMapper.delete(followWrapper);
+            return;
         }
         UserFollow follow = new UserFollow();
         follow.setFollowUid(authUser.getUid());
@@ -247,7 +271,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoVO getUserInfo() {
-        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = UserContext.getCurrentUser();
+        AuthUser authUser = userUtil.getCurrentUser();
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
@@ -258,6 +283,27 @@ public class UserServiceImpl implements UserService {
         UserData userData = userDataMapper.selectOne(queryWrapper);
         BeanUtils.copyProperties(userData, userInfoVO);
         return userInfoVO;
+    }
+
+    @Override
+    public String avatar(MultipartFile file){
+//        FileForm form = new FileForm();
+//        try {
+//            form.setMd5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()));
+//            form.setBucket("rvc2");
+//            form.setPath("rvc/image3");
+//            form.setFile(file);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        System.out.println(fileService.upload(form));
+//        AuthUser authUser = userUtil.getCurrentUser();
+        try {
+            fileService.upload(file, "rvc2", org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()), "rvc/image3");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     private String loginByPsw(String email, String password){

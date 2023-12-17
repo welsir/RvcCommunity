@@ -6,6 +6,7 @@ import com.tml.pojo.dto.UpdatePasswordDTO;
 import com.tml.pojo.dto.UserInfoDTO;
 import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public interface UserService {
 
     Map<String, String> preCode();
 
-    void sendCode(String email,String code, String uuid, int type);
+    void sendCode(String email, String code, String uuid, int type);
 
     UserInfoVO one(String uid);
 
@@ -37,4 +38,6 @@ public interface UserService {
     void updatePassword(UpdatePasswordDTO updatePasswordDTO);
 
     UserInfoVO getUserInfo();
+
+    String avatar(MultipartFile file);
 }

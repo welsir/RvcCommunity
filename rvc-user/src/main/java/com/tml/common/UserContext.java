@@ -14,6 +14,7 @@ public class UserContext {
         AuthUser authUser;
         try {
             authUser = threadLocal.get();
+            System.out.println("UserContext Thread ID: " + Thread.currentThread().getId());
         } catch (Exception e){
             throw new ServerException(ResultEnums.NO_LOGIN);
         }

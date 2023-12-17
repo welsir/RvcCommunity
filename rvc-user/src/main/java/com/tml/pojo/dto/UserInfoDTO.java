@@ -20,7 +20,5 @@ public class UserInfoDTO {
 
     private String sex;
 
-    private String avatar;
-
     private String description;
 }

@@ -1,8 +1,9 @@
 package com.tml.controller;
 
-import com.tml.common.ListElementSize;
-import com.tml.common.ListNotEmpty;
-import com.tml.common.Login;
+import com.tml.annotation.apiAuth.WhiteApi;
+import com.tml.common.annotation.ListElementSize;
+import com.tml.common.annotation.ListNotEmpty;
+import com.tml.common.annotation.Login;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -12,6 +13,7 @@ import io.github.common.web.Result;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -105,7 +107,6 @@ public class UserController {
                           String uid){
         return Result.success(userService.one(uid));
     }
-
     /**
      * @param uidList List<String>
      * @return {@link Result}
@@ -124,7 +125,7 @@ public class UserController {
      * @return {@link Result} 待完成
      */
     @PostMapping("/update")
-    @Login
+    @WhiteApi
     public Result update(@RequestBody
                              @Valid
                              UserInfoDTO userInfoDTO){
@@ -136,8 +137,8 @@ public class UserController {
      * @param uid String
      * @return {@link Result}
      */
-    @GetMapping ("/follow")
-    @Login
+    @PostMapping("/follow")
+    @WhiteApi
     public Result follow(@RequestParam
                              @Valid
                              @Length(min = 19, max = 19, message = "uid长度为19")
@@ -148,17 +149,23 @@ public class UserController {
     }
 
     @PostMapping("/updatePassword")
-    @Login
-    public Result updatePassword(@RequestParam
+    @WhiteApi
+    public Result updatePassword(@RequestBody
                                      @Valid
                                      UpdatePasswordDTO updatePasswordDTO){
         userService.updatePassword(updatePasswordDTO);
         return Result.success();
     }
 
-    @PostMapping("getUserInfo")
-    @Login
+    @GetMapping("getUserInfo")
+    @WhiteApi
     public Result getUserInfo(){
         return Result.success(userService.getUserInfo());
+    }
+
+    @PostMapping("/avatar")
+    @WhiteApi
+    public Result avatar(@RequestParam("file") MultipartFile file){
+        return Result.success(userService.avatar(file));
     }
 }

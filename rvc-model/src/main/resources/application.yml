@@ -1,0 +1,12 @@
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+server:
+  port: ${SERVER_PORT:9100}
+spring:
+  profiles:
+    active: ${ACTIVE:dev}
+file:
+  logger:
+    handler: ${Logger:slf4j}
+    enable: true
