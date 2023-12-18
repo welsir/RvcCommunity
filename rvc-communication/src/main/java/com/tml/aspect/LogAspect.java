@@ -15,11 +15,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author yuech
- * @version 1.0
- * @description: TODO
- * @date 2022/12/4 9:37
+ * 日志打印
  */
+
 @Component
 @Aspect
 @Slf4j
@@ -36,7 +34,7 @@ public class LogAspect {
         try {
             handleBefore(joinPoint);
             ret = joinPoint.proceed();
-            handleAfter(ret);
+//            handleAfter(ret);
         } finally {
             long endTime = System.currentTimeMillis(); // 获取程序结束时间
             long totalTime = endTime - startTime; // 计算总运行时间
