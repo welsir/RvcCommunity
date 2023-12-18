@@ -25,7 +25,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <dependency>
             <groupId>com.tml</groupId>
             <artifactId>rvc-rpc</artifactId>
