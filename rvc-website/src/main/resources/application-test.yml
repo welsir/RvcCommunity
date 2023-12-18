@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
+    url: ${MYSQL_ADDR:ENC(h9xRlu7jZ2/v7Ijedz96Wx7ISYvkYasXTlIVeKfKNJyXLKW3oc10vzNcLQ3IroscJpC4AbUwOSulW3Rwt52+ytaSnnw6Vs6FWDjNR8S72UZzLJqBPxZ7ryTG2ZHJoqYou5yW7/+McVaZRLatY54LEgG23rU6rW1x)}
     username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
     password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
   redis:
@@ -42,5 +42,3 @@ management:
         include: '*'
   server:
     port: 9301
-
-

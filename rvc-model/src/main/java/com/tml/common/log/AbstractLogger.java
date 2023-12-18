@@ -23,6 +23,10 @@ public class AbstractLogger {
         loggerHandler.error(msg,args);
     }
 
+    public void error(Exception e){
+        loggerHandler.error("%s:%s",e.getMessage(),e.getStackTrace()[0]);
+    }
+
     public void warn(String msg,Object... args){
         loggerHandler.warn(msg,args);
     }
