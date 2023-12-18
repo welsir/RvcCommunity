@@ -8,3 +8,28 @@ spring:
     active: ${ACTIVE:dev}
 
 
+assistant:
+  mysql:
+    query-group:
+      feedback_list: fb_id,uid,title,type,status,comment_num,up_num,create_at
+      feedback_detail: fb_id,uid,title,content,type,status,comment_num,up_num,create_at
+      feedback_comment: cm_id,reply_fb_id,reply_cm_id,uid,comment,like_num,create_at
+
+
+rvc:
+  feedback:
+    feedback_order_column: create_at,up_num,comment_num
+    comment_order_column: create_at,like_num
+
+
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 30000
+        read-timeout: 30000
+
+  httpclient:
+    enabled: true # 支持HttpClient的开关
+    max-connections: 200 # 最大连接数
+    max-connections-per-route: 50 # 单个路径的最大连接数

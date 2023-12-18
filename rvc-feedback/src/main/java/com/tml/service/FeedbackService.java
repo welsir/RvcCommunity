@@ -15,7 +15,7 @@ public interface FeedbackService {
 
     Result<PageVO<FeedbackVO>> getFeedbackPageVO(Integer page, Integer limit, String uid, String order);
 
-    Result<?> getFeedbackVO(String uid,String fb_id);
+    Result<?> getFeedbackVO(String uid,Long fb_id);
 
     List<FeedbackDO> batchFeedbackList(List<String> params, Map<String,List<Object>> inCondition);
 
@@ -25,5 +25,5 @@ public interface FeedbackService {
 
     Result<?> changeStatus(String uid,String fb_id,Integer status);
 
-    Result<?> deleteFeedback(String uid,String fb_id);
+    Result<?> deleteFeedback(String uid,Long fb_id);
 }

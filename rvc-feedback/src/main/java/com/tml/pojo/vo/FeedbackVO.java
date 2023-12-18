@@ -12,12 +12,14 @@ import io.github.constant.TimeConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class FeedbackVO {
 
     /**
@@ -83,7 +85,6 @@ public class FeedbackVO {
     /**
      * 最近创建时间
      */
-    @TableField(updateStrategy = FieldStrategy.NEVER)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")

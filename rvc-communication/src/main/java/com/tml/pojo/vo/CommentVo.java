@@ -1,4 +1,4 @@
-package com.tml.pojo.vo;
+package com.tml.pojo.VO;
 
 import com.tml.pojo.entity.User;
 import lombok.AllArgsConstructor;
@@ -38,9 +38,13 @@ public class CommentVo {
     private LocalDateTime updateAt;
 
 
+<<<<<<< HEAD:rvc-communication/src/main/java/com/tml/pojo/vo/CommentVo.java
     private User user;
 
     private User replayUser;
 
     private List<CommentVo> childrenComment;
 }
+=======
+}
+>>>>>>> upgrade/master:rvc-communication/src/main/java/com/tml/pojo/VO/CommentVo.java

@@ -15,7 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <assistant.version>1.0.8</assistant.version>
+        <assistant.version>1.1.0</assistant.version>
     </properties>
 
     <dependencies>
@@ -47,8 +47,8 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
-        <!--        mybatis-->
 
+        <!--        mybatis-->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -86,6 +86,7 @@
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
         </dependency>
+
 
         <!--        Assistant框架-->
         <dependency>
