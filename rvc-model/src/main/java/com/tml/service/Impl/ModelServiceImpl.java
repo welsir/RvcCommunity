@@ -97,7 +97,7 @@ public class ModelServiceImpl implements ModelService {
         try {
             QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
             wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
-                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType,"type",type));
+                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType,"type_id",type));
             return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
