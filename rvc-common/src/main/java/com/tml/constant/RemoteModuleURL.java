@@ -21,4 +21,14 @@ public class RemoteModuleURL {
      * 用户模块获取用户信息
      */
     public static final String GET_USERINFO = "/user/one";
+
+    /*
+     * 模型模块获取用户点赞的模型列表
+     */
+    public static final String GET_USER_LIKES_MODELS = "/model/likes";
+
+    /*
+     * 模型模块获取用户收藏的模型列表
+     */
+    public static final String GET_USER_COLLECTION_MODELS = "/model/collection";
 }

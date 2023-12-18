@@ -24,7 +24,7 @@ spring:
     password: ${REDIS_PWD:ENC(fMELtMSEcwBw2h37zL58HwThVlByZ9j0IVBE+0b9zGE=)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
   application:
-    name: file-model-service${UNIQUE_ID:0}
+    name: model-service${UNIQUE_ID:0}
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)

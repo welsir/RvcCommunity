@@ -307,6 +307,7 @@ public class ModelServiceImpl implements ModelService {
             ModelDO modelDO = modelDOMap.get(Long.parseLong(modelLikeDO.getModelId()));
             if (modelDO != null) {
                 UserLikesModelVO modelVO = new UserLikesModelVO();
+                modelVO.setId(modelDO.getId().toString());
                 modelVO.setName(modelDO.getName());
                 modelVO.setPicture(modelDO.getPicture());
                 modelVO.setLikesNum(modelDO.getLikesNum());
