@@ -35,9 +35,21 @@ public class ModelVO {
     private String nickname;
     private String avatar;
 
-    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO result){
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo,List<String> labels,String... args){
+        ModelVO modelVO = modelDOToModelVO(modelDO, userInfo, args);
+        modelVO.setLabel(labels);
+        return modelVO;
+    }
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo,String... args){
+        ModelVO modelVO = modelDOToModelVO(modelDO, userInfo);
+        modelVO.setType(args[0]);
+        modelVO.setIsLike("".equals(args[1])||null==args[1]?"0":"1");
+        modelVO.setIsCollection("".equals(args[2])||null==args[2]?"0":"1");
+        return modelVO;
+    }
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo){
         return ModelVO.builder()
-                .id(String.valueOf(modelDO.getFileId()))
+                .id(modelDO.getId().toString())
                 .name(modelDO.getName())
                 .picture(modelDO.getPicture())
                 .likesNum(modelDO.getLikesNum())
@@ -45,10 +57,10 @@ public class ModelVO {
                 .description(modelDO.getDescription())
                 .viewNum(modelDO.getViewNum())
                 .note(modelDO.getNote())
-                .uid(result.getUid())
-                .avatar(result.getAvatar())
-                .nickname(result.getNickname())
-                .username(result.getUsername())
+                .uid(userInfo.getUid())
+                .avatar(userInfo.getAvatar())
+                .nickname(userInfo.getNickname())
+                .username(userInfo.getUsername())
                 .build();
     }
 }

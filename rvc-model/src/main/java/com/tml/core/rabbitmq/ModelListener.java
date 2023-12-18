@@ -63,11 +63,17 @@ public class ModelListener implements ListenerInterface{
     private final ConcurrentHashMap<String,Integer> auditCountMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> lockMap = new ConcurrentHashMap<>();
 
+    private final ConcurrentHashMap<String,Map<String,String>> auditParams = new ConcurrentHashMap<>();
+
     public void setMap(String id,int count){
         this.auditCountMap.put(id,count);
     }
     public void setMap(String id,String value){
         this.lockMap.put(id,value);
+    }
+
+    public void setMap(String id,Map<String,String> params){
+        this.auditParams.put(id,params);
     }
 
     public void sendMsgToMQ(DetectionTaskDTO task,String routingKey){
@@ -132,7 +138,7 @@ public class ModelListener implements ListenerInterface{
                     entity = clazz.getDeclaredConstructor().newInstance();
                     mapper = getMapperByEntityType(clazz);
                     UpdateWrapper wrapper;
-                    logger.info("审核[%s]失败",statusDTO.getId());
+                    logger.info("[%s]审核失败",statusDTO.getId());
                     try {
                         wrapper = new UpdateWrapper<>(entity);
                         wrapper.eq("id",statusDTO.getId());
@@ -144,18 +150,28 @@ public class ModelListener implements ListenerInterface{
                     }
 
                 } else if(auditCountMap.get(lock)==1){
+                    //审核成功
                     Object entity;
                     BaseMapper mapper;
                     Class<?> clazz = Class.forName(table);
                     entity = clazz.getDeclaredConstructor().newInstance();
                     mapper = getMapperByEntityType(clazz);
                     UpdateWrapper wrapper;
-                    logger.info("[%s]审核完毕,更新数据库",statusDTO.getId());
                     wrapper = new UpdateWrapper<>(entity);
                     if(checkLabelIsLegal(statusDTO.getLabels())){
-                        wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
+                        logger.info("[%s]审核完毕,更新数据库",statusDTO.getId());
                         wrapper.eq("id",statusDTO.getId());
+                        wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
+                        //后置步骤，例如修改需要额外修改字段参数
+
+                        logger.info("修改字段");
+                        if(auditParams.get(statusDTO.getId())!=null){
+                            for (String s : auditParams.get(statusDTO.getId()).keySet()) {
+                                wrapper.set(s,auditParams.get(statusDTO.getId()).get(s));
+                            }
+                        }
                     }else {
+                        logger.info("[%s]审核失败",statusDTO.getId());
                         wrapper.eq("id",statusDTO.getId());
                         wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
                     }

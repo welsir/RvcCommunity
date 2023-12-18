@@ -15,7 +15,9 @@ import java.util.List;
  */
 public interface LabelMapper extends BaseMapper<LabelDO> {
 
-    @Select("select label_id from rvc_model_model_label where model_id = #{modelId}")
+    @Select("SELECT l.label FROM rvc_model_label l " +
+            "JOIN rvc_model_model_label mml ON l.id = mml.label_id " +
+            "WHERE mml.model_id = #{modelId}")
     List<String> selectListById(String modelId);
 
     @Insert("<script>\n" +

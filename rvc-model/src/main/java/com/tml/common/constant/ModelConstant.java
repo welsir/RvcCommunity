@@ -17,4 +17,18 @@ public class ModelConstant {
 
     public static final String SERVICE_NAME = "model";
 
+    public static final String TEXT_TYPE = "text";
+
+    public static final String IMAGE_TYPE = "image";
+
+    public static final boolean UN_DELETE = false;
+
+    public static final boolean DELETE = true;
+
+    public static final String DEFAULT_SORT = "time";
+
+    public static final String FLAG = "0";
+
+    public static final String UN_FLAG = "1";
+
 }

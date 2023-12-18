@@ -40,4 +40,12 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
 
     @Select("select * from rvc_model_collection where uid = #{uid}")
     List<ModelCollectionDO> getUserCollectionModel(String uid);
+
+    @Delete("DELETE FROM rvc_model_likes WHERE model_id = #{modelId}")
+    int deleteLikesByModelId(String modelId);
+
+    @Delete("DELETE FROM rvc_model_collection WHERE model_id = #{modelId}")
+    int deleteCollectionByModelId(String modelId);
+
+
 }

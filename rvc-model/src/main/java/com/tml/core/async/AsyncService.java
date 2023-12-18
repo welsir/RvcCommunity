@@ -9,7 +9,7 @@ import com.tml.common.log.AbstractLogger;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.ModelMapper;
 import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.DTO.AsyncdetectionForm;
+import com.tml.pojo.DTO.AsyncDetectionForm;
 import com.tml.pojo.DTO.DetectionTaskDTO;
 import com.tml.pojo.ResultCodeEnum;
 import org.springframework.scheduling.annotation.Async;
@@ -66,9 +66,10 @@ public class AsyncService {
     @Async
     public void asyncAddModelViewNums(String modelId){
         try {
-            List<ModelDO> list = mapper.selectList(new QueryWrapper<ModelDO>().eq("id", modelId));
-            ModelDO modelDO = list.get(0);
-            mapper.update(modelDO,new UpdateWrapper<ModelDO>().set("view_num",modelDO.getViewNum()+1));
+            UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id",modelId)
+                            .setSql("likes_num = likes_num+1");
+            mapper.update(null,wrapper);
         }catch (RuntimeException e){
             logger.error("%s:"+e.getStackTrace()[0],e);
             throw new BaseException(ResultCodeEnum.UPDATE_MODEL_VIEWS_FAIL);
@@ -76,8 +77,8 @@ public class AsyncService {
     }
 
     @Async
-    public void listenerMq(List<AsyncdetectionForm> listenList){
-        for (AsyncdetectionForm asyncdetectionForm : listenList) {
+    public void listenerMq(List<AsyncDetectionForm> listenList){
+        for (AsyncDetectionForm asyncdetectionForm : listenList) {
             String type = asyncdetectionForm.getType();
             listener.setMap(asyncdetectionForm.getTaskDTO().getId(),listenList.size());
             listener.setMap(asyncdetectionForm.getTaskDTO().getId(),ModelConstant.SERVICE_NAME+"-"+asyncdetectionForm.getTaskDTO().getName());

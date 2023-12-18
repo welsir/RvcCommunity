@@ -33,4 +33,5 @@ public class ModelDO {
     private String createTime;
     private String updateTime;
     private String hasShow;
+    private String hasDelete;
 }

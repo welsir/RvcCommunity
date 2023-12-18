@@ -1,11 +1,11 @@
-package com.tml.pojo.VO;
+package com.tml.pojo.DTO;
 
 import lombok.Data;
 
 /**
  * @Description
  * @Author welsir
- * @Date 2023/12/14 17:21
+ * @Date 2023/12/18 10:29
  */
 @Data
 public class UserLikesModelVO {
