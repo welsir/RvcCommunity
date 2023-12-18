@@ -15,6 +15,6 @@ public interface TypeMapper extends BaseMapper<TypeDO> {
     @Select("select type from rvc_model_type where id = #{typeId}")
     String selectTypeById(String typeId);
 
-    @Insert("insert from rvc_model_model_type where model_id = #{modelId} and type_id = #{typeId}")
+    @Insert("insert into rvc_model_model_type (model_id,type_id) values(#{modelId},#{typeId})")
     int insertModelType(String modelId,String typeId);
 }

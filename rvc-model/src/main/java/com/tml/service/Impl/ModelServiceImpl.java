@@ -165,6 +165,13 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
+        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
+        if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
+            for (String s : model.getLabelId()) {
+                AbstractAssert.isNull(labelMapper.selectById(s),ResultCodeEnum.LABEL_NOT_EXIT);
+            }
+        }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
         modelDO.setUpdateTime(DateUtil.formatDate());
@@ -175,19 +182,16 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
-        if(model.getLabelId()!=null){
+        if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
             try{
-                for (String s : model.getLabelId()) {
-                    AbstractAssert.isNull(labelMapper.selectById(s),ResultCodeEnum.LABEL_NOT_EXIT);
-                }
                 labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
             }catch (RuntimeException e){
                 logger.error(e);
                 throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
             }
         }
-        AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
-        typeMapper.insertModelType(modelDO.getId().toString(),modelDO.getTypeId());
+        String typeId = model.getTypeId();
+        typeMapper.insertModelType(modelDO.getId().toString(),typeId);
         ModelUserDO modelUserDO = new ModelUserDO();
         modelUserDO.setModelId(String.valueOf(modelDO.getId()));
         modelUserDO.setUid(uid);
