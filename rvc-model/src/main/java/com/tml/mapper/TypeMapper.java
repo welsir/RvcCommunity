@@ -2,6 +2,7 @@ package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tml.pojo.DO.TypeDO;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -14,4 +15,6 @@ public interface TypeMapper extends BaseMapper<TypeDO> {
     @Select("select type from rvc_model_type where id = #{typeId}")
     String selectTypeById(String typeId);
 
+    @Insert("insert from rvc_model_model_type where model_id = #{modelId} and type_id = #{typeId}")
+    int insertModelType(String modelId,String typeId);
 }

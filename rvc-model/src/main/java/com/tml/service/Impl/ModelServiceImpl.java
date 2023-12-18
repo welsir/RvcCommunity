@@ -1,5 +1,6 @@
 package com.tml.service.Impl;
 
+import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -80,11 +81,19 @@ public class ModelServiceImpl implements ModelService {
     SystemConfig systemConfig;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
+    /**
+     * @description: 分页查询所有模型集合
+     * @param: size
+     * @param page
+     * @param sortType
+     * @param uid
+     * @return: Page<ModelVO>
+     **/
     @Override
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
             QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
-            WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+            wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
                     "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
             return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
@@ -92,12 +101,21 @@ public class ModelServiceImpl implements ModelService {
         }
     }
 
+    /**
+     * @description: 分页、类别模型集合
+     * @param: typeId
+     * @param page
+     * @param size
+     * @param order
+     * @param uid
+     * @return: Page<ModelVO>
+     **/
     @Override
-    public Page<ModelVO> getModelList(String type,String page,String size,String sortType,String uid) {
+    public Page<ModelVO> getModelList(String typeId,String page,String size,String order,String uid) {
         try {
             QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
             wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
-                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType,"type_id",type));
+                    "has_delete",ModelConstant.UN_DELETE,"sort",order,"type_id",typeId));
             return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
@@ -121,14 +139,14 @@ public class ModelServiceImpl implements ModelService {
             Callable<List<String>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
-            Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
-            Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
-
             String type = ConcurrentUtil.futureGet(typeFuture);
+            Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
             String isLike = ConcurrentUtil.futureGet(likeFuture);
+            Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
             String isCollection = ConcurrentUtil.futureGet(collectionFuture);
+            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
             List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+
             UserInfoDTO dto = null;
             if(uid!=null){
                 Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
@@ -159,12 +177,17 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
         if(model.getLabelId()!=null){
             try{
+                for (String s : model.getLabelId()) {
+                    AbstractAssert.isNull(labelMapper.selectById(s),ResultCodeEnum.LABEL_NOT_EXIT);
+                }
                 labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
             }catch (RuntimeException e){
                 logger.error(e);
                 throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
             }
         }
+        AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
+        typeMapper.insertModelType(modelDO.getId().toString(),modelDO.getTypeId());
         ModelUserDO modelUserDO = new ModelUserDO();
         modelUserDO.setModelId(String.valueOf(modelDO.getId()));
         modelUserDO.setUid(uid);
@@ -375,6 +398,13 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
+        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
+        if(StringUtils.isBlank(commentFormVO.getReplyId())){
+            AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
+        }else {
+            AbstractAssert.isNull(commentMapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.COMMENT_NOT_EXITS);
+        }
         try {
             CommentDO commentDO = new CommentDO();
             commentDO.setContent(commentFormVO.getContent());
@@ -407,19 +437,17 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
-
-        if(commentMapper.selectDOById(commentId,uid)!=null){
-            if(ModelConstant.FLAG.equals(type)){
-                throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
-            }
+        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
+        AbstractAssert.notNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
+        if(ModelConstant.FLAG.equals(type)){
+            throw new BaseException(ResultCodeEnum.USER_LIKES_ERROR);
+        }
+        if(ModelConstant.UN_FLAG.equals(type)){
             commentMapper.delUserCommentLikes(commentId,uid);
             return true;
         }
-        UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-        wrapper.eq("id",commentId)
-                .setSql("likes_num = likes_num + 1");
-        commentMapper.insertUserCommentRelative(commentId,uid);
-        return commentMapper.update(null,wrapper) == 1;
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
     @Override
@@ -442,7 +470,10 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userLikesModel(String status, String modelId, String uid) {
+        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
+            AbstractAssert.notNull(mapper.queryUserModelLikes(uid,modelId),ResultCodeEnum.USER_LIKES_ERROR);
             ModelLikeDO build =  ModelLikeDO.builder()
                     .modelId(modelId)
                     .uid(uid)
@@ -450,23 +481,28 @@ public class ModelServiceImpl implements ModelService {
             return mapper.insertModelUserLikes(
                     build
             )==1;
-        }else {
+        }else if(ModelConstant.UN_FLAG.equals(status)) {
             return mapper.delModelLikes(uid,modelId)==1;
         }
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
+        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
+            AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
             ModelCollectionDO build = ModelCollectionDO.builder()
                     .modelId(modelId)
                     .uid(uid)
                     .build();
             return mapper.insertModelUserCollection(
                     build)==1;
-        }else{
+        }else if(ModelConstant.UN_FLAG.equals(status)){
             return mapper.delModelCollection(uid,modelId)==1;
         }
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
@@ -475,7 +511,7 @@ public class ModelServiceImpl implements ModelService {
         List<FirstCommentVO> firstCommentVOList = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToFirstCommentVO(commentDO, uid))
                 .collect(Collectors.toList());
-        return new Page<FirstCommentVO>().setRecords(firstCommentVOList);
+        return new Page<FirstCommentVO>().setRecords(firstCommentVOList).setSize(firstCommentVOList.size());
     }
 
     private FirstCommentVO convertToFirstCommentVO(CommentDO commentDO,String uid){
@@ -532,6 +568,10 @@ public class ModelServiceImpl implements ModelService {
         Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
         Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
 
+        AbstractAssert.isBlank(ConcurrentUtil.futureGet(typeFuture),ResultCodeEnum.GET_TYPE_ERROR);
+        AbstractAssert.isNull(ConcurrentUtil.futureGet(likeFuture),ResultCodeEnum.SYSTEM_ERROR);
+        AbstractAssert.isNull(ConcurrentUtil.futureGet(collectionFuture),ResultCodeEnum.SYSTEM_ERROR);
+
         String type = ConcurrentUtil.futureGet(typeFuture);
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
@@ -554,7 +594,7 @@ public class ModelServiceImpl implements ModelService {
         List<SecondCommentVO> secondCommentVOS = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToSecondCommentVO(commentDO, uid))
                 .collect(Collectors.toList());
-        return new Page<SecondCommentVO>().setRecords(secondCommentVOS);
+        return new Page<SecondCommentVO>().setRecords(secondCommentVOS).setSize(secondCommentVOS.size());
     }
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, String page, String size, String uid) {
@@ -563,7 +603,7 @@ public class ModelServiceImpl implements ModelService {
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(modelDO -> convertToModelVO(modelDO,uid))
                 .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList);
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
 }
