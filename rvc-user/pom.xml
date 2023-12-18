@@ -27,7 +27,8 @@
 
         <dependency>
             <groupId>com.tml</groupId>
-            <artifactId>rvc-common</artifactId>
+            <artifactId>rvc-rpc</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <!--        nacos-->
         <dependency>
@@ -96,13 +97,6 @@
             <artifactId>assistant-common</artifactId>
             <version>1.0.7</version>
             <scope>compile</scope>
-        </dependency>
-
-        <!--openfeign依赖-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <version>3.0.3</version>
         </dependency>
 
         <dependency>

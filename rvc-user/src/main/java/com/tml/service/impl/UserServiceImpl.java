@@ -2,8 +2,6 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.common.DetectionStatusEnum;
-import com.tml.common.fegin.file.FileForm;
-import com.tml.common.fegin.file.FileService;
 import com.tml.common.rabbitmq.UserRabbitMQListener;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
@@ -68,9 +66,6 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     CodeUtil codeUtil;
-
-    @Resource
-    FileService fileService;
 
     @Resource
     UserUtil userUtil;
@@ -312,11 +307,11 @@ public class UserServiceImpl implements UserService {
 //        }
 //        System.out.println(fileService.upload(form));
 //        AuthUser authUser = userUtil.getCurrentUser();
-        try {
-            fileService.upload(file, "rvc2", org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()), "rvc/image3");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            fileService.upload(file, "rvc2", org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()), "rvc/image3");
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         return null;
     }
 

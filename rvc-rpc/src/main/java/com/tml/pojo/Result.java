@@ -1,5 +1,6 @@
-package com.tml.common.fegin.captcha;
+package com.tml.pojo;
 
+import com.tml.pojo.enums.StatusConstEnum;
 import lombok.Data;
 
 import java.io.Serializable;

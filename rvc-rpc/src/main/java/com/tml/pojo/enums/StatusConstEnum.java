@@ -1,4 +1,4 @@
-package com.tml.common.fegin.captcha;
+package com.tml.pojo.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

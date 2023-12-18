@@ -1,5 +1,6 @@
-package com.tml.common.fegin.captcha;
+package com.tml.client;
 
+import com.tml.pojo.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
