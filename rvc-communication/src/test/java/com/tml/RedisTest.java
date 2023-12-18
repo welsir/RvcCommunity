@@ -41,8 +41,8 @@ public class RedisTest {
     @Test
     public void  addPostType(){
         ArrayList<PostType> postTypes = new ArrayList<>();
-        postTypes.add(new PostType("1","前端","/img/tool-person.png"));
-        postTypes.add(new PostType("2","后端","/img/tool-chat.png"));
+        postTypes.add(new PostType("1","/img/tool-person.png","前端"));
+        postTypes.add(new PostType("2","/img/tool-chat.png","后端"));
 
         redisCache.setCacheList(RVC_COMMUNICATION_POST_TYPE,postTypes);
     }

@@ -2,6 +2,7 @@ package com.tml.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
+import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 
 /**
@@ -46,6 +48,7 @@ public class CommentController {
 
 
     @PostMapping("/add")
+    @ContentDetection(businessName ="post.cover",exchangeName = DETECTION_EXCHANGE_NAME)
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody
                           @Valid CommentDto commentDto){

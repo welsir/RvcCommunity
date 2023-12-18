@@ -8,12 +8,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tml.feign.file.RvcFileServiceFeignClient;
 import com.tml.feign.user.RvcUserServiceFeignClient;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.*;
 import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.*;
+import com.tml.pojo.vo.CommonFileVO;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
@@ -21,17 +23,16 @@ import com.tml.strategy.SortStrategy;
 import com.tml.strategy.impl.LikeSortStrategy;
 import com.tml.strategy.impl.TimeSortStrategy;
 import com.tml.strategy.impl.ViewSortStrategy;
-import com.tml.utils.BeanCopyUtils;
-import com.tml.utils.BeanUtils;
-import com.tml.utils.RedisCache;
-import com.tml.utils.Uuid;
+import com.tml.utils.*;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -66,6 +67,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
+    private final RvcFileServiceFeignClient rvcFileServiceFeignClient;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
@@ -577,6 +579,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
 
         return postSimpleVos;
+    }
+
+    @Override
+    public void updUserProfile(MultipartFile profile) throws IOException {
+
+        //获取文件的byte信息
+        byte[] uploadBytes = profile.getBytes();
+        CommonFileVO build = CommonFileVO.builder()
+                .md5(MD5Util.getMD5(uploadBytes.toString()))
+                .file(profile).build();
+        Result upload = rvcFileServiceFeignClient.upload(build);
+        System.out.println(upload);
+        System.out.println(upload.getData());
+
     }
 
 

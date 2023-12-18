@@ -3,6 +3,7 @@ package com.tml.mq.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.tml.annotation.SystemLog;
 import com.tml.mapper.CoverMapper;
 import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.strategy.DetectionProcessStrategy;
@@ -52,6 +53,7 @@ public class ReceiveHandler {
     }
 
 //    监听text队列
+
     @RabbitListener(bindings = @QueueBinding(
                 value = @Queue(),
 //            value = @Queue(name = "res.text"),
@@ -82,6 +84,7 @@ public class ReceiveHandler {
 
 
     //监听 image 队列
+
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(),
 //            value = @Queue(name = "res.image"),
@@ -115,7 +118,6 @@ public class ReceiveHandler {
             key = "res.audio"
     ))
     public void receive_audio(Message message) throws Exception {
-        System.out.println(LocalDate.now());
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
 

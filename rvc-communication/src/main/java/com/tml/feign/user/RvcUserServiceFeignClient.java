@@ -9,15 +9,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(value = "tml-user-service",
-        url = "1.94.28.8:9000",
-        path = "/user")
+//@FeignClient(value = "tml-user-service",
+//        url = "1.94.28.8:9000",
+//        path = "/user")
 //@FeignClient(name = "tml-user-service",
 //        path = "/user")
+@FeignClient("tml-user-service")
+@Component
 public interface RvcUserServiceFeignClient {
-    @GetMapping("/one")
+    @GetMapping("/user/one")
     Result<UserInfoVO> one(@RequestParam("uid") String uid);
 
-    @PostMapping("/list")
+    @PostMapping("/user/list")
     Result <Map<String,List<UserInfoVO>>> list(@RequestBody List<String> uidList);
 }

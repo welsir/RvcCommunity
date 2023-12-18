@@ -5,7 +5,9 @@ import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface PostService {
@@ -31,4 +33,6 @@ public interface PostService {
     List<PostSimpleVo> userCollect(PageInfo<String> params);
 
     List<PostSimpleVo> userCreate(PageInfo<String> params);
+
+    void updUserProfile(MultipartFile profile) throws IOException;
 }

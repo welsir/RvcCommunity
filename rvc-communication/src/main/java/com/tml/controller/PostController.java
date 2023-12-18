@@ -12,10 +12,12 @@ import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.List;
 
 import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
@@ -115,12 +117,12 @@ public class PostController {
 
 
 
-    @GetMapping("/cover")
-    @SystemLog(businessName = "上传帖子封面  [T]  [审]")
-    public Result cover(  @Valid @NotBlank String coverUrl){
-        String coverId = postService.cover(coverUrl);
-        return Result.success(coverId);
-    }
+//    @GetMapping("/cover")
+//    @SystemLog(businessName = "上传帖子封面  [T]  [审]")
+//    public Result cover(  @Valid @NotBlank String coverUrl){
+//        String coverId = postService.cover(coverUrl);
+//        return Result.success(coverId);
+//    }
 
 
 
@@ -149,6 +151,14 @@ public class PostController {
         return Result.success(postVoListPage);
     }
 
+
+    //用户上传头像
+    //富文本上传图片
+    @PostMapping("/cover")
+    public Result setUserProfile(@RequestParam("wangeditor-uploaded-image") MultipartFile profile) throws IOException {
+        postService.updUserProfile(profile);
+        return Result.success();
+    }
 
 
 }

@@ -97,15 +97,15 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                 .createAt(currentTime)
                 .build();
         save(commentDo);
-//        审核
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id(uuid)
-                .content(commentDto.getContent())
-                .name("comment.text")
-                .build();
-
-        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-        producerHandler.submit(textDetectionTaskDto,"text");
+////        审核
+//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+//                .id(uuid)
+//                .content(commentDto.getContent())
+//                .name("comment.text")
+//                .build();
+//
+//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
+//        producerHandler.submit(textDetectionTaskDto,"text");
 
     }
 
