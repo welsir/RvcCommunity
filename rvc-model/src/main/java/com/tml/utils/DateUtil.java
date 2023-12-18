@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class DateUtil {
 
-    public String formatDate(){
+    public static String formatDate(){
         LocalDateTime now = LocalDateTime.now();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

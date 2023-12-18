@@ -1,11 +1,14 @@
 package com.tml.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.Result;
 import com.tml.common.constant.ModelConstant;
+import com.tml.common.exception.AbstractAssert;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
@@ -20,8 +23,10 @@ import com.tml.pojo.DTO.*;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
+import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
+import com.tml.utils.WrapperUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,11 +37,16 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
+import static com.tml.pojo.ResultCodeEnum.MODEL_FILE_ILLEGAL;
 
 /**
  * @Description
@@ -63,25 +73,20 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     AbstractLogger logger;
     @Resource
-    FileUtil fileUtil;
-    @Resource
     AsyncService asyncService;
     @Resource
     ModelListener listener;
     @Resource
-    DateUtil dateUtil;
-    @Resource
     SystemConfig systemConfig;
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     @Override
     public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
         try {
-            QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
-                    .eq("has_delete",ModelConstant.UN_DELETE);
-            setSortingCriteria(queryWrapper, sortType);
-            size = (size==null|| "".equals(size))? systemConfig.getSize():Long.parseLong(size)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():size;
-            return getModelListCommon(queryWrapper, page, size, uid);
+            QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+            WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
+            return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
         }
@@ -90,51 +95,47 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Page<ModelVO> getModelList(String type,String page,String size,String sortType,String uid) {
         try {
-            QueryWrapper<ModelDO> queryWrapper = new QueryWrapper<ModelDO>()
-                    .eq("has_show", DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
-                    .eq("has_delete",ModelConstant.UN_DELETE)
-                    .eq("type_id",type);
-            size = (size==null|| "".equals(size))? systemConfig.getSize():Long.parseLong(size)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():size;
-            setSortingCriteria(queryWrapper, sortType);
-            return getModelListCommon(queryWrapper, page, size, uid);
+            QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+            wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType,"type",type));
+            return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
         }
     }
 
+    /**
+     * @description: 查询某个模型详细信息
+     * @param: modelId
+     * @param uid
+     * @return: ModelVO
+     **/
     @Override
     public ModelVO queryOneModel(String modelId, String uid) {
         try {
             ModelDO model = mapper.selectById(modelId);
-            if(model==null){
-                throw new BaseException(ResultCodeEnum.QUERY_MODEL_FAIL);
+            AbstractAssert.isNull(model,"NullPointException:modelDO");
+            Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
+            Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
+            Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
+            Callable<List<String>> labelTask = () -> labelMapper.selectListById(modelId);
+
+            Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
+            Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
+            Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
+            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+
+            String type = ConcurrentUtil.futureGet(typeFuture);
+            String isLike = ConcurrentUtil.futureGet(likeFuture);
+            String isCollection = ConcurrentUtil.futureGet(collectionFuture);
+            List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+            UserInfoDTO dto = null;
+            if(uid!=null){
+                Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
+                dto = userInfo.getData();
+                AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
             }
-            ModelVO modelVO = ModelVO.builder().build();
-            BeanUtils.copyProperties(model,modelVO);
-            modelVO.setId(String.valueOf(model.getId()));
-            modelVO.setType(typeMapper.selectById(model.getTypeId()).getType());
-            List<String> labelList = labelMapper.selectListById(String.valueOf(model.getId()));
-            if(labelList!=null){
-                List<String> strings = new ArrayList<>();
-                for (String s : labelList) {
-                    String label = labelMapper.selectById(s).getLabel();
-                    strings.add(label);
-                    modelVO.setLabel(strings);
-                }
-            }else {
-                modelVO.setLabel(null);
-            }
-            modelVO.setIsLike(mapper.queryUserModelLikes(uid,modelId)==null?"0":"1");
-            modelVO.setIsCollection(mapper.queryUserModelCollection(uid,modelId)==null?"0":"1");
-            Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
-            UserInfoDTO dto = userInfo.getData();
-            if(dto==null){
-                throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
-            }
-            modelVO.setUid(userInfo.getData().getUid());
-            modelVO.setUsername(userInfo.getData().getUsername());
-            modelVO.setNickname(userInfo.getData().getNickname());
-            modelVO.setAvatar(userInfo.getData().getAvatar());
+            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type, isLike,isCollection);
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
         }catch (RuntimeException e){
@@ -148,16 +149,14 @@ public class ModelServiceImpl implements ModelService {
     public void insertOneModel(ModelInsertVO model,String uid) {
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
-        modelDO.setUpdateTime(dateUtil.formatDate());
-        modelDO.setCreateTime(dateUtil.formatDate());
+        modelDO.setUpdateTime(DateUtil.formatDate());
+        modelDO.setCreateTime(DateUtil.formatDate());
         modelDO.setLikesNum("0");
         modelDO.setCollectionNum("0");
         modelDO.setViewNum("0");
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
-        int insert = mapper.insert(modelDO);
-        if(insert!=1){
-            throw new BaseException(ResultCodeEnum.ADD_MODEL_FAIL);
-        }
+        mapper.insert(modelDO);
+        AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
         if(model.getLabelId()!=null){
             try{
                 labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
@@ -213,26 +212,30 @@ public class ModelServiceImpl implements ModelService {
         return true;
     }
 
+    //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
     public ReceiveUploadFileDTO uploadModel(MultipartFile file) {
+        if(FileUtil.checkModelFileIsAvailable(file)){
+            throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
+        }
         try {
             UploadModelForm form = UploadModelForm.builder()
                     .file(file)
                     .path(ModelConstant.DEFAULT_MODEL_PATH)
                     .bucket(ModelConstant.DEFAULT_BUCKET)
-                    .md5(fileUtil.getMD5Checksum(file.getInputStream()))
+                    .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                     .build();
             Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
             return res.getData();
         } catch (NoSuchAlgorithmException | IOException e) {
             logger.error("%s:"+e.getStackTrace()[0],e);
-            throw new BaseException();
+            throw new BaseException(e.toString());
         }
     }
 
     @Override
     public ReceiveUploadFileDTO uploadImage(MultipartFile file) {
-        if(fileUtil.isImageFile(file.getOriginalFilename())&&fileUtil.imageSizeIsAviable(file)){
+        if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
             return this.uploadModel(file);
         }else{
             throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
@@ -273,7 +276,7 @@ public class ModelServiceImpl implements ModelService {
         LabelDO labelDO = new LabelDO();
         try {
             labelDO.setLabel(label);
-            labelDO.setCreateTime(dateUtil.formatDate());
+            labelDO.setCreateTime(DateUtil.formatDate());
             labelDO.setHasShow(UN_DETECTION.getStatus().toString());
             labelMapper.insert(labelDO);
             DetectionTaskDTO dto = DetectionTaskDTO.builder()
@@ -357,19 +360,12 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Page<ModelVO> queryUserModelList(String uid,String page,String limit) {
-        QueryWrapper<ModelUserDO> wrapper = new QueryWrapper<>();
-        wrapper.eq("uid",uid);
         List<String> modelIds = modelUserMapper.selectModelIdByUid(uid);
-        long maxLimit;
-        if(limit!=null){
-            maxLimit = Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?Long.parseLong(systemConfig.getSize()):Long.parseLong(limit);
-        }else {
-            maxLimit = Long.parseLong(systemConfig.getSize());
-        }
-        QueryWrapper<ModelDO> q = new QueryWrapper<>();
-        q.in("id",modelIds);
-        setSortingCriteria(q,ModelConstant.DEFAULT_SORT);
-        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit,false),q);
+        long maxLimit = limit ==null?Long.parseLong(systemConfig.getPageSize()):Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+        wrapper.in("id",modelIds);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("sort",""));
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit,false),wrapper);
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(modelDO -> convertToModelVO(modelDO,uid))
                 .collect(Collectors.toList());
@@ -385,8 +381,8 @@ public class ModelServiceImpl implements ModelService {
             commentDO.setModelId(commentFormVO.getModelId());
             commentDO.setUid(uid);
             commentDO.setHasShow(UN_DETECTION.getStatus().toString());
-            commentDO.setUpdateTime(dateUtil.formatDate());
-            commentDO.setCreateTime(dateUtil.formatDate());
+            commentDO.setUpdateTime(DateUtil.formatDate());
+            commentDO.setCreateTime(DateUtil.formatDate());
             commentDO.setParentId(commentFormVO.getReplyId());
             commentDO.setLikesNum("0");
             commentMapper.insert(commentDO);
@@ -413,7 +409,7 @@ public class ModelServiceImpl implements ModelService {
     public Boolean likeComment(String uid, String commentId,String type) {
 
         if(commentMapper.selectDOById(commentId,uid)!=null){
-            if("true".equals(type)){
+            if(ModelConstant.FLAG.equals(type)){
                 throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
             }
             commentMapper.delUserCommentLikes(commentId,uid);
@@ -430,10 +426,8 @@ public class ModelServiceImpl implements ModelService {
     public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
         List<String> firsComments  = commentMapper.queryCommentIds(modelId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
-        wrapper.eq("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
         wrapper.in("id",firsComments);
-        limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
-        setSortingCriteria(wrapper,sortType);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",""));
         return getFirstComment(wrapper,page,limit,uid);
     }
 
@@ -441,14 +435,42 @@ public class ModelServiceImpl implements ModelService {
     public Page<SecondCommentVO> querySecondCommentList(String parentCommentId,String page,String limit,String sortType, String uid) {
         List<String> secondComments  = commentMapper.querySecondComments(parentCommentId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
-        wrapper.eq("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
         wrapper.in("id",secondComments);
-        limit = (limit==null|| "".equals(limit))? systemConfig.getSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getSize())?systemConfig.getSize():limit;
-        setSortingCriteria(wrapper,sortType);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
         return getSecondCommentList(wrapper,page,limit,uid);
     }
 
+    @Override
+    public Boolean userLikesModel(String status, String modelId, String uid) {
+        if(ModelConstant.FLAG.equals(status)){
+            ModelLikeDO build =  ModelLikeDO.builder()
+                    .modelId(modelId)
+                    .uid(uid)
+                    .build();
+            return mapper.insertModelUserLikes(
+                    build
+            )==1;
+        }else {
+            return mapper.delModelLikes(uid,modelId)==1;
+        }
+    }
+
+    @Override
+    public Boolean userCollectionModel(String status, String modelId, String uid) {
+        if(ModelConstant.FLAG.equals(status)){
+            ModelCollectionDO build = ModelCollectionDO.builder()
+                    .modelId(modelId)
+                    .uid(uid)
+                    .build();
+            return mapper.insertModelUserCollection(
+                    build)==1;
+        }else{
+            return mapper.delModelCollection(uid,modelId)==1;
+        }
+    }
+
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
+        limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
         Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
         List<FirstCommentVO> firstCommentVOList = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToFirstCommentVO(commentDO, uid))
@@ -466,9 +488,12 @@ public class ModelServiceImpl implements ModelService {
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
         Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
         builder.uid(commentUid)
+                .id(commentDO.getId().toString())
+                .commentTime(commentDO.getCreateTime())
                 .commentTime(commentDO.getCreateTime())
                 .content(commentDO.getContent())
                 .likesNum(commentDO.getLikesNum())
+                .modelId(commentDO.getModelId())
                 .picture(userInfo.getData().getAvatar())
                 .nickname(userInfo.getData().getNickname());
         return builder.build();
@@ -496,63 +521,49 @@ public class ModelServiceImpl implements ModelService {
     private ModelVO convertToModelVO(ModelDO model,String myUid) {
         ModelVO modelVO;
         String uid;
+        Result<UserInfoDTO> userInfo;
+        Callable<List<String>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
+        Callable<String> typeTask = () -> typeMapper.selectById(model.getTypeId()).getType();
+        Callable<String> likeTask = () -> mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1";
+        Callable<String> collectionTask = () -> mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1";
+
+        Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
+        Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
+        Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
+        Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+
+        String type = ConcurrentUtil.futureGet(typeFuture);
+        String isLike = ConcurrentUtil.futureGet(likeFuture);
+        String isCollection = ConcurrentUtil.futureGet(collectionFuture);
+        List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
         try {
             ModelUserDO modelUserDO = modelUserMapper.selectById(model.getId());
             uid = modelUserDO.getUid();
-            Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
-            modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData());
+            userInfo = userServiceClient.getUserInfo(uid);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
         }
-        Long modelId = model.getId();
-        List<String> list = labelMapper.selectListById(modelId.toString());
-        List<String> labels = labelMapper.getLabels(list);
-        modelVO.setLabel(labels);
-        if(myUid==null){
-            modelVO.setIsLike("0");
-            modelVO.setIsCollection("0");
-            return modelVO;
-        }
-        modelVO.setType(typeMapper.selectById(model.getTypeId()).getType());
-        modelVO.setIsLike(mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1");
-        modelVO.setIsCollection(mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1");
+        modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData(),labelList,type,isLike,isCollection);
         return modelVO;
     }
 
-    private Page<SecondCommentVO> getSecondCommentList(QueryWrapper<CommentDO> queryWrapper,String page,String size,String uid){
-        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size), false), queryWrapper);
+    private Page<SecondCommentVO> getSecondCommentList(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
+        limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
+        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
         List<SecondCommentVO> secondCommentVOS = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToSecondCommentVO(commentDO, uid))
                 .collect(Collectors.toList());
         return new Page<SecondCommentVO>().setRecords(secondCommentVOS);
     }
 
-    private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> queryWrapper, String page, String size, String uid) {
-        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), queryWrapper);
+    private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, String page, String size, String uid) {
+        size = (size==null|| "".equals(size))? systemConfig.getPageSize():Long.parseLong(size)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():size;
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
         List<ModelVO> modelVOList = modelPage.getRecords().stream()
                 .map(modelDO -> convertToModelVO(modelDO,uid))
                 .collect(Collectors.toList());
         return new Page<ModelVO>().setRecords(modelVOList);
-    }
-
-    private void setSortingCriteria(QueryWrapper queryWrapper, String sortType) {
-        if(sortType==null||"".equals(sortType)){
-            sortType = "1";
-        }
-        switch (sortType) {
-            case "1":
-                queryWrapper.orderByDesc("create_time");
-                break;
-            case "2":
-                queryWrapper.orderByDesc("likes_num");
-                break;
-            case "3":
-                queryWrapper.orderByDesc("view_num");
-                break;
-            default:
-                throw new BaseException(ResultCodeEnum.SORT_FAIL);
-        }
     }
 
 }

@@ -18,9 +18,9 @@ import javax.annotation.PostConstruct;
 public class SystemConfig {
 
     @Value("${page.size}")
-    private String size;
+    private String pageSize;
 
-    @Value("${file.image-file-size}")
+    @Value("${file.image.image-file-size}")
     private String imageSize;
 
     @Value("${labels.allow_labels}")
@@ -32,4 +32,12 @@ public class SystemConfig {
     @Value("${page.second-comment-size}")
     private String secondCommentLimit;
 
+    @Value("${file.image.image-type}")
+    private String[] imageType;
+
+//    @Value("${file.model.model-type}")
+//    private String[] modelType;
+
+    @Value("${file.model.model-file-size}")
+    private String modelFileSize;
 }

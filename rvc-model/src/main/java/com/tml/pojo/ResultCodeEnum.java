@@ -34,7 +34,8 @@ public enum ResultCodeEnum {
     PARAM_ID_IS_ERROR(520,"参数ID不正确"),
     INSERT_MODEL_USER_RELATIVE_FAIL(521,"插入模型-用户关系表失败"),
     ADD_COMMENT_FAIL(522,"评论失败"),
-    USER_COMMENT_FAIL(523,"无法重复点赞");
+    USER_COMMENT_FAIL(523,"无法重复点赞"),
+    MODEL_FILE_ILLEGAL(524,"模型文件不合法");
 
 
     /**

@@ -27,4 +27,8 @@ public class ModelConstant {
 
     public static final String DEFAULT_SORT = "time";
 
+    public static final String FLAG = "0";
+
+    public static final String UN_FLAG = "1";
+
 }

@@ -2,7 +2,6 @@ package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.Result;
-import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
 import org.springframework.validation.annotation.Validated;
@@ -11,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 
 /**
  * @Description
@@ -26,33 +24,62 @@ public class ModelController {
     @Resource
     ModelService modelService;
 
+    /**
+     * @description 分页获取模型列表(不分类)
+     * @param page 当前页数
+     * @param limit 限制条数(最大20条)
+     * @param sortType 排序顺序(默认时间倒序排序)
+     * @param uid 用户uid，用于显式是否点赞收藏信息
+     * @return Result<?>
+     */
     @GetMapping("/list")
     public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
-                                  @RequestParam(value = "limit",required = false) String size,
+                                  @RequestParam(value = "limit",required = false) String limit,
                                   @RequestParam(value = "sortType",required = false)  String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
-        Page<ModelVO> modelList = modelService.getModelList(size,page,sortType,uid);
+        Page<ModelVO> modelList = modelService.getModelList(limit,page,sortType,uid);
         return Result.success(modelList);
     }
 
+    /**
+     * @description 分类、分页获取模型列表
+     * @param typeId 分类唯一Id
+     * @param page 当前页数
+     * @param limit 最大
+     * @param sortType 排序顺序同上
+     * @param uid 同上
+     * @return Result<?>
+     */
     @GetMapping("/list/{typeId}")
     public Result<?> getModelListByType(@PathVariable @NotBlank String typeId,
                                         @RequestParam("page") @NotBlank String page,
-                                        @RequestParam(value = "limit",required = false)  String size,
+                                        @RequestParam(value = "limit",required = false)  String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
-        Page<ModelVO> modelList = modelService.getModelList(typeId,page,size,sortType,uid);
+        Page<ModelVO> modelList = modelService.getModelList(typeId,page,limit,sortType,uid);
         return Result.success(modelList);
     }
 
+    /**
+     * @description 查看指定模型详细信息
+     * @param modelId
+     * @param uid
+     * @return Result<?>
+     */
     @GetMapping("/one/{modelId}")
     public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
-                                 @RequestHeader(value = "uid") String uid){
+                                 @RequestHeader(value = "uid",required = false) String uid){
         ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
     }
 
     //todo:考虑重复上传问题
+    /**
+     * @description:
+     * @param: model
+     * @param uid
+     * @return: Result<?>
+     **/
     @PostMapping("/one")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
                                     @RequestHeader(value = "uid") String uid){
@@ -88,15 +115,18 @@ public class ModelController {
         return Result.success(modelService.uploadImage(file));
     }
 
-    @PostMapping("/relative")
-    public Result<?> modelUserRelative(@RequestParam("type") String type,
-                                       @RequestParam("modelId")String modelId,
-                                       @RequestHeader(value = "uid") String uid,
-                                       @RequestParam("status") String status){
-        modelService.insertRelative(type,modelId,uid,status);
-        return Result.success();
+    @PostMapping("/relative/likes")
+    public Result<?> modelUserLike(@RequestParam("status") String status,
+                                   @RequestParam("modelId")String modelId,
+                                   @RequestHeader(value = "uid") String uid){
+        return Result.success(modelService.userLikesModel(status,modelId,uid));
     }
-
+    @PostMapping("/relative/collection")
+    public Result<?> modelUserCollection(@RequestParam("status") String status,
+                                   @RequestParam("modelId")String modelId,
+                                   @RequestHeader(value = "uid") String uid){
+        return Result.success(modelService.userCollectionModel(status,modelId,uid));
+    }
     @PostMapping("/label")
     public Result<?> insertLabel(
             @RequestParam("label") String label,

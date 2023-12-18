@@ -50,4 +50,8 @@ public interface ModelService {
     Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid);
 
     Page<SecondCommentVO> querySecondCommentList(String parentCommentId,String page,String limit,String sortType,String uid);
+
+    Boolean userLikesModel(String status,String modelId,String uid);
+
+    Boolean userCollectionModel(String status,String modelId,String uid);
 }
