@@ -4,7 +4,6 @@ import com.tml.annotation.SystemLog;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
-import com.tml.pojo.vo.CommentVo;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
@@ -16,11 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
-
-import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 
 /**
  * @NAME: PostController

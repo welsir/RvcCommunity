@@ -1,9 +1,7 @@
 package com.tml.strategy.impl;
 
-import com.tml.mapper.CoverMapper;
 import com.tml.mapper.PostMapper;
 import com.tml.pojo.dto.DetectionStatusDto;
-import com.tml.pojo.entity.Cover;
 import com.tml.pojo.entity.Post;
 import com.tml.strategy.DetectionProcessStrategy;
 import lombok.RequiredArgsConstructor;

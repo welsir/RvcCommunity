@@ -1,4 +1,4 @@
-package com.tml.pojo.DTO;
+package com.tml.pojo.dto;
 
 import lombok.Data;
 

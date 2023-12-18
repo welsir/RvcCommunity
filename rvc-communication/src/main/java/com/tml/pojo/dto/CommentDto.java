@@ -1,4 +1,4 @@
-package com.tml.pojo.DTO;
+package com.tml.pojo.dto;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -21,7 +21,7 @@ public class CommentDto {
     @NotNull
     private String postId;
 //    顶级评论id
-<<<<<<< HEAD:rvc-communication/src/main/java/com/tml/pojo/dto/CommentDto.java
+
     @NotNull
     private String rootCommentId;
 //    回复目标用户id
@@ -31,9 +31,6 @@ public class CommentDto {
     @NotNull
     private String toCommentId;
 }
-=======
-    private Long rootCommentId;
-//    回复目标评论id
-    private Long toCommentId;
-}
->>>>>>> upgrade/master:rvc-communication/src/main/java/com/tml/pojo/DTO/CommentDto.java
+
+
+

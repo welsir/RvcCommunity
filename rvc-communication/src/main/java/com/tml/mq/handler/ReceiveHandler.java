@@ -3,8 +3,6 @@ package com.tml.mq.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.tml.annotation.SystemLog;
-import com.tml.mapper.CoverMapper;
 import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.strategy.DetectionProcessStrategy;
 
@@ -12,8 +10,6 @@ import com.tml.strategy.impl.CommentProcessStrategy;
 import com.tml.strategy.impl.CoverProcessStrategy;
 
 import com.tml.strategy.impl.PostProcessStrategy;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.core.Message;

@@ -7,16 +7,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.CommentMapper;
+
 import com.tml.mapper.LikeCommentMapper;
-import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.Comment;
 import com.tml.pojo.entity.LikeComment;
-import com.tml.pojo.entity.Post;
 import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import com.tml.utils.BeanCopyUtils;
-import com.tml.utils.BeanUtils;
 import com.tml.utils.Uuid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
