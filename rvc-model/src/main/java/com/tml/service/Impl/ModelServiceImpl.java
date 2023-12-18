@@ -376,6 +376,7 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean delSingleModel(String modelId) {
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
