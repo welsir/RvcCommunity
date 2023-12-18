@@ -4,6 +4,7 @@ package com.tml.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
+import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
 import com.tml.pojo.dto.PageInfo;
@@ -48,12 +49,12 @@ public class CommentController {
 
 
     @PostMapping("/add")
-    @ContentDetection(businessName ="post.cover",exchangeName = DETECTION_EXCHANGE_NAME)
+    @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody
                           @Valid CommentDto commentDto){
-        commentService.comment(commentDto);
-        return Result.success();
+        String commentId = commentService.comment(commentDto);
+        return Result.success(commentId);
     }
 
 

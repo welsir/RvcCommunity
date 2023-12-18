@@ -1,6 +1,6 @@
 package com.tml.feign.user;
 
-import com.tml.pojo.entity.UserInfoVO;
+import com.tml.pojo.vo.UserInfoVO;
 import io.github.common.web.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;

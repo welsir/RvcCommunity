@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
+import static com.tml.constant.DetectionConstants.DETECTION_ROUTER_KEY_HEADER;
 
 
 /**
@@ -24,6 +25,6 @@ public class ProducerHandler {
     RabbitTemplate rabbitTemplate;
 //
     public void submit(Object submit,String type){
-        rabbitTemplate.convertAndSend(DETECTION_EXCHANGE_NAME, "detection." + type, JSON.toJSONString(submit));
+        rabbitTemplate.convertAndSend(DETECTION_EXCHANGE_NAME, DETECTION_ROUTER_KEY_HEADER + type, JSON.toJSONString(submit));
     }
 }

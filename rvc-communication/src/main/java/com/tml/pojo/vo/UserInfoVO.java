@@ -1,4 +1,4 @@
-package com.tml.pojo.entity;
+package com.tml.pojo.vo;
 
 import lombok.Data;
 

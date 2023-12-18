@@ -1,7 +1,6 @@
 package com.tml.pojo.vo;
 
 import com.tml.pojo.entity.PostType;
-import com.tml.pojo.entity.UserInfoVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;

@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COMMENT_LIKES;
+
 /**
  * @NAME: LikeComment
  * @USER: yuech
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("rvc_communication_comment_likes")
+@TableName(RVC_COMMUNICATION_COMMENT_LIKES)
 public class LikeComment {
     @TableId
     private String likeId;

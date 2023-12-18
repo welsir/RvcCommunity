@@ -1,10 +1,8 @@
 package com.tml;
 
 import com.tml.feign.user.RvcUserServiceFeignClient;
-import com.tml.pojo.entity.PostType;
-import com.tml.pojo.entity.UserInfoVO;
+import com.tml.pojo.vo.UserInfoVO;
 import io.github.common.web.Result;
-import org.junit.After;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 
 /**
  * @NAME: FeignTest

@@ -18,6 +18,7 @@ import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.CommonFileVO;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
+import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.PostService;
 import com.tml.strategy.SortStrategy;
 import com.tml.strategy.impl.LikeSortStrategy;
@@ -358,7 +359,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public void add(PostDto postDto) {
+    public String add(PostDto postDto) {
 /**
  * 模拟获取userid
  */
@@ -395,14 +396,17 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         int i = coverMapper.updateById(cover);
 
-        //提交审核
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id(uuid)
-                .content(post.getContent())
-                .name("post.text")
-                .build();
-        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-        producerHandler.submit(textDetectionTaskDto,"text");
+
+        return uuid;
+
+//        //提交审核
+//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+//                .id(uuid)
+//                .content(post.getContent())
+//                .name("post.text")
+//                .build();
+//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
+//        producerHandler.submit(textDetectionTaskDto,"text");
     }
 
     @Override

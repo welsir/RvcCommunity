@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST;
+
 /**
  * @NAME: Post
  * @USER: yuech
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
-@TableName("rvc_communication_post")
+@TableName(RVC_COMMUNICATION_POST)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Post {

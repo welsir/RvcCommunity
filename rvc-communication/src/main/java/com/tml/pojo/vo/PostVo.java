@@ -1,8 +1,6 @@
 package com.tml.pojo.vo;
 
 import com.tml.pojo.entity.PostType;
-import com.tml.pojo.entity.User;
-import com.tml.pojo.entity.UserInfoVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

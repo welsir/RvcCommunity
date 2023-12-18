@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Builder;
 import lombok.Data;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COVER;
+
 /**
  * @NAME: Cover
  * @USER: yuech
@@ -13,7 +15,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-@TableName("rvc_communication_cover")
+@TableName(RVC_COMMUNICATION_COVER)
 public class Cover {
     @TableId
     private String coverId;

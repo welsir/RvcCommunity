@@ -12,7 +12,7 @@ import com.tml.pojo.vo.CommentVo;
 import java.util.List;
 
 public interface CommentService  extends IService<Comment> {
-    void comment(CommentDto commentDto);
+    String comment(CommentDto commentDto);
 
 
 

@@ -9,15 +9,6 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 
-/**
- * Copyright (C),2021-2023
- * All rights reserved.
- * FileName: WebConfiguration
- *
- * @author NEKOnyako
- * Description:
- * Date: 2023/10/25 0025 10:33
- */
 
 @Component
 public class WebConfiguration implements WebMvcConfigurer {

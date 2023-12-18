@@ -1,6 +1,5 @@
 package com.tml.pojo.vo;
 
-import com.tml.pojo.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,10 +36,9 @@ public class CommentVo {
     //修改时间
     private LocalDateTime updateAt;
 
+    private UserInfoVO user;
 
-    private User user;
-
-    private User replayUser;
+    private UserInfoVO replayUser;
 
     private List<CommentVo> childrenComment;
 }

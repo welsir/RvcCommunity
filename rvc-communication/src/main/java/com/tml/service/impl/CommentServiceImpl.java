@@ -40,10 +40,12 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
     private final LikeCommentMapper likeCommentMapper;
 
     @Override
-    public void comment(CommentDto commentDto) {
+    public String comment(CommentDto commentDto) {
+        //从header获取用户id
         LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
         String uid = loginInfoDTO.getId();
 
+        //帖子id不能为空
         if (commentDto.getPostId() == null)
         {
             throw new RuntimeException("post_id为空");
@@ -95,6 +97,8 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                 .createAt(currentTime)
                 .build();
         save(commentDo);
+
+        return uuid;
 ////        审核
 //        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
 //                .id(uuid)
@@ -186,6 +190,9 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                     .eq(Comment::getPostCommentId, coinDto.getId())
                     .setSql("comment_like_count = comment_like_count - 1");
             commentMapper.update(null,updateWrapper);
+
+
+            return;
         }
     }
 }

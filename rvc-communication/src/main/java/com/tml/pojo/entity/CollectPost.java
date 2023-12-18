@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_COLLECT;
+
 /**
  * @NAME: CollectPost
  * @USER: yuech
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("rvc_communication_post_collect")
+@TableName(RVC_COMMUNICATION_POST_COLLECT)
 public class CollectPost {
     @TableField
     private String postId;

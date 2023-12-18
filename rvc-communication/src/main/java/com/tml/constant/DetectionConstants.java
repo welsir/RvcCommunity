@@ -2,6 +2,8 @@ package com.tml.constant;
 
 public class DetectionConstants {
 
+    public static final String DETECTION_ROUTER_KEY_HEADER = "detection.";
+
     public static final String RES_EXCHANGE_NAME = "res.topic";
     public static final String DETECTION_EXCHANGE_NAME = "detection.topic";
 

@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.tml.constant.DetectionConstants.*;
+import static com.tml.enums.ContentDetectionEnum.*;
+
 
 /**
  * @ClassName ReceiveHandler
@@ -43,28 +46,22 @@ public class ReceiveHandler {
 
     @Autowired
     public ReceiveHandler(CoverProcessStrategy coverProcessStrategy, CommentProcessStrategy commentProcessStrategy, PostProcessStrategy postProcessStrategy) {
-        strategyMap.put("post_cover", coverProcessStrategy);
-        strategyMap.put("comment.text",commentProcessStrategy);
-        strategyMap.put("post.text",postProcessStrategy);
+        strategyMap.put(POST_COVER.getFullName() ,coverProcessStrategy);
+        strategyMap.put(COMMENT.getFullName(),commentProcessStrategy);
+        strategyMap.put(POST_CONTENT.getFullName(),postProcessStrategy);
     }
 
 //    监听text队列
-
     @RabbitListener(bindings = @QueueBinding(
                 value = @Queue(),
-//            value = @Queue(name = "res.text"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
-            key = "res.text"
+            exchange = @Exchange(name = RES_EXCHANGE_NAME,type = ExchangeTypes.FANOUT),
+            key = TEXT_ROUTER_KEY
     ))
     public void receive_text(Message message) throws Exception {
 
         String content = new String(message.getBody(), StandardCharsets.UTF_8);
         ObjectMapper objectMapper = new ObjectMapper();
-
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
-
-        System.out.println(detectionTaskDto);
-
 
 ////处理逻辑  更新数据库
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
@@ -83,9 +80,8 @@ public class ReceiveHandler {
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(),
-//            value = @Queue(name = "res.image"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
-            key = "res.image"
+            exchange = @Exchange(name = RES_EXCHANGE_NAME,type = ExchangeTypes.FANOUT),
+            key = IMAGE_ROUTER_KEY
     ))
     public void receive_image(Message message) throws Exception {
         System.out.println(LocalDate.now());
@@ -109,9 +105,8 @@ public class ReceiveHandler {
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(),
-//            value = @Queue(name = "res.audio"),
-            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
-            key = "res.audio"
+            exchange = @Exchange(name = RES_EXCHANGE_NAME,type = ExchangeTypes.FANOUT),
+            key = AUDIO_ROUTER_KEY
     ))
     public void receive_audio(Message message) throws Exception {
         String content = new String(message.getBody(), StandardCharsets.UTF_8);

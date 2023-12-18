@@ -7,6 +7,8 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COMMENT;
+
 /**
  * @NAME: Comment
  * @USER: yuech
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
-@TableName("rvc_communication_comment")
+@TableName(RVC_COMMUNICATION_COMMENT)
 public class Comment {
     //评论id
     @TableId

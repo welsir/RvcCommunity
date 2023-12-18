@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
+
 /**
  * @NAME: PostType
  * @USER: yuech
@@ -18,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName(value = DBConstant.RVC_COMMUNICATION_POST_TYPE )
+@TableName(RVC_COMMUNICATION_POST_TYPE )
 public class PostType {
 
     @TableId(value = "tag_id", type = IdType.AUTO)

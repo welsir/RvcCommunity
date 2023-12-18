@@ -1,6 +1,8 @@
 package com.tml.controller;
 
+import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
+import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
@@ -17,6 +19,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.util.List;
+
+import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 
 /**
  * @NAME: PostController
@@ -83,10 +87,11 @@ public class PostController {
      */
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
+    @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
     public Result add(@RequestBody
                           @Valid PostDto postDto){
-        postService.add(postDto);
-        return Result.success();
+        String postId = postService.add(postDto);
+        return Result.success(postId);
     }
 
 
@@ -97,28 +102,6 @@ public class PostController {
         postService.delete(postId);
         return Result.success();
     }
-
-
-
-    /**
-     *修改我发布的帖子
-     * @return
-     */
-//    @PutMapping("/update")
-//    @SystemLog(businessName = "修改我发布的帖子  [T]  [审]")
-//    public Result update(@RequestBody PostDto postDto){
-//        postService.update(postDto);
-//        return Result.success();
-//    }
-
-
-
-//    @GetMapping("/cover")
-//    @SystemLog(businessName = "上传帖子封面  [T]  [审]")
-//    public Result cover(  @Valid @NotBlank String coverUrl){
-//        String coverId = postService.cover(coverUrl);
-//        return Result.success(coverId);
-//    }
 
 
 
