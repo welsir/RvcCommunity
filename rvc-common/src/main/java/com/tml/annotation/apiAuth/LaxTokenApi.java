@@ -6,11 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 需要进行验证Token的接口（必须）
- * 包含正确形式的token返回uid,username
- * 不包含不通过则直接返回401
+ * 不严格要求用户登录的接口
+ * 用户登录：返回uid与username
+ * 用户未登录，放行
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface WhiteApi {
+public @interface LaxTokenApi {
 }

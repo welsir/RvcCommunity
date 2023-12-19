@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.google.protobuf.ServiceException;
+import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.pojo.WebInfoDO;
 import com.tml.service.*;
 import io.github.common.web.Result;
@@ -24,7 +25,6 @@ public class WebController {
 
     @Resource
     TeamService teamService;
-
 
     /**
      * 获取网站首页信息
@@ -78,6 +78,7 @@ public class WebController {
      * @return
      */
     @GetMapping("/notice/detail")
+    @LaxTokenApi
     public Result getNotice(@RequestParam String noticeId,
                             @RequestHeader(required = false) String uid){
         return noticeService.getWebNoticeDetail(noticeId,uid);
@@ -90,6 +91,7 @@ public class WebController {
      * @return
      */
     @GetMapping("/notice/watch")
+    @LaxTokenApi
     public Result watchNotice(@RequestParam String noticeId,
                             @RequestHeader(required = false) String uid) throws ServiceException {
         return noticeService.watchNotice(noticeId,uid);
