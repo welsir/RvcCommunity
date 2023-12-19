@@ -375,8 +375,8 @@ public class ModelServiceImpl implements ModelService {
 
     @Transactional
     @Override
-    public Boolean delSingleModel(String modelId) {
-        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+    public Boolean delSingleModel(String modelId,String uid) {
+        AbstractAssert.isTrue(!Objects.equals(modelUserMapper.selectById(modelId).getUid(), uid),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
@@ -403,12 +403,11 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
-        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
         AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
         if(StringUtils.isBlank(commentFormVO.getReplyId())){
             AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
         }else {
-            AbstractAssert.isNull(commentMapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.COMMENT_NOT_EXITS);
+            AbstractAssert.isNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
         }
         try {
             CommentDO commentDO = new CommentDO();
@@ -442,11 +441,13 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
-        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
-        AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
-        AbstractAssert.notNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
+        AbstractAssert.isNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
         if(ModelConstant.FLAG.equals(type)){
-            throw new BaseException(ResultCodeEnum.USER_LIKES_ERROR);
+            AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
+            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("uid",uid).eq("id",commentId).setSql("likes_num = likes_num+1");
+            commentMapper.update(null,wrapper);
+            return commentMapper.insertUserCommentRelative(commentId,uid)==1;
         }
         if(ModelConstant.UN_FLAG.equals(type)){
             commentMapper.delUserCommentLikes(commentId,uid);
@@ -585,11 +586,12 @@ public class ModelServiceImpl implements ModelService {
             ModelUserDO modelUserDO = modelUserMapper.selectById(model.getId());
             uid = modelUserDO.getUid();
             userInfo = userServiceClient.getUserInfo(uid);
+            AbstractAssert.isNull(userInfo,ResultCodeEnum.GET_USER_INFO_FAIL);
+            modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData(),labelList,type,isLike,isCollection);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
         }
-        modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData(),labelList,type,isLike,isCollection);
         return modelVO;
     }
 

@@ -39,7 +39,7 @@ public interface ModelService {
 
     List<UserCollectionModelVO> getUserCollectionList(String uid);
 
-    Boolean delSingleModel(String modelId);
+    Boolean delSingleModel(String modelId,String uid);
 
     Page<ModelVO> queryUserModelList(String uid,String page,String limit);
 

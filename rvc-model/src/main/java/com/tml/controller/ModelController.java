@@ -152,7 +152,7 @@ public class ModelController {
     @DeleteMapping("/one")
     public Result<?> delOneModel(@RequestParam("id") String modelId,
                                  @RequestHeader("uid") @NotBlank String uid){
-        return Result.success(modelService.delSingleModel(modelId));
+        return Result.success(modelService.delSingleModel(modelId,uid));
     }
 
     @GetMapping("user/model")
@@ -165,7 +165,7 @@ public class ModelController {
 
     @PostMapping("/comment")
     public Result<?> addComment(@RequestBody @Validated CommentFormVO commentFormVO,
-                                     @RequestHeader("uid") String uid){
+                                     @RequestHeader("uid") @NotBlank String uid){
         return Result.success(modelService.commentModel(commentFormVO,uid));
     }
 

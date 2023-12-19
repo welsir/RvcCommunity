@@ -3,13 +3,16 @@ package com.tml.common.exception;
 import com.tml.common.Result;
 import com.tml.common.log.AbstractLogger;
 import com.tml.pojo.ResultCodeEnum;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.stream.Collectors;
 
 /**
  * @Description
@@ -45,5 +48,12 @@ public class GobalExceptionHandler {
         }
         logger.info("exception handle result:" + result);
         return result;
+    }
+
+    @ExceptionHandler(BindException.class)
+    @ResponseBody
+    public Result bindExceptionHandler(BindException e){
+        String message = e.getBindingResult().getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining());
+        return Result.fail(message);
     }
 }
