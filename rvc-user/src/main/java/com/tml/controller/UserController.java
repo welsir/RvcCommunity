@@ -1,9 +1,9 @@
 package com.tml.controller;
 
+import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
-import com.tml.common.annotation.Login;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -63,8 +63,7 @@ public class UserController {
 
     @GetMapping("/preCode")
     public Result preCode(){
-//        return Result.success(userService.preCode());
-        return Result.success();
+        return Result.success(userService.preCode());
     }
 
     /**
@@ -139,7 +138,7 @@ public class UserController {
      */
     @PostMapping("/follow")
     @WhiteApi
-    public Result follow(@RequestParam
+    public Result follow(@RequestPart
                              @Valid
                              @Length(min = 19, max = 19, message = "uid长度为19")
                              @NotNull(message = "uid不能为空")
@@ -157,7 +156,7 @@ public class UserController {
         return Result.success();
     }
 
-    @GetMapping("getUserInfo")
+    @GetMapping("/getUserInfo")
     @WhiteApi
     public Result getUserInfo(){
         return Result.success(userService.getUserInfo());
@@ -165,7 +164,12 @@ public class UserController {
 
     @PostMapping("/avatar")
     @WhiteApi
-    public Result avatar(@RequestParam("file") MultipartFile file){
+    public Result avatar(@RequestPart("file") MultipartFile file){
         return Result.success(userService.avatar(file));
+    }
+
+    @GetMapping("/exist")
+    public Result exist(@RequestParam String uid){
+        return Result.success(userService.exist(uid));
     }
 }
