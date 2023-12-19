@@ -9,7 +9,7 @@ spring:
 
 sa-token:
   token-name: token
-  timeout: 86400
+  timeout: 604800
   active-timeout: -1
   is-concurrent: true
   is-share: true

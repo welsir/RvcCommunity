@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @Date 2023/12/10
@@ -29,7 +30,7 @@ public interface UserService {
 
     UserInfoVO one(String uid);
 
-    List<UserInfoVO> list(List<String> uidList);
+    Map<String, UserInfoVO> list(List<String> uidList);
 
     void update(UserInfoDTO userInfoDTO);
 
@@ -39,7 +40,7 @@ public interface UserService {
 
     UserInfoVO getUserInfo();
 
-    String avatar(MultipartFile file);
+    void avatar(MultipartFile file);
 
     boolean exist(String uid);
 }

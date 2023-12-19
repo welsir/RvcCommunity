@@ -1,6 +1,6 @@
 spring:
   application:
-    name: tml-user-service
+    name: rvc-user-service
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
