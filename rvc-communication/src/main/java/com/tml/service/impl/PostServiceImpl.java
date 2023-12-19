@@ -604,7 +604,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .md5(MD5Util.getMD5(uploadBytes.toString()))
                 .path("rvc/image3")
                 .build();
-        com.alibaba.nacos.api.model.v2.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
+        com.tml.pojo.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
         try {
             receiveUploadFileDTOResult = fileServiceClient.uploadModel(build);
         } catch (Exception e) {
