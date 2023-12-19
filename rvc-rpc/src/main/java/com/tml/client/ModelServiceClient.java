@@ -17,7 +17,7 @@ import java.util.List;
  * @Author welsir
  * @Date 2023/12/18 10:24
  */
-@FeignClient(name = "model-service0",configuration = FeignConfig.class)
+@FeignClient(name = "rvc_model_service",configuration = FeignConfig.class)
 public interface ModelServiceClient {
 
     @GetMapping(value = RemoteModuleURL.GET_USER_LIKES_MODELS,consumes = MediaType.APPLICATION_JSON_VALUE)
