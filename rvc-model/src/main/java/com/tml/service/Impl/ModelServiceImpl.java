@@ -1,9 +1,7 @@
 package com.tml.service.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.Result;
@@ -46,7 +44,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
-import static com.tml.pojo.ResultCodeEnum.MODEL_FILE_ILLEGAL;
 
 /**
  * @Description
