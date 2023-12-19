@@ -1,18 +1,18 @@
 package com.tml.controller;
 
-import com.tml.annotation.Detection;
 import com.tml.annotation.SystemLog;
-import com.tml.pojo.entity.PostTypeDo;
+import com.tml.feign.user.RvcUserServiceFeignClient;
+import com.tml.pojo.entity.PostType;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.util.List;
-
-import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 
 /**
  * @NAME: PostTypeController
@@ -21,17 +21,19 @@ import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
  * @DATE: 2023/11/26
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/communication/post/type")
 public class PostTypeController {
 
-    @Autowired
-    private PostTypeService postTypeService;
+    private final PostTypeService postTypeService;
+
+
 
     @GetMapping("/list")
     @SystemLog(businessName = "获取所有交流类型列表")
     public Result list(){
-        List<PostTypeDo> list = postTypeService.list();
-        return Result.success(list);
+        List<Object> listType = postTypeService.listType();
+        return Result.success(listType);
     }
 
 }

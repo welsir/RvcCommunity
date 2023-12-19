@@ -1,12 +1,22 @@
 package com.tml.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.tml.pojo.DTO.CommentDto;
-import com.tml.pojo.DTO.CommentStatusDto;
-import com.tml.pojo.entity.CommentDo;
+import com.tml.pojo.dto.CoinDto;
+import com.tml.pojo.dto.CommentDto;
 
-public interface CommentService  extends IService<CommentDo> {
-    void comment(CommentDto commentDto);
+import com.tml.pojo.dto.PageInfo;
+import com.tml.pojo.entity.Comment;
+import com.tml.pojo.vo.CommentVo;
 
-    void status(CommentStatusDto commentStatusDto);
+import java.util.List;
+
+public interface CommentService  extends IService<Comment> {
+    String comment(CommentDto commentDto);
+
+
+
+    List<CommentVo> list(PageInfo<String> params);
+
+    void favorite(CoinDto coinDto);
 }

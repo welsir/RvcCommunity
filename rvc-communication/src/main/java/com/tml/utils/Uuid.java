@@ -43,7 +43,8 @@ public class Uuid {
     }
 
     //测试
-    public static Long getUuid() {
-        return (new Uuid().snowflakeId());   //1277896081711169536
+    public static String getUuid() {
+        return new String(String.valueOf((new Uuid().snowflakeId())));
+        //1277896081711169536
     }
 }
