@@ -3,9 +3,8 @@ package com.tml.service.impl;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
-import com.tml.client.UserServiceClient;
-import com.tml.common.DetectionStatusEnum;
 import com.tml.common.rabbitmq.UserRabbitMQListener;
+import com.tml.config.DetectionConfig;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
@@ -21,10 +20,7 @@ import com.tml.pojo.dto.*;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
-import com.tml.util.CodeUtil;
-import com.tml.util.RandomStringUtil;
-import com.tml.util.TokenUtil;
-import com.tml.util.UserUtil;
+import com.tml.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -40,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.tml.pojo.enums.EmailEnums.*;
 
@@ -70,7 +67,7 @@ public class UserServiceImpl implements UserService {
     UserDataMapper userDataMapper;
 
     @Resource
-    UserRabbitMQListener rabbitMQListener;
+    UserRabbitMQListener userRabbitMQListener;
 
     @Resource
     CodeUtil codeUtil;
@@ -195,47 +192,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserInfoVO> list(List<String> uidList) {
+    public Map<String, UserInfoVO> list(List<String> uidList) {
         if(uidList.isEmpty()){
             throw new ServerException(ResultEnums.UID_LIST_IS_EMPTY);
         }
-        UserInfo user;
-        UserInfoVO userInfoVO;
+        QueryWrapper<UserInfo> userQuery = new QueryWrapper<>();
+        userQuery.in("uid", uidList);
+
         List<UserInfoVO> userList = new ArrayList<>();
-        for (String uid: uidList){
-            user = userInfoMapper.selectById(uid);
-            userInfoVO = new UserInfoVO();
-            if(user == null) {
-                userInfoVO.setUid(uid);
-                userInfoVO.setUsername("用户不存在");
-                userInfoVO.setNickname("用户不存在");
-            } else {
-                userInfoVO.setUid(user.getUid());
-                userInfoVO.setUsername(user.getUsername());
-                userInfoVO.setNickname(user.getUsername());
-                userInfoVO.setAvatar(userInfoVO.getAvatar());
-            }
-            userList.add(userInfoVO);
-        }
-        return userList;
+        CopyUtil.copyPropertiesForList(userInfoMapper.selectList(userQuery), userList, UserInfoVO.class);
+        return userList.stream().collect(Collectors.toMap(UserInfoVO::getUid, userInfoVO -> userInfoVO));
     }
 
     @Override
     public void update(UserInfoDTO userInfoDTO) {
 //        AuthUser authUser = UserContext.getCurrentUser();
         AuthUser authUser = userUtil.getCurrentUser();
-        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
-        userWrapper.eq("uid", authUser.getUid());
-        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
 
-        rabbitMQListener.sendMsgToMQ(DetectionTaskDTO
-                .builder()
-                .content(userInfoDTO.getDescription())
-                .id(userInfo.getUid())
-                .name(userInfo.getUsername())
-                .build(), "txt");
-        BeanUtils.copyProperties(userInfoDTO, userInfo);
-        userInfoMapper.updateById(userInfo);
+        DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
+                                .id(authUser.getUid())
+                                .name(DetectionConfig.USER_DESCRIPTION)
+                                .content(userInfoDTO.getNickname())
+                                .build();
+
+        DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
+                .id(authUser.getUid())
+                .name(DetectionConfig.USER_NICKNAME)
+                .content(userInfoDTO.getNickname())
+                .build();
+
+        userRabbitMQListener.textSubmit(nicknameTask);
+        userRabbitMQListener.textSubmit(descriptionTask);
     }
 
     @Override
@@ -281,7 +268,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoVO getUserInfo() {
-//        AuthUser authUser = UserContext.getCurrentUser();
         AuthUser authUser = userUtil.getCurrentUser();
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
@@ -296,8 +282,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String avatar(MultipartFile file){
+    public void avatar(MultipartFile file){
         try {
+            AuthUser authUser = userUtil.getCurrentUser();
             UploadModelForm form = UploadModelForm.builder()
                     .bucket("rvc")
                     .path("rvc/user/avatar")
@@ -308,7 +295,12 @@ public class UserServiceImpl implements UserService {
                 throw new ServerException(result.getCode().toString(), result.getMessage());
             }
             ReceiveUploadFileDTO receiveUploadFileDTO = result.getData();
-            return receiveUploadFileDTO.getUrl();
+            DetectionTaskDTO imageTask = DetectionTaskDTO.builder()
+                    .id(authUser.getUid())
+                    .name(DetectionConfig.USER_AVATAR)
+                    .content(receiveUploadFileDTO.getUrl())
+                    .build();
+            userRabbitMQListener.imageSubmit(imageTask);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

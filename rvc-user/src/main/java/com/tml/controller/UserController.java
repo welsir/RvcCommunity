@@ -21,6 +21,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @Date 2023/12/10
@@ -115,8 +116,8 @@ public class UserController {
                            @Valid
                            @ListNotEmpty
                            @ListElementSize(min = 19, max = 19, message = "uid长度为19")
-                           List<String> uidList){
-        return Result.success(Map.of("userList", userService.list(uidList)));
+                       List<String> uidList){
+        return Result.success(userService.list(uidList));
     }
 
     /**
@@ -129,7 +130,7 @@ public class UserController {
                              @Valid
                              UserInfoDTO userInfoDTO){
         userService.update(userInfoDTO);
-        return Result.success();
+        return Result.success("审核中");
     }
 
     /**
@@ -165,7 +166,8 @@ public class UserController {
     @PostMapping("/avatar")
     @WhiteApi
     public Result avatar(@RequestPart("file") MultipartFile file){
-        return Result.success(userService.avatar(file));
+        userService.avatar(file);
+        return Result.success("审核中");
     }
 
     @GetMapping("/exist")
