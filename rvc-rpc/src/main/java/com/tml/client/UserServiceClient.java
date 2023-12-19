@@ -15,7 +15,7 @@ import java.util.Map;
  * @Date 2023/12/19
  * @Author xiaochun
  */
-@FeignClient(name = "tml-user-service")
+@FeignClient(name = "rvc-user-service")
 public interface UserServiceClient {
     @GetMapping(value = RemoteUserURL.USER_ONE)
     Result<UserInfoVO> one(@RequestParam String uid);
