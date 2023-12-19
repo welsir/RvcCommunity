@@ -312,7 +312,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public List<UserLikesModelVO> getUserLikesList(String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
+        //todo:需要等待用户模块提供查询用户是否存在接口,后续可以异步加入缓存
 
         List<ModelLikeDO> modelLikeDOList = mapper.getUserLikesModel(uid);
         List<String> modelIds = modelLikeDOList.stream()
