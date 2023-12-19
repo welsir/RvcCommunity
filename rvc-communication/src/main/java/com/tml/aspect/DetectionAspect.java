@@ -71,7 +71,7 @@ public class DetectionAspect {
         log.info("=======Start===================================");
 
     }
-    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) {
+    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
 
         Result res = (Result)(ret);
 
@@ -90,35 +90,31 @@ public class DetectionAspect {
                     Field[] fields = argClass.getDeclaredFields();
                     for (Field field : fields) {
                         field.setAccessible(true);
+                        //入参名
                         if ("content".equals(field.getName())) {
-                            try {
-                                 contentValue = (String) field.get(arg);
-
-                                DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                                        .id(uuid)
-                                        .content(contentValue)
-                                        .name(type.getName()+":" + type.getType())
-                                        .build();
-                                //在此处 上传任务到mq
-                                rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            }
+                            contentValue = (String) field.get(arg);
+                            break;
+                        } else if ("coverUrl".equals(field.getName())) {
+                            contentValue = (String) field.get(arg);
+                            break;
                         }
                     }
                 }
+                DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+                        .id(uuid)
+                        .content(contentValue)
+                        .name(type.getName()+":" + type.getType())
+                        .build();
+                //在此处 上传任务到mq
+                rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
             }
         }
-        System.out.println(contentValue);
 
 
 
 
-
-//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-//        .id(uuid)
-//        .content(commentDto.getContent())
-//        .name("comment.text")
-//        .build();
     }
+
+
+
 }

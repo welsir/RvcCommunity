@@ -11,8 +11,8 @@ import java.io.Serializable;
 public class PageInfo<T> implements Serializable {
 
     private T data;
-    @NotNull(message = "参数不能为空")
+    @NotNull(message = "page 参数不能为空")
     private Integer page;
-    @NotNull(message = "参数不能为空")
+    @NotNull(message = " limit 参数不能为空")
     private Integer limit;
 }

@@ -193,6 +193,8 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
 
             return;
+        }else {
+            throw new RuntimeException("类型错误");
         }
     }
 }

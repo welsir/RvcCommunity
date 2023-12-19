@@ -1,6 +1,7 @@
 package com.tml.service;
 
 import com.tml.pojo.dto.CoinDto;
+import com.tml.pojo.dto.CoverDto;
 import com.tml.pojo.dto.PageInfo;
 import com.tml.pojo.dto.PostDto;
 import com.tml.pojo.vo.PostSimpleVo;
@@ -16,7 +17,7 @@ public interface PostService {
     PostVo details(String postId);
 
 
-    String cover(String coverUrl);
+//    String cover(String coverUrl);
 
     void favorite(CoinDto coinDto);
 
@@ -26,7 +27,7 @@ public interface PostService {
 
     String add(PostDto postDto);
 
-    void update(PostDto postDto);
+//    void update(PostDto postDto);
 
     List<PostSimpleVo> userFavorite(PageInfo<String> params);
 
@@ -34,5 +35,7 @@ public interface PostService {
 
     List<PostSimpleVo> userCreate(PageInfo<String> params);
 
-    void updUserProfile(MultipartFile profile) throws IOException;
+    String updUserProfile(MultipartFile profile) throws IOException;
+
+    String coverUrl(CoverDto coverDto);
 }

@@ -13,22 +13,24 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 public class CommentDto {
-//    内容
-    @Length(min = 1, max = 1000, message = "长度为1到1000")
+
+    @Length(min = 1, max = 1000, message = "content 长度为1到1000")
     @NotNull
     private String content;
-//    所属帖子id
-    @NotNull
+
+    @NotNull(message = "postId 不能为空")
     private String postId;
-//    顶级评论id
 
     @NotNull
+    @NotNull(message = "rootCommentId 不能为空")
     private String rootCommentId;
-//    回复目标用户id
+
     @NotNull
+    @NotNull(message = "toUserId 不能为空")
     private String toUserId;
-    //回复评论id
+
     @NotNull
+    @NotNull(message = "toCommentId 不能为空")
     private String toCommentId;
 }
 

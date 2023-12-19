@@ -3,9 +3,9 @@ package com.tml.controller;
 import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
 import com.tml.enums.ContentDetectionEnum;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.dto.PostDto;
+import com.tml.feign.communication.RvcCommunicationServiceFeignClient;
+import com.tml.interceptor.UserLoginInterceptor;
+import com.tml.pojo.dto.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
@@ -36,6 +36,7 @@ public class PostController {
 
 
     private final PostService postService;
+    private final RvcCommunicationServiceFeignClient rvcCommunicationServiceFeignClient;
 
 
     @SystemLog(businessName = "获取交流帖子列表")
@@ -46,13 +47,9 @@ public class PostController {
     }
 
 
-    /**
-     * 用户id如何获取
-     * @return
-     */
     @GetMapping("/details")
     @SystemLog(businessName = "获取某个帖子详情信息")
-    public Result details(@Valid @NotBlank String postId){
+    public Result details(@RequestParam @NotBlank String postId){
         PostVo postVo = postService.details(postId);
         return Result.success(postVo);
     }
@@ -81,10 +78,6 @@ public class PostController {
     }
 
 
-    /**
-     * 审核流程  用户先上传封面进行审核     发布帖子携带封面id
-     * @return
-     */
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
     @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
@@ -98,7 +91,7 @@ public class PostController {
 
     @DeleteMapping("/delete/{postId}")
     @SystemLog(businessName = "删除帖子   [T]")
-    public Result delete(@PathVariable("postId") @Valid @NotBlank String postId){
+    public Result delete(@PathVariable("postId") @NotBlank String postId){
         postService.delete(postId);
         return Result.success();
     }
@@ -109,7 +102,6 @@ public class PostController {
     @SystemLog(businessName = "获取用户点赞的贴子")
     public Result userFavorite(
             @Valid PageInfo<String> params){
-
         List<PostSimpleVo> postVoListPage = postService.userFavorite(params);
         return Result.success(postVoListPage);
     }
@@ -132,12 +124,30 @@ public class PostController {
 
 
     //用户上传头像
-    //富文本上传图片
+    //文件上传
     @PostMapping("/cover")
-    public Result setUserProfile(@RequestParam("wangeditor-uploaded-image") MultipartFile profile) throws IOException {
-        postService.updUserProfile(profile);
-        return Result.success();
+    @SystemLog(businessName = "用户上传头像  文件上传")
+    public Result setUserProfile(@RequestPart("wangeditor-uploaded-image") MultipartFile profile) throws IOException {
+        //从header获取用户id
+        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+        String url = postService.updUserProfile(profile);
+        CoverDto build = CoverDto.builder()
+                .uid(loginInfoDTO.getId())
+                .coverUrl(url)
+                .build();
+        rvcCommunicationServiceFeignClient.coverUrl(build);
+        return Result.success(url);
     }
 
+
+    //上传图片
+    //链接上传
+    @PostMapping("/coverUrl")
+    @SystemLog(businessName = "用户上传头像  url上传")
+    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
+    public Result coverUrl(@RequestBody CoverDto coverDto) {
+        String urlId =  postService.coverUrl(coverDto);
+        return Result.success(urlId);
+    }
 
 }

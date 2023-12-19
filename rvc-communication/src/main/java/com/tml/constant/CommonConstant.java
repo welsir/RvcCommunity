@@ -16,4 +16,6 @@ public class CommonConstant {
      */
     public static final String POST_WATCH_TIME = "rvc-communication:post:watch_time";
 
+    public static final String[] IMG_TYPE_LIST = { ".jpg", ".png"};
+
 }
