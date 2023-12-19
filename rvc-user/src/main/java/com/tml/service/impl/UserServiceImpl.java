@@ -215,7 +215,6 @@ public class UserServiceImpl implements UserService {
                 userInfoVO.setNickname(user.getUsername());
                 userInfoVO.setAvatar(userInfoVO.getAvatar());
             }
-
             userList.add(userInfoVO);
         }
         return userList;
