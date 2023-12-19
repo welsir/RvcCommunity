@@ -1,27 +1,21 @@
 package com.tml.controller;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
 import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
 import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.entity.Comment;
 import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
 import java.util.List;
-
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
-import static com.tml.constant.MessageConstant.API_NOT_IMPLEMENTED;
 
 /**
  * @NAME: CommentController
@@ -45,7 +39,6 @@ public class CommentController {
         List<CommentVo> commentListPage = commentService.list(params);
         return Result.success(commentListPage);
     }
-
 
 
     @PostMapping("/add")

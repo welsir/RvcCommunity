@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * @NAME: CoinDto
@@ -13,10 +14,11 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 public class CoinDto {
-    @NotNull
+    @NotNull(message = "id 不能为空")
     private String id;
-//        //1、点赞    添加关系表中的记录       post表 like_num +1
-//        //0、取消点赞    删除关系表中的记录       post表 like_num -1
-    @NotNull
+
+    //1、点赞
+    //0、取消点赞
+    @NotNull(message = "type 不能为空")
     private String type;
 }

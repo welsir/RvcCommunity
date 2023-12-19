@@ -63,8 +63,8 @@ public class LogAspect {
         log.info("Class Method   : {}.{}",joinPoint.getSignature().getDeclaringTypeName(),((MethodSignature) joinPoint.getSignature()).getName() );
         // 打印请求的 IP
         log.info("IP             : {}",request.getRemoteHost());
-        // 打印请求入参
-        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
+//        // 打印请求入参
+//        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
         // 结束后换行
         log.info("==================================");
     }
