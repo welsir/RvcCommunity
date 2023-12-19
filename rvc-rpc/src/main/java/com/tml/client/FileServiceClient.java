@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @Author welsir
  * @Date 2023/12/6 16:01
  */
-@FeignClient(name = "rvc_file_service",configuration = FeignConfig.class)
+@FeignClient(name = "rvc-file-service",configuration = FeignConfig.class)
 public interface FileServiceClient {
 
     @PostMapping(value = RemoteModuleURL.UPLOAD_FILE_TO_OSS,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
