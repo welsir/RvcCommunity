@@ -65,7 +65,7 @@ public class GobalExceptionHandler {
     public Result constraintViolationException(ConstraintViolationException e){
         String message = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining());
+                .collect(Collectors.joining(", "));
         return Result.fail(message);
     }
 

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.common.Result;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +34,7 @@ public class ModelController {
      * @return Result<?>
      */
     @GetMapping("/list")
-    public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
+    public Result<?> getModelList(@RequestParam("page") @NotBlank(message = "page不能为空") String page,
                                   @RequestParam(value = "limit",required = false) String limit,
                                   @RequestParam(value = "sortType",required = false)  String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
@@ -51,8 +52,8 @@ public class ModelController {
      * @return Result<?>
      */
     @GetMapping("/list/{typeId}")
-    public Result<?> getModelListByType(@PathVariable @NotBlank String typeId,
-                                        @RequestParam("page") @NotBlank String page,
+    public Result<?> getModelListByType(@PathVariable @NotBlank(message = "id不能为空") String typeId,
+                                        @RequestParam("page") @NotBlank(message = "page不能为空") String page,
                                         @RequestParam(value = "limit",required = false)  String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
@@ -67,7 +68,7 @@ public class ModelController {
      * @return Result<?>
      */
     @GetMapping("/one/{modelId}")
-    public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
+    public Result<?> getOneModel(@PathVariable @NotBlank(message = "id不能为空") String modelId,
                                  @RequestHeader(value = "uid",required = false) String uid){
         ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
@@ -141,18 +142,29 @@ public class ModelController {
         return Result.success(modelService.insertLabel(label, uid));
     }
 
+    /**
+     * @description: 获取用户点赞列表
+     * @param: uid
+     * @return: Result<?>
+     **/
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
-            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
+            @RequestParam("page") @NotBlank(message = "page不能为空") String page,
+            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam(value = "order",required = false) String order
     ){
-        return Result.success(modelService.getUserLikesList(uid));
+        return Result.success(modelService.getUserLikesList(uid,page,limit,order));
     }
 
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
-            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
+            @RequestParam("page") @NotBlank(message = "page不能为空") String page,
+            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam(value = "order",required = false) String order
     ){
-        return Result.success(modelService.getUserCollectionList(uid));
+        return Result.success(modelService.getUserCollectionList(uid,page,limit,order));
     }
 
     @DeleteMapping("/one")
@@ -183,12 +195,12 @@ public class ModelController {
     }
 
     @GetMapping("/comment/first")
-    public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String commentId,
+    public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                         @RequestParam(value = "limit",required = false) String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestParam("page") @NotBlank(message = "page为空") String page,
                                         @RequestHeader(value = "uid",required = false) String uid){
-        return Result.success(modelService.queryFirstCommentList(commentId,page,limit,sortType,uid));
+        return Result.success(modelService.queryFirstCommentList(modelId,page,limit,sortType,uid));
     }
 
     @GetMapping("/comment/second")

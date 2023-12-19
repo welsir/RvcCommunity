@@ -33,9 +33,9 @@ public interface ModelService {
 
     String insertLabel(String label,String uid);
 
-    List<UserLikesModelVO> getUserLikesList(String uid);
+    Page<ModelVO> getUserLikesList(String uid,String page,String limit,String order);
 
-    List<UserCollectionModelVO> getUserCollectionList(String uid);
+    Page<ModelVO> getUserCollectionList(String uid,String page,String limit,String order);
 
     Boolean delSingleModel(String modelId,String uid);
 

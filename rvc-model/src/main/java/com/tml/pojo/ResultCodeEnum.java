@@ -44,7 +44,8 @@ public enum ResultCodeEnum {
     USER_COLLECTION_ERROR(530,"无法重复收藏"),
     COMMENT_NOT_EXITS(531,"评论不存在"),
     MODEL_NOT_EXITS(532,"模型不存在"),
-    FILE_IS_NULL(533,"文件为空");
+    FILE_IS_NULL(533,"文件为空"),
+    LABEL_IS_EXIT(534,"标签已存在");
 
 
     /**

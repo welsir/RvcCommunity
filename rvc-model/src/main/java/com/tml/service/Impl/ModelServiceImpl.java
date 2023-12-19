@@ -1,21 +1,19 @@
 package com.tml.service.Impl;
 
 import com.alibaba.cloud.commons.lang.StringUtils;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.client.FileServiceClient;
+import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
-import com.tml.common.Result;
 import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.AbstractAssert;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
 import com.tml.core.async.AsyncService;
-import com.tml.core.client.FileServiceClient;
-import com.tml.core.client.UserServiceClient;
+
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.*;
 import com.tml.pojo.DO.*;
@@ -23,15 +21,19 @@ import com.tml.pojo.DO.*;
 import com.tml.pojo.DTO.*;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.*;
+import com.tml.pojo.VO.DownloadModelForm;
+import com.tml.pojo.VO.UploadModelForm;
+import com.tml.pojo.VO.UserCollectionModelVO;
+import com.tml.pojo.VO.UserLikesModelVO;
 import com.tml.service.ModelService;
 import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import com.tml.utils.WrapperUtil;
+import io.github.common.web.Result;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -47,7 +49,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
-import static com.tml.pojo.ResultCodeEnum.MODEL_FILE_ILLEGAL;
 
 /**
  * @Description
@@ -112,6 +113,7 @@ public class ModelServiceImpl implements ModelService {
      **/
     @Override
     public Page<ModelVO> getModelList(String typeId,String page,String size,String order,String uid) {
+        AbstractAssert.isNull(typeMapper.selectById(typeId), ResultCodeEnum.TYPE_NOT_EXIT);
         try {
             QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
             wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
@@ -147,9 +149,9 @@ public class ModelServiceImpl implements ModelService {
             Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
             List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
 
-            UserInfoDTO dto = null;
+            UserInfoVO dto = null;
             if(uid!=null){
-                Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
+                io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(uid);
                 dto = userInfo.getData();
                 AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
             }
@@ -165,10 +167,9 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
         if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
-            AbstractAssert.isNull(labelMapper.getLabels(model.getLabelId()),ResultCodeEnum.LABEL_NOT_EXIT);
+            AbstractAssert.isTrue(labelMapper.getLabels(model.getLabelId()).size()!=model.getLabelId().size(),ResultCodeEnum.LABEL_NOT_EXIT);
         }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
@@ -177,6 +178,7 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setLikesNum("0");
         modelDO.setCollectionNum("0");
         modelDO.setViewNum("0");
+        modelDO.setHasDelete("0");
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
@@ -204,16 +206,14 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public String downloadModel(String modelId,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
-
-        Result<String> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build());
+        com.tml.pojo.Result<String> result = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+        );
         return result.getData();
     }
 
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
         List<DetectionTaskDTO> dtos = Arrays.asList(
@@ -244,7 +244,6 @@ public class ModelServiceImpl implements ModelService {
     //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
     public ReceiveUploadFileDTO uploadModel(MultipartFile file,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         if(FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
@@ -255,7 +254,7 @@ public class ModelServiceImpl implements ModelService {
                     .bucket(ModelConstant.DEFAULT_BUCKET)
                     .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                     .build();
-            Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
             return res.getData();
         } catch (NoSuchAlgorithmException | IOException e) {
             logger.error("%s:"+e.getStackTrace()[0],e);
@@ -265,7 +264,6 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
             try {
                 UploadModelForm form = UploadModelForm.builder()
@@ -274,7 +272,7 @@ public class ModelServiceImpl implements ModelService {
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                         .build();
-                Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
                 return res.getData();
             } catch (NoSuchAlgorithmException | IOException e) {
                 logger.error("%s:"+e.getStackTrace()[0],e);
@@ -287,8 +285,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public String insertLabel(String label, String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
-
+        AbstractAssert.notNull(labelMapper.queryLabelIsExits(label),ResultCodeEnum.LABEL_IS_EXIT);
         LabelDO labelDO = new LabelDO();
         try {
             labelDO.setLabel(label);
@@ -311,64 +308,54 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public List<UserLikesModelVO> getUserLikesList(String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口,后续可以异步加入缓存
-
-        List<ModelLikeDO> modelLikeDOList = mapper.getUserLikesModel(uid);
-        List<String> modelIds = modelLikeDOList.stream()
-                .map(ModelLikeDO::getModelId)
-                .collect(Collectors.toList());
-
-        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
-                .stream()
-                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
-
-        List<UserLikesModelVO> list = new ArrayList<>();
-        for (ModelLikeDO modelLikeDO : modelLikeDOList) {
-            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelLikeDO.getModelId()));
-            if (modelDO != null) {
-                UserLikesModelVO modelVO = new UserLikesModelVO();
-                modelVO.setId(modelDO.getId().toString());
-                modelVO.setName(modelDO.getName());
-                modelVO.setPicture(modelDO.getPicture());
-                modelVO.setLikesNum(modelDO.getLikesNum());
-                modelVO.setCollectionNum(modelDO.getCollectionNum());
-                list.add(modelVO);
-            }
+    public Page<ModelVO> getUserLikesList(String uid,String page,String limit,String order) {
+        long maxLimit;
+        if (limit == null || limit.trim().isEmpty()) {
+            maxLimit = Long.parseLong(systemConfig.getPageSize());
+        } else {
+            maxLimit = Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
         }
-        return list;
+        List<String> modelIds = mapper.getUserLikesModel(uid);
+        if(modelIds.isEmpty()){
+            return new Page<ModelVO>(Long.parseLong(page), maxLimit, 0).setSize(0);
+        }
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+        wrapper.in("id",modelIds);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",order));
+        Page<ModelDO> modelDOPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit), wrapper);
+        List<ModelVO> modelVOList = modelDOPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
+                .collect(Collectors.toList());
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
     @Override
-    public List<UserCollectionModelVO> getUserCollectionList(String uid) {
-        List<ModelCollectionDO> modelCollectionDOList = mapper.getUserCollectionModel(uid);
-        List<String> modelIds = modelCollectionDOList.stream()
-                .map(ModelCollectionDO::getModelId)
-                .collect(Collectors.toList());
-        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
-                .stream()
-                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
-
-        List<UserCollectionModelVO> list = new ArrayList<>();
-        for (ModelCollectionDO modelCollectionDO : modelCollectionDOList) {
-            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelCollectionDO.getModelId()));
-            if (modelDO != null) {
-                UserCollectionModelVO modelVO = new UserCollectionModelVO();
-                modelVO.setName(modelDO.getName());
-                modelVO.setPicture(modelDO.getPicture());
-                modelVO.setLikesNum(modelDO.getLikesNum());
-                modelVO.setCollectionNum(modelDO.getCollectionNum());
-                list.add(modelVO);
-            }
+    public Page<ModelVO> getUserCollectionList(String uid,String page,String limit,String order) {
+        long maxLimit;
+        if (limit == null || limit.trim().isEmpty()) {
+            maxLimit = Long.parseLong(systemConfig.getPageSize());
+        } else {
+            maxLimit = Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
         }
-        return list;
+        List<String> modelIds = mapper.getUserCollectionModel(uid);
+        if(modelIds.isEmpty()){
+            return new Page<ModelVO>(Long.parseLong(page), maxLimit, 0).setSize(0);
+        }
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+
+        wrapper.in("id",modelIds);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",order));
+        Page<ModelDO> modelDOPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit), wrapper);
+        List<ModelVO> modelVOList = modelDOPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
+                .collect(Collectors.toList());
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
     @Transactional
     @Override
     public Boolean delSingleModel(String modelId,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
-        AbstractAssert.isTrue(!Objects.equals(modelUserMapper.selectById(modelId).getUid(), uid),ResultCodeEnum.QUERY_MODEL_FAIL);
+        AbstractAssert.isNull(modelUserMapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
@@ -377,28 +364,23 @@ public class ModelServiceImpl implements ModelService {
         return mapper.update(null,wrapper)==1;
     }
 
-
     @Override
     public Page<ModelVO> queryUserModelList(String uid,String page,String limit) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
-
         List<String> modelIds = modelUserMapper.selectModelIdByUid(uid);
         long maxLimit = limit ==null?Long.parseLong(systemConfig.getPageSize()):Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
         QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",modelIds);
         wrapper = WrapperUtil.setWrappers(wrapper,Map.of("sort",""));
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit,false),wrapper);
-        List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(modelDO -> convertToModelVO(modelDO,uid))
+        List<ModelVO> modelVOList = modelPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
                 .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList);
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
         //todo:需要等待用户模块提供查询用户是否存在接口
-
         AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
         if(StringUtils.isBlank(commentFormVO.getReplyId())){
             AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
@@ -457,6 +439,7 @@ public class ModelServiceImpl implements ModelService {
     public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.MODEL_NOT_EXITS);
         List<String> firsComments  = commentMapper.queryCommentIds(modelId);
+        AbstractAssert.isTrue(firsComments==null||firsComments.isEmpty(),ResultCodeEnum.COMMENT_NOT_EXITS);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",firsComments);
         wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",""));
@@ -526,7 +509,7 @@ public class ModelServiceImpl implements ModelService {
             builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
-        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
+        io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
         builder.uid(commentUid)
                 .id(commentDO.getId().toString())
                 .commentTime(commentDO.getCreateTime())
@@ -547,7 +530,7 @@ public class ModelServiceImpl implements ModelService {
             builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
-        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
+        io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
         builder.uid(commentUid)
                 .parentId(commentDO.getParentId())
                 .commentTime(commentDO.getCreateTime())
@@ -558,10 +541,8 @@ public class ModelServiceImpl implements ModelService {
         return builder.build();
     }
 
-    private ModelVO convertToModelVO(ModelDO model,String myUid) {
+    private ModelVO convertToModelVO(ModelDO model, String myUid, UserInfoVO userInfoVO) {
         ModelVO modelVO;
-        String uid;
-        Result<UserInfoDTO> userInfo;
         Callable<List<String>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
         Callable<String> typeTask = () -> typeMapper.selectById(model.getTypeId()).getType();
         Callable<String> likeTask = () -> mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1";
@@ -580,12 +561,14 @@ public class ModelServiceImpl implements ModelService {
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
         List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+
+        if(userInfoVO==null){
+            Result<UserInfoVO> userInfo = userServiceClient.one(myUid);
+            userInfoVO = userInfo.getData();
+            AbstractAssert.isNull(userInfoVO,ResultCodeEnum.GET_USER_INFO_FAIL);
+        }
         try {
-            ModelUserDO modelUserDO = modelUserMapper.selectById(model.getId());
-            uid = modelUserDO.getUid();
-            userInfo = userServiceClient.getUserInfo(uid);
-            AbstractAssert.isNull(userInfo,ResultCodeEnum.GET_USER_INFO_FAIL);
-            modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData(),labelList,type,isLike,isCollection);
+            modelVO = ModelVO.modelDOToModelVO(model,userInfoVO,labelList,type,isLike,isCollection);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
@@ -604,9 +587,14 @@ public class ModelServiceImpl implements ModelService {
 
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, String page, String size, String uid) {
         size = (size==null|| "".equals(size))? systemConfig.getPageSize():Long.parseLong(size)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():size;
+        //todo:建索引优化
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
-        List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(modelDO -> convertToModelVO(modelDO,uid))
+        List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
+        List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
+        Result<Map<String, List<UserInfoVO>>> result = userServiceClient.list(uids);
+        List<UserInfoVO> userList = result.getData().get("userList");
+        List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
+                .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userList.get(i)))
                 .collect(Collectors.toList());
         return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }

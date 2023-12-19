@@ -54,7 +54,7 @@ public abstract class AbstractAssert {
     }
 
     public static void isTrue(boolean expression,ResultCodeEnum message){
-        if(!expression){
+        if(expression){
             throw new BaseException(message);
         }
     }

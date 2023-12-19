@@ -1,6 +1,6 @@
 package com.tml.client;
 
-import com.alibaba.nacos.api.model.v2.Result;
+import com.tml.pojo.Result;
 import com.tml.config.FeignConfig;
 import com.tml.constant.RemoteModuleURL;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
