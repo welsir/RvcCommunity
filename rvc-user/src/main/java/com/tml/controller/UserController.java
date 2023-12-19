@@ -63,8 +63,7 @@ public class UserController {
 
     @GetMapping("/preCode")
     public Result preCode(){
-//        return Result.success(userService.preCode());
-        return Result.success();
+        return Result.success(userService.preCode());
     }
 
     /**
