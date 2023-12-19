@@ -1,7 +1,8 @@
 package com.tml.util;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.tml.client.CaptchaService;
+import com.tml.client.CaptchaServiceClient;
+import com.tml.config.CodeCofig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserInfoMapper;
 import com.tml.pojo.DO.UserInfo;
@@ -26,24 +27,22 @@ public class CodeUtil {
     RedisTemplate<String, String> redisTemplate;
 
     @Resource
-    CaptchaService captchaService;
+    CaptchaServiceClient captchaService;
 
     @Resource
     UserInfoMapper userInfoMapper;
 
 
     public void sendCode(String email, EmailEnums enums){
-        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
-        userWrapper.eq("email", email);
         switch (enums){
             case LOGIN:
             case PASSWORD:
-                if(userInfoMapper.selectCount(userWrapper) <= 0){
+                if(!userInfoMapper.exist("email", email)){
                     throw new ServerException(ResultEnums.ACCOUNT_NOT_EXIST);
                 }
                 break;
             case REGISTER:
-                if(userInfoMapper.selectCount(userWrapper) > 0){
+                if(userInfoMapper.exist("email", email)){
                     throw new ServerException(ResultEnums.EMAIL_EXIST);
                 }
                 break;
@@ -54,11 +53,11 @@ public class CodeUtil {
             throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
         }
 
-        redisTemplate.opsForValue().set(enums.getCodeHeader() + email, result.getData().get("code"), 5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email, result.getData().get("code"), 5, TimeUnit.MINUTES);
     }
 
     public boolean emailVerify(String email, EmailEnums enums, String code){
-        String c = redisTemplate.opsForValue().get(enums.getCodeHeader() + email);
+        String c = redisTemplate.opsForValue().get(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
         if(c != null && c.equals(code)){
             redisTemplate.delete(enums.getCodeHeader() + email);
             return true;
@@ -75,12 +74,12 @@ public class CodeUtil {
         String base64 = map.get("base64");
         String code = map.get("code");
         String uuid = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set(uuid, code, 2, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(CodeCofig.IMAGE_BASE + uuid, code, 2, TimeUnit.MINUTES);
         return Map.of("base64", base64, "uuid", uuid);
     }
 
     public boolean preVerify(String uuid, String code){
-        String c = redisTemplate.opsForValue().get(uuid);
+        String c = redisTemplate.opsForValue().get(CodeCofig.IMAGE_BASE + uuid);
         if(c != null && c.equals(code)){
             redisTemplate.delete(uuid);
             return true;

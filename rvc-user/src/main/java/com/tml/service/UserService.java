@@ -40,4 +40,6 @@ public interface UserService {
     UserInfoVO getUserInfo();
 
     String avatar(MultipartFile file);
+
+    boolean exist(String uid);
 }
