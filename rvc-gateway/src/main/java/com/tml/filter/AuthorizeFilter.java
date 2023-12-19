@@ -94,7 +94,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
 
     @Override
     public int getOrder() {
-        return 0;
+        return 2;
     }
 
     @Override

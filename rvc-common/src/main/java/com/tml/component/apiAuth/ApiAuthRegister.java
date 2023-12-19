@@ -3,6 +3,7 @@ package com.tml.component.apiAuth;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.ConfigType;
+import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import org.springframework.beans.factory.InitializingBean;
@@ -25,6 +26,7 @@ import java.util.*;
  * 获取注解将api过滤规则名单设置到Nacos服务上面
  * Lax-Token接口: 基于LaxTokenApi.class注解实现
  * White-Api接口: 基于WhiteApi.class注解实现
+ * Internal-Api接口: 基于InternalApi.class注解实现
  */
 @Component
 @Conditional(WebEnvironmentCondition.class)
@@ -32,9 +34,10 @@ public class ApiAuthRegister implements InitializingBean {
 
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
 
-    private Map<String,Class<? extends Annotation>> anoMap = Map.of(
+    private final Map<String,Class<? extends Annotation>> anoMap = Map.of(
             "whiteApi",WhiteApi.class,
-            "laxTokenApi", LaxTokenApi.class
+            "laxTokenApi", LaxTokenApi.class,
+            "internalApi", InternalApi.class
     );
 
     @Value("${spring.cloud.nacos.server-addr}")
