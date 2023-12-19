@@ -17,7 +17,7 @@ public interface PostService {
     PostVo details(String postId);
 
 
-    String cover(String coverUrl);
+//    String cover(String coverUrl);
 
     void favorite(CoinDto coinDto);
 
@@ -27,7 +27,7 @@ public interface PostService {
 
     String add(PostDto postDto);
 
-    void update(PostDto postDto);
+//    void update(PostDto postDto);
 
     List<PostSimpleVo> userFavorite(PageInfo<String> params);
 

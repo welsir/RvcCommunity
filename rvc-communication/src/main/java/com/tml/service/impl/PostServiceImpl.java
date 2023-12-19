@@ -208,39 +208,39 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return postVo;
     }
 
-    @Override
-    public String cover(String coverUrl) {
-        /**
-         * 需要改
-         * 不走前端上传文件
-         */
-
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
-
-//        数据库添加记录
-        String coverId = Uuid.getUuid();
-        Cover cover = Cover.builder()
-                .coverId(coverId)
-                .detectionStatus(UN_DETECTION)
-                .coverUrl(coverUrl)
-                .uid(uuid)
-                .build();
-        coverMapper.insert(cover);
-
-
-        //       提交审核任务
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id(coverId)
-                .content(coverUrl)
-                .name("post_cover")
-                .build();
-
-        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-        producerHandler.submit(textDetectionTaskDto,"image");
-
-        return coverId;
-    }
+//    @Override
+//    public String cover(String coverUrl) {
+//        /**
+//         * 需要改
+//         * 不走前端上传文件
+//         */
+//
+//        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
+//        String uuid = loginInfoDTO.getId();
+//
+////        数据库添加记录
+//        String coverId = Uuid.getUuid();
+//        Cover cover = Cover.builder()
+//                .coverId(coverId)
+//                .detectionStatus(UN_DETECTION)
+//                .coverUrl(coverUrl)
+//                .uid(uuid)
+//                .build();
+//        coverMapper.insert(cover);
+//
+//
+//        //       提交审核任务
+//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+//                .id(coverId)
+//                .content(coverUrl)
+//                .name("post_cover")
+//                .build();
+//
+//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
+//        producerHandler.submit(textDetectionTaskDto,"image");
+//
+//        return coverId;
+//    }
 
     @Override
     public void favorite(CoinDto coinDto) {
@@ -282,6 +282,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("like_num = like_num - 1");
             postMapper.update(null,updateWrapper);
+        }else {
+            throw new RuntimeException("类型错误");
         }
     }
 
@@ -323,6 +325,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("collect_num = collect_num - 1");
             postMapper.update(null,updateWrapper);
+        }else {
+            throw new RuntimeException("类型错误");
         }
     }
 
@@ -408,8 +412,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //        producerHandler.submit(textDetectionTaskDto,"text");
     }
 
-    @Override
-    public void update(PostDto postDto) {
+//    @Override
+//    public void update(PostDto postDto) {
 
 //        String uuid = Uuid.getUuid();
 //        Post post = BeanCopyUtils.copyBean(postDto, Post.class);
@@ -436,7 +440,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //
 //        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
 //        producerHandler.submit(textDetectionTaskDto,"text");
-    }
+//    }
 
     @Override
     public List<PostSimpleVo> userFavorite(PageInfo<String> params) {
