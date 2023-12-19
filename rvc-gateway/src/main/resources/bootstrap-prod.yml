@@ -57,3 +57,10 @@ spring:
     port: ${REDIS_PORT:ENC(lFAbKYtMOt5dctRhoYYeIdekCwPv5euR)} # Redis服务器连接端口
     password: ${REDIS_PWD:ENC(g+DlVpnt76Ji9s86jd28sGrL+GMWgvWivTRehbesgrA=)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
+
+assistant:
+  service:
+    id:
+      snowflake:
+        register: register-redis
+        startTime: 2023-12-05 00:00:00
