@@ -75,89 +75,95 @@ public class ModelController {
 
     //todo:考虑重复上传问题
     /**
-     * @description:
+     * @description: 新建模型
      * @param: model
      * @param uid
      * @return: Result<?>
      **/
     @PostMapping("/one")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
-                                    @RequestHeader(value = "uid") String uid){
+                                    @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         modelService.insertOneModel(model,uid);
         return Result.success();
     }
 
+    /**
+     * @description: 下载模型文件
+     * @param: modelId
+     * @param uid
+     * @return: Result<?>
+     **/
     @PostMapping("/download/{modelId}")
     public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
-                                   @RequestHeader(value = "uid") String uid){
-        String modelUrl = modelService.downloadModel(modelId);
+                                   @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        String modelUrl = modelService.downloadModel(modelId,uid);
         return Result.success(modelUrl);
     }
 
     @PostMapping("/update")
     public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
-                               @RequestHeader(value = "uid") String uid){
-        Boolean flag = modelService.editModelMsg(modelUpdateFormVO);
+                               @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
+        Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
     }
 
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
             MultipartFile file,
-            @RequestHeader(value = "uid") String uid){
-        return Result.success(modelService.uploadModel(file));
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.uploadModel(file,uid));
     }
 
     @PostMapping("/upload/image")
     public Result<?> uploadImage(
             MultipartFile file,
-            @RequestHeader(value = "uid") String uid){
-        return Result.success(modelService.uploadImage(file));
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.uploadImage(file,uid));
     }
 
     @PostMapping("/relative/likes")
-    public Result<?> modelUserLike(@RequestParam("status") String status,
-                                   @RequestParam("modelId")String modelId,
-                                   @RequestHeader(value = "uid") String uid){
+    public Result<?> modelUserLike(@RequestParam("status") @NotBlank(message = "status为空") String status,
+                                   @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
+                                   @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userLikesModel(status,modelId,uid));
     }
     @PostMapping("/relative/collection")
-    public Result<?> modelUserCollection(@RequestParam("status") String status,
-                                   @RequestParam("modelId")String modelId,
-                                   @RequestHeader(value = "uid") String uid){
+    public Result<?> modelUserCollection(@RequestParam("status") @NotBlank(message = "status为空") String status,
+                                   @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
+                                   @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userCollectionModel(status,modelId,uid));
     }
     @PostMapping("/label")
     public Result<?> insertLabel(
-            @RequestParam("label") String label,
-            @RequestHeader(value = "uid") String uid
+            @RequestParam("label") @NotBlank(message = "label为空") String label,
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid
     ){
         return Result.success(modelService.insertLabel(label, uid));
     }
 
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
-            @RequestHeader(value = "uid") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
     ){
         return Result.success(modelService.getUserLikesList(uid));
     }
 
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
-            @RequestHeader(value = "uid") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
     ){
         return Result.success(modelService.getUserCollectionList(uid));
     }
 
     @DeleteMapping("/one")
-    public Result<?> delOneModel(@RequestParam("id") String modelId,
-                                 @RequestHeader("uid") @NotBlank String uid){
+    public Result<?> delOneModel(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
+                                 @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.delSingleModel(modelId,uid));
     }
 
     @GetMapping("user/model")
-    public Result<?> queryUserModelList(@RequestHeader("uid") String uid,
-                                        @RequestParam("page") String page,
+    public Result<?> queryUserModelList(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
+                                        @RequestParam("page") @NotBlank(message = "page为空") String page,
                                         @RequestParam(value = "limit",required = false)String limit){
         return Result.success(modelService.queryUserModelList(uid,page,limit));
     }
@@ -165,32 +171,32 @@ public class ModelController {
 
     @PostMapping("/comment")
     public Result<?> addComment(@RequestBody @Validated CommentFormVO commentFormVO,
-                                     @RequestHeader("uid") @NotBlank String uid){
+                                     @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.commentModel(commentFormVO,uid));
     }
 
     @PostMapping("/comment/likes")
-    public Result<?> likeComment(@RequestHeader("uid") String uid,
-                                 @RequestParam("type") String type,
-                                 @RequestParam("id") @NotBlank String commentId){
+    public Result<?> likeComment(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
+                                 @RequestParam("type") @NotBlank(message = "type为空") String type,
+                                 @RequestParam("id") @NotBlank(message = "id为空") String commentId){
         return Result.success(modelService.likeComment(uid,commentId,type));
     }
 
     @GetMapping("/comment/first")
-    public Result<?> queryFirstComments(@RequestParam("id")@NotBlank String commentId,
+    public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String commentId,
                                         @RequestParam(value = "limit",required = false) String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
-                                        @RequestParam("page") @NotBlank String page,
+                                        @RequestParam("page") @NotBlank(message = "page为空") String page,
                                         @RequestHeader(value = "uid",required = false) String uid){
         return Result.success(modelService.queryFirstCommentList(commentId,page,limit,sortType,uid));
     }
 
     @GetMapping("/comment/second")
     public Result<?> querySecondComments(
-            @RequestParam("id") @NotBlank String commentId,
+            @RequestParam("id") @NotBlank(message = "id为空") String commentId,
             @RequestParam(value = "limit",required = false) String limit,
             @RequestParam(value = "sortType",required = false) String sortType,
-            @RequestParam("page") @NotBlank String page,
+            @RequestParam("page") @NotBlank(message = "page为空") String page,
             @RequestHeader(value = "uid",required = false) String uid
     ){
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));

@@ -43,7 +43,8 @@ public enum ResultCodeEnum {
     GEY_LABEL_ERROR(529,"获取不到模型标签"),
     USER_COLLECTION_ERROR(530,"无法重复收藏"),
     COMMENT_NOT_EXITS(531,"评论不存在"),
-    MODEL_NOT_EXITS(532,"模型不存在");
+    MODEL_NOT_EXITS(532,"模型不存在"),
+    FILE_IS_NULL(533,"文件为空");
 
 
     /**

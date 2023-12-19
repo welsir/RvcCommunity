@@ -23,15 +23,13 @@ public interface ModelService {
 
     void insertOneModel(ModelInsertVO model,String uid);
 
-    String downloadModel(String modelId);
+    String downloadModel(String modelId,String uid);
 
-    Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO);
+    Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    ReceiveUploadFileDTO uploadModel(MultipartFile file);
+    ReceiveUploadFileDTO uploadModel(MultipartFile file,String uid);
 
-    ReceiveUploadFileDTO uploadImage(MultipartFile file);
-
-    void insertRelative(String type,String modelId,String uid,String isClick);
+    ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 
     String insertLabel(String label,String uid);
 

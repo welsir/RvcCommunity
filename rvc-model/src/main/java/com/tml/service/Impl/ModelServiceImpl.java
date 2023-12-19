@@ -132,7 +132,7 @@ public class ModelServiceImpl implements ModelService {
     public ModelVO queryOneModel(String modelId, String uid) {
         try {
             ModelDO model = mapper.selectById(modelId);
-            AbstractAssert.isNull(model,"NullPointException:modelDO");
+            AbstractAssert.isNull(model,ResultCodeEnum.MODEL_NOT_EXITS);
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
@@ -165,12 +165,10 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
-        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
         if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
-            for (String s : model.getLabelId()) {
-                AbstractAssert.isNull(labelMapper.selectById(s),ResultCodeEnum.LABEL_NOT_EXIT);
-            }
+            AbstractAssert.isNull(labelMapper.getLabels(model.getLabelId()),ResultCodeEnum.LABEL_NOT_EXIT);
         }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
@@ -205,14 +203,18 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String downloadModel(String modelId) {
+    public String downloadModel(String modelId,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
+
         Result<String> result = fileServiceClient.downloadModel(
                 DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build());
         return result.getData();
     }
 
     @Override
-    public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO) {
+    public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
+        AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
         List<DetectionTaskDTO> dtos = Arrays.asList(
                 DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
@@ -241,7 +243,8 @@ public class ModelServiceImpl implements ModelService {
 
     //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
-    public ReceiveUploadFileDTO uploadModel(MultipartFile file) {
+    public ReceiveUploadFileDTO uploadModel(MultipartFile file,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
         if(FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
@@ -261,45 +264,31 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public ReceiveUploadFileDTO uploadImage(MultipartFile file) {
+    public ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
         if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
-            return this.uploadModel(file);
+            try {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(file)
+                        .path(ModelConstant.DEFAULT_MODEL_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(file.getInputStream()))
+                        .build();
+                Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                return res.getData();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                logger.error("%s:"+e.getStackTrace()[0],e);
+                throw new BaseException(e.toString());
+            }
         }else{
             throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
         }
     }
 
     @Override
-    public void insertRelative(String type, String modelId,String uid,String isClick) {
-        if("collection".equals(type)){
-            if("false".equals(isClick)){
-                ModelCollectionDO build = ModelCollectionDO.builder()
-                        .modelId(modelId)
-                        .uid(uid)
-                        .build();
-                mapper.insertModelUserCollection(
-                        build);
-            }else{
-                mapper.delModelCollection(uid,modelId);
-            }
-        }else {
-            if("false".equals(isClick)){
-                ModelLikeDO build =  ModelLikeDO.builder()
-                        .modelId(modelId)
-                        .uid(uid)
-                        .build();
-                mapper.insertModelUserLikes(
-                        build
-                );
-            }else{
-                mapper.delModelLikes(uid,modelId);
-            }
-        }
-    }
-
-    @Override
     public String insertLabel(String label, String uid) {
-        Assert.notNull(uid,"用户未登录");
+        //todo:需要等待用户模块提供查询用户是否存在接口
+
         LabelDO labelDO = new LabelDO();
         try {
             labelDO.setLabel(label);
@@ -323,6 +312,8 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public List<UserLikesModelVO> getUserLikesList(String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
+
         List<ModelLikeDO> modelLikeDOList = mapper.getUserLikesModel(uid);
         List<String> modelIds = modelLikeDOList.stream()
                 .map(ModelLikeDO::getModelId)
@@ -376,6 +367,7 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean delSingleModel(String modelId,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isTrue(!Objects.equals(modelUserMapper.selectById(modelId).getUid(), uid),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
@@ -388,6 +380,8 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Page<ModelVO> queryUserModelList(String uid,String page,String limit) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
+
         List<String> modelIds = modelUserMapper.selectModelIdByUid(uid);
         long maxLimit = limit ==null?Long.parseLong(systemConfig.getPageSize()):Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
         QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
@@ -403,6 +397,8 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
+
         AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
         if(StringUtils.isBlank(commentFormVO.getReplyId())){
             AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
@@ -441,6 +437,7 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
+        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
         if(ModelConstant.FLAG.equals(type)){
             AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
@@ -458,6 +455,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.MODEL_NOT_EXITS);
         List<String> firsComments  = commentMapper.queryCommentIds(modelId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",firsComments);
@@ -476,7 +474,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userLikesModel(String status, String modelId, String uid) {
-        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelLikes(uid,modelId),ResultCodeEnum.USER_LIKES_ERROR);
@@ -495,7 +493,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
-        AbstractAssert.notNull(uid,ResultCodeEnum.PARAM_ID_IS_ERROR);
+        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);

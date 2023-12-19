@@ -37,4 +37,6 @@ public interface LabelMapper extends BaseMapper<LabelDO> {
             "</foreach>" +
             "</script>")
     List<String> getLabels(List<String> labelsId);
+
+
 }

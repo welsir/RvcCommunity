@@ -1,6 +1,8 @@
 package com.tml.utils;
 
+import com.tml.common.exception.BaseException;
 import com.tml.config.SystemConfig;
+import com.tml.pojo.ResultCodeEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -81,6 +83,9 @@ public class FileUtil {
     }
 
     public static boolean checkModelFileIsAvailable(MultipartFile file){
+        if(file.isEmpty()){
+            return true;
+        }
         double fileSizeInKB = getFileSizeInKB(file);
         double defaultModelFileSize = Double.parseDouble(modelSize);
         return fileSizeInKB>defaultModelFileSize;
