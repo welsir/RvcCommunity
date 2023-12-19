@@ -8,14 +8,15 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tml.feign.file.RvcFileServiceFeignClient;
+import com.tml.client.FileServiceClient;
 import com.tml.feign.user.RvcUserServiceFeignClient;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.*;
 import com.tml.mq.handler.ProducerHandler;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
+import com.tml.pojo.VO.UploadModelForm;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.*;
-import com.tml.pojo.vo.CommonFileVO;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.pojo.vo.UserInfoVO;
@@ -33,14 +34,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
+import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
@@ -64,7 +63,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
-    private final RvcFileServiceFeignClient rvcFileServiceFeignClient;
+    private final FileServiceClient fileServiceClient;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
@@ -582,17 +581,46 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public void updUserProfile(MultipartFile profile) throws IOException {
+    public String updUserProfile(MultipartFile profile) throws IOException {
+        //判断后缀名
+        String fileSuffix = profile.getOriginalFilename().substring(profile.getOriginalFilename().lastIndexOf("."));
 
-        //获取文件的byte信息
+        if (!Arrays.stream(IMG_TYPE_LIST).anyMatch(
+                type -> fileSuffix.equals(type))
+        ){
+            throw new RuntimeException("类型不支持");
+        }
+
+
         byte[] uploadBytes = profile.getBytes();
-        CommonFileVO build = CommonFileVO.builder()
-                .md5(MD5Util.getMD5(uploadBytes.toString()))
-                .file(profile).build();
-        Result upload = rvcFileServiceFeignClient.upload(build);
-        System.out.println(upload);
-        System.out.println(upload.getData());
 
+        UploadModelForm build = UploadModelForm.builder()
+                .bucket("rvc1")
+                .file(profile)
+                .md5(MD5Util.getMD5(uploadBytes.toString()))
+                .path("rvc/image3")
+                .build();
+        com.alibaba.nacos.api.model.v2.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
+        try {
+            receiveUploadFileDTOResult = fileServiceClient.uploadModel(build);
+        } catch (Exception e) {
+            throw new RuntimeException("调用文件服务出错");
+        }
+        ReceiveUploadFileDTO data = receiveUploadFileDTOResult.getData();
+
+        return data.getUrl();
+    }
+
+    @Override
+    public String coverUrl(CoverDto coverDto) {
+        String uuid = Uuid.getUuid();
+        Cover build = Cover.builder()
+                .uid(coverDto.getUid())
+                .coverUrl(coverDto.getCoverUrl())
+                .coverId(uuid)
+                .build();
+        coverMapper.insert(build);
+        return uuid;
     }
 
 

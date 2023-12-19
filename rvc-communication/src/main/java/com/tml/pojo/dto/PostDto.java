@@ -15,16 +15,16 @@ import java.time.LocalDateTime;
 public class PostDto {
 
     //        帖子类型
-    @NotBlank(message = "参数不能为空")
+    @NotBlank(message = "tagId 参数不能为空")
     private String tagId;
     //        帖子标题
-    @NotBlank(message = "参数不能为空")
+    @NotBlank(message = "title 参数不能为空")
     private String title;
     //        帖子内容
-    @NotBlank(message = "参数不能为空")
+    @NotBlank(message = "content 参数不能为空")
     private String content;
     //        帖子封面
-    @NotBlank(message = "参数不能为空")
+    @NotBlank(message = "coverId 参数不能为空")
     private String coverId;
 
 }
