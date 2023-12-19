@@ -9,17 +9,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.FileServiceClient;
-import com.tml.feign.user.RvcUserServiceFeignClient;
+import com.tml.client.UserServiceClient;
+import com.tml.exception.SystemException;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.*;
-import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.UploadModelForm;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
-import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.PostService;
 import com.tml.strategy.SortStrategy;
 import com.tml.strategy.impl.LikeSortStrategy;
@@ -43,7 +43,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
-import static com.tml.constant.DetectionConstants.UN_DETECTION;
+import static com.tml.enums.AppHttpCodeEnum.*;
 
 /**
  * @NAME: PostServiceImpl
@@ -60,7 +60,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final CoverMapper coverMapper;
     private final PostMapper postMapper;
     private final ThreadPoolTaskExecutor executor;
-    private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
+    private final UserServiceClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
     private final FileServiceClient fileServiceClient;
@@ -107,8 +107,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         List<String> userIds = records.stream()
                 .map(post -> post.getUid())
                 .collect(Collectors.toList());
-        Result<Map<String, List<UserInfoVO>>> res = rvcUserServiceFeignClient.list(userIds);
-        List<UserInfoVO> userList = res.getData().get("userList");
+        Result<Map<String, List<com.tml.pojo.VO.UserInfoVO>>> res = rvcUserServiceFeignClient.list(userIds);
+
+        List<com.tml.pojo.VO.UserInfoVO> userList = res.getData().get("userList");
+
 
         //获取tag
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
@@ -171,7 +173,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post = this.getById(postId);
         if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
 
@@ -253,7 +255,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         //帖子是否存在
         Post post = postMapper.selectById(coinDto.getId());
         if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
 
         //1、点赞    添加关系表中的记录       post表 like_num +1
@@ -264,7 +266,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             try {
                 likePostMapper.insert(likePost);
             } catch (Exception e) {
-                throw new RuntimeException("不允许重复点赞");
+                throw new SystemException(SYSTEM_ERROR);
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -276,14 +278,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                             .eq(LikePost::getPostId,coinDto.getId());
             int delete = likePostMapper.delete(likePostLambdaQueryWrapper);
               if (delete == 0){
-                  throw new RuntimeException("不允许重复取消点赞");
+                  throw new SystemException(SYSTEM_ERROR);
               }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("like_num = like_num - 1");
             postMapper.update(null,updateWrapper);
         }else {
-            throw new RuntimeException("类型错误");
+            throw new SystemException(TYPE_ERROR);
         }
     }
 

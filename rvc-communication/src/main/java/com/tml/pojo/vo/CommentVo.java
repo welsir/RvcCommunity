@@ -1,5 +1,6 @@
 package com.tml.pojo.vo;
 
+import com.tml.pojo.VO.UserInfoVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

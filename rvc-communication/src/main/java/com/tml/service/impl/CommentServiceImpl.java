@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tml.exception.SystemException;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.CommentMapper;
 
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.tml.constant.DetectionConstants.*;
+import static com.tml.enums.AppHttpCodeEnum.*;
 
 
 /**
@@ -48,7 +50,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         //帖子id不能为空
         if (commentDto.getPostId() == null)
         {
-            throw new RuntimeException("post_id为空");
+            throw new SystemException(QUERY_ERROR);
         }
 
         // 如果该评论为二级评论，查看其父评论是否存在
@@ -63,7 +65,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             // 如果回复评论id不为空，则不允许为一级评论（如果通过这步，说明该评论为二级评论）
             if (parentId.isBlank())
             {
-                throw new RuntimeException("不允许为一级评论");
+                throw new SystemException(QUERY_ERROR);
             }
 
             // 如果回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
@@ -76,7 +78,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
             if (replayComment != null && (!replayComment.getRootCommentId().equals(parentId) || replayComment.getRootCommentId().isBlank()))
             {
-                throw new RuntimeException("不符合规定");
+                throw new SystemException(QUERY_ERROR);
             }
         }
 
@@ -161,7 +163,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
         Comment comment = commentMapper.selectById(coinDto.getId());
         if (Objects.isNull(comment)){
-            throw new RuntimeException("评论不存在");
+            throw new SystemException(COMMENT_ERROR);
         }
 
         //1、点赞    添加关系表中的记录       post表 like_num +1
@@ -172,7 +174,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             try {
                 likeCommentMapper.insert(likeComment);
             } catch (Exception e) {
-                throw new RuntimeException("不允许重复点赞");
+                throw new SystemException(FAVORITE_ERROR);
             }
             LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
                     .eq(Comment::getPostCommentId, coinDto.getId())
@@ -184,7 +186,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
                     .eq(LikeComment::getCommentId,coinDto.getId());
             int delete = likeCommentMapper.delete(likePostLambdaQueryWrapper);
             if (delete == 0){
-                throw new RuntimeException("不允许重复取消点赞");
+                throw new SystemException(FAVORITE_ERROR);
             }
             LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
                     .eq(Comment::getPostCommentId, coinDto.getId())
@@ -194,7 +196,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
             return;
         }else {
-            throw new RuntimeException("类型错误");
+            throw new SystemException(TYPE_ERROR);
         }
     }
 }

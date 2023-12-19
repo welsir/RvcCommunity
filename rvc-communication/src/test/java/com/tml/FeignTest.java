@@ -1,7 +1,7 @@
 package com.tml;
 
 import com.tml.feign.user.RvcUserServiceFeignClient;
-import com.tml.pojo.vo.UserInfoVO;
+import com.tml.pojo.VO.UserInfoVO;
 import io.github.common.web.Result;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
