@@ -157,6 +157,14 @@ public class ModelController {
         return Result.success(modelService.getUserLikesList(uid,page,limit,order));
     }
 
+    /**
+     * @description: 获取用户收藏列表
+     * @param: uid
+     * @param page
+     * @param limit
+     * @param order
+     * @return: Result<?>
+     **/
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
@@ -167,6 +175,12 @@ public class ModelController {
         return Result.success(modelService.getUserCollectionList(uid,page,limit,order));
     }
 
+    /**
+     * @description: 删除某个模型
+     * @param: modelId
+     * @param uid
+     * @return: Result<?>
+     **/
     @DeleteMapping("/one")
     public Result<?> delOneModel(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                  @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
