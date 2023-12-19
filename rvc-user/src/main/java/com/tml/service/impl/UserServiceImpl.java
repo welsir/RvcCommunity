@@ -1,6 +1,9 @@
 package com.tml.service.impl;
 
+import com.alibaba.nacos.api.model.v2.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.tml.client.FileServiceClient;
+import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.rabbitmq.UserRabbitMQListener;
 import com.tml.exception.GlobalExceptionHandler;
@@ -12,6 +15,8 @@ import com.tml.pojo.DO.AuthUser;
 import com.tml.pojo.DO.UserData;
 import com.tml.pojo.DO.UserFollow;
 import com.tml.pojo.DO.UserInfo;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
+import com.tml.pojo.VO.UploadModelForm;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
@@ -54,6 +59,9 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     UserInfoMapper userInfoMapper;
+
+    @Resource
+    FileServiceClient fileServiceClient;
 
     @Resource
     UserFollowMapper userFollowMapper;
@@ -113,7 +121,6 @@ public class UserServiceImpl implements UserService {
         userInfo.setPassword(password);
         userInfo.setRegisterData(LocalDateTime.now());
         userInfo.setUpdatedAt(LocalDateTime.now());
-        userInfo.setHas_show(1);
         int retryCount = 0;
         boolean success = false;
         while (retryCount < MAX_RETRIES && !success) {
@@ -220,7 +227,6 @@ public class UserServiceImpl implements UserService {
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
-        userInfo.setHas_show(0);
 
         rabbitMQListener.sendMsgToMQ(DetectionTaskDTO
                 .builder()
@@ -239,9 +245,7 @@ public class UserServiceImpl implements UserService {
         if(Objects.equals(uid, authUser.getUid())){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
-        QueryWrapper<UserInfo> userQuery = new QueryWrapper<>();
-        userQuery.eq("uid", uid);
-        if(userInfoMapper.selectCount(userQuery) <= 0){
+        if(userInfoMapper.exist("uid", uid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
         QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
@@ -288,31 +292,34 @@ public class UserServiceImpl implements UserService {
         queryWrapper.eq("uid", authUser.getUid());
         UserData userData = userDataMapper.selectOne(queryWrapper);
         BeanUtils.copyProperties(userData, userInfoVO);
-        if(userInfo.getHas_show() == DetectionStatusEnum.UN_DETECTION.getStatus()){
-            userInfoVO.setDescription("审核中");
-        }
         return userInfoVO;
     }
 
     @Override
     public String avatar(MultipartFile file){
-//        FileForm form = new FileForm();
-//        try {
-//            form.setMd5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()));
-//            form.setBucket("rvc2");
-//            form.setPath("rvc/image3");
-//            form.setFile(file);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        System.out.println(fileService.upload(form));
-//        AuthUser authUser = userUtil.getCurrentUser();
-//        try {
-//            fileService.upload(file, "rvc2", org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()), "rvc/image3");
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-        return null;
+        try {
+            UploadModelForm form = UploadModelForm.builder()
+                    .bucket("rvc")
+                    .path("rvc/user/avatar")
+                    .md5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()))
+                    .build();
+            Result<ReceiveUploadFileDTO> result = fileServiceClient.uploadModel(form);
+            if(result.getCode() != 200){
+                throw new ServerException(result.getCode().toString(), result.getMessage());
+            }
+            ReceiveUploadFileDTO receiveUploadFileDTO = result.getData();
+            return receiveUploadFileDTO.getUrl();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean exist(String uid) {
+        if(!userInfoMapper.exist("uid", uid)){
+            throw new ServerException(ResultEnums.USER_NOT_EXIST);
+        }
+        return true;
     }
 
     private String loginByPsw(String email, String password){

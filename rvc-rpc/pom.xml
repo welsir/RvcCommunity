@@ -28,9 +28,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.tml</groupId>
             <artifactId>rvc-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-common</artifactId>
+            <version>1.0.7</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
