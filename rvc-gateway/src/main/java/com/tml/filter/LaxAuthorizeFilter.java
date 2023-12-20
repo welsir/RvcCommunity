@@ -3,8 +3,7 @@ package com.tml.filter;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.cloud.nacos.client.NacosPropertySourceBuilder;
 import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -14,21 +13,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.yaml.snakeyaml.Yaml;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
@@ -37,35 +32,31 @@ import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 @Data
 @RefreshScope
 @ConfigurationProperties("api")
-public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
+public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private HashSet<String> whiteApi;
+    private ArrayList<String> laxTokenApi;
 
     @Resource
     CommonLogger commonLogger;
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        commonLogger.info("laxTokenApi="+laxTokenApi);
+    }
 
     @SneakyThrows
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
-
         ServerHttpRequest request = exchange.getRequest();
-        ServerHttpResponse response = exchange.getResponse();
-
         URL url = new URL(request.getURI().toString());
         String requestUrl = url.getFile();
-
-        if(whiteApi.contains(requestUrl)){
+        if(laxTokenApi.contains(requestUrl)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌
             String token = headers.getFirst(AUTHORIZE_TOKEN);
             // 判断请求头中是否有令牌
             if (StringUtils.isEmpty(token)) {
-                //7. 响应中放入返回的状态吗, 没有权限访问
-                response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                //8. 返回
-                return response.setComplete();
+                return chain.filter(exchange);
             }
             try {
                 ServerHttpRequest newRequest = null;
@@ -80,11 +71,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                     }
                 }
             } catch (NotLoginException e) {
-                e.printStackTrace();
-                //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
-                response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                //11. 返回
-                return response.setComplete();
+                return chain.filter(exchange);
             }
         }
 
@@ -94,11 +81,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
 
     @Override
     public int getOrder() {
-        return 2;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        commonLogger.info("whiteApi="+whiteApi);
+        return 1;
     }
 }
+

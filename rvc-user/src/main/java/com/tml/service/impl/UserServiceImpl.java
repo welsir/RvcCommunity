@@ -2,17 +2,14 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
-import com.tml.common.rabbitmq.UserRabbitMQListener;
+import com.tml.common.rabbitmq.RabbitMQListener;
 import com.tml.config.DetectionConfig;
 import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
-import com.tml.pojo.DO.AuthUser;
-import com.tml.pojo.DO.UserData;
-import com.tml.pojo.DO.UserFollow;
-import com.tml.pojo.DO.UserInfo;
+import com.tml.pojo.DO.*;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.Result;
 import com.tml.pojo.VO.UploadModelForm;
@@ -38,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.tml.config.DetectionConfig.*;
 import static com.tml.pojo.enums.EmailEnums.*;
 
 /**
@@ -47,12 +45,6 @@ import static com.tml.pojo.enums.EmailEnums.*;
 @Service
 public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    @Value("${user.retry.max-retries}")
-    int MAX_RETRIES;
-
-    @Value("${user.retry.retry-interval}")
-    int RETRY_INTERVAL;
 
     @Resource
     UserInfoMapper userInfoMapper;
@@ -67,7 +59,7 @@ public class UserServiceImpl implements UserService {
     UserDataMapper userDataMapper;
 
     @Resource
-    UserRabbitMQListener userRabbitMQListener;
+    RabbitMQListener rabbitMQListener;
 
     @Resource
     CodeUtil codeUtil;
@@ -107,10 +99,10 @@ public class UserServiceImpl implements UserService {
         String email = registerDTO.getEmail();
         String emailCode = registerDTO.getEmailCode();
         String password = registerDTO.getPassword();
-
-        if(!codeUtil.emailVerify(email, REGISTER, emailCode)) {
-            throw new ServerException(ResultEnums.VER_CODE_ERROR);
-        }
+//
+//        if(!codeUtil.emailVerify(email, REGISTER, emailCode)) {
+//            throw new ServerException(ResultEnums.VER_CODE_ERROR);
+//        }
 
         UserInfo userInfo = new UserInfo();
         UserData userData = new UserData("0",0,0,0,0);
@@ -118,38 +110,10 @@ public class UserServiceImpl implements UserService {
         userInfo.setPassword(password);
         userInfo.setRegisterData(LocalDateTime.now());
         userInfo.setUpdatedAt(LocalDateTime.now());
-        int retryCount = 0;
-        boolean success = false;
-        while (retryCount < MAX_RETRIES && !success) {
-            try {
-                userInfo.setUsername(RandomStringUtil.generateRandomString());
-                userInfoMapper.insert(userInfo);
-                userData.setUid(userInfo.getUid());
-                userDataMapper.insert(userData);
-                success = true;
-            } catch (DataIntegrityViolationException e) {
-                e.printStackTrace();
-                String errorMessage = e.getMessage();
-                if(errorMessage.contains("username_UNIQUE")){
-                    logger.error("生成用户名相同，正在重试...");
-                    if (retryCount < MAX_RETRIES - 1) {
-                        try {
-                            Thread.sleep(RETRY_INTERVAL);
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                } else if(errorMessage.contains("email_UNIQUE")){
-                    throw new ServerException(ResultEnums.EMAIL_EXIST);
-                } else {
-                    throw new ServerException("500", "数据库插入错误");
-                }
-            }
-            retryCount++;
-        }
-        if(!success){
-            throw new ServerException(ResultEnums.FAIL_REGISTER);
-        }
+        userInfo.setUsername(RandomStringUtil.generateRandomString());
+        userInfoMapper.insert(userInfo);
+        userData.setUid(userInfo.getUid());
+        userDataMapper.insert(userData);
         return Map.of("token", TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername()));
     }
 
@@ -208,21 +172,40 @@ public class UserServiceImpl implements UserService {
     public void update(UserInfoDTO userInfoDTO) {
 //        AuthUser authUser = UserContext.getCurrentUser();
         AuthUser authUser = userUtil.getCurrentUser();
+        UserInfo user = userInfoMapper.selectById(authUser.getUid());
+        boolean flag = false;
 
-        DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
-                                .id(authUser.getUid())
-                                .name(DetectionConfig.USER_DESCRIPTION)
-                                .content(userInfoDTO.getNickname())
-                                .build();
+        if(!userInfoDTO.getNickname().equals(user.getNickname())){
+            DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
+                    .id(authUser.getUid())
+                    .name(USER_NICKNAME)
+                    .content(userInfoDTO.getNickname())
+                    .build();
+            rabbitMQListener.submit(nicknameTask, "text");
+            user.setNickname("审核中");
+            flag = true;
+        }
 
-        DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
-                .id(authUser.getUid())
-                .name(DetectionConfig.USER_NICKNAME)
-                .content(userInfoDTO.getNickname())
-                .build();
+        if(!userInfoDTO.getDescription().equals(user.getDescription())){
+            DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
+                    .id(authUser.getUid())
+                    .name(USER_DESCRIPTION)
+                    .content(userInfoDTO.getDescription())
+                    .build();
+            rabbitMQListener.submit(descriptionTask, "text");
+            user.setDescription("审核中");
+            flag = true;
+        }
+        if(!(user.getSex().equals(userInfoDTO.getSex()) && user.getBirthday() == userInfoDTO.getBirthday())){
+            user.setSex(userInfoDTO.getSex());
+            user.setBirthday(userInfoDTO.getBirthday());
+            flag = true;
+        }
 
-        userRabbitMQListener.textSubmit(nicknameTask);
-        userRabbitMQListener.textSubmit(descriptionTask);
+        if(flag){
+            user.setUpdatedAt(LocalDateTime.now());
+            userInfoMapper.updateById(user);
+        }
     }
 
     @Override
@@ -232,7 +215,7 @@ public class UserServiceImpl implements UserService {
         if(Objects.equals(uid, authUser.getUid())){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
-        if(userInfoMapper.exist("uid", uid)){
+        if(!userInfoMapper.exist("uid", uid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
         QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
@@ -289,6 +272,7 @@ public class UserServiceImpl implements UserService {
                     .bucket("rvc")
                     .path("rvc/user/avatar")
                     .md5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()))
+                    .file(file)
                     .build();
             Result<ReceiveUploadFileDTO> result = fileServiceClient.uploadModel(form);
             if(result.getCode() != 200){
@@ -297,10 +281,10 @@ public class UserServiceImpl implements UserService {
             ReceiveUploadFileDTO receiveUploadFileDTO = result.getData();
             DetectionTaskDTO imageTask = DetectionTaskDTO.builder()
                     .id(authUser.getUid())
-                    .name(DetectionConfig.USER_AVATAR)
+                    .name(USER_AVATAR)
                     .content(receiveUploadFileDTO.getUrl())
                     .build();
-            userRabbitMQListener.imageSubmit(imageTask);
+            rabbitMQListener.submit(imageTask, "image");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
