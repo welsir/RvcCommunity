@@ -1,0 +1,78 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:ENC(Q/mUDDQ+0TwZ+60p9l6jr/F2nN/93jltB6EvwDqxGR5r91clGxM6slm0dskGePCLbdSFU+3NYgN1A3sJVjTNvd7r2XJs8V6coHAg0F9fe42NS087BTdFgrZjYRW09b2vlMFxo7KBJUwv2qZO8Kfa5VvulLkoBP28jdJsNkHbCDw=)}
+    username: ${MYSQL_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
+    password: ${MYSQL_PASSWORD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
+  redis:
+    host: ${REDIS_ADDR:ENC(gfVHUx9Q3MOobwxRYtxbvNuo0SeQBllfb7SLgEtm8ZY=)} # Redis服务器地址
+    database: 0 # Redis数据库索引（默认为0）
+    port: ${REDIS_PORT:ENC(lFAbKYtMOt5dctRhoYYeIdekCwPv5euR)} # Redis服务器连接端口
+    password: ${REDIS_PWD:ENC(g+DlVpnt76Ji9s86jd28sGrL+GMWgvWivTRehbesgrA=)} # Redis服务器连接密码（默认为空）
+    timeout: 3000ms # 连接超时时间（毫秒）
+  application:
+    name: rvc-model-service
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)}
+      username: ${NACOS_SERVER_USER:ENC(qqqHXA1bwhhYPJ9SXXZqyO5j//wygYDK)}
+      password: ${NACOS_SERVER_PASSWORD:ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)}
+      config:
+        file-extension: yaml
+        namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
+      discovery:
+        ip: ${SERVER_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)}
+  rabbitmq:
+    host: ${MQ_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)} # rabbitMQ的ip地址
+    port: ${MQ_PORT:ENC(o4a1BoPYeYviHisCyAaRQJ9BRzQt7Yxp)} # 端口
+    username: ${MQ_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
+    password: ${MQ_PWD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
+    virtual-host: /
+    publisher-confirm-type: simple
+    publisher-returns: true
+    listener:
+      simple:
+        prefetch: ${MQ_PREFETCH:5}
+        concurrency: ${MIN_CONCURRENCY:5}
+        max-concurrency: ${MAX_CONCURRENCY:10}
+        acknowledge-mode: manual
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+feign:
+  httpclient:
+    enabled: true
+    max-connections: 200 # 最大的连接数
+    max-connections-per-route: 50 # 每个路径的最大连接数
+server:
+  port: 9100
+
+page:
+  size: ${DEFAULT_SIZE:ENC(247Kmy9z8U5mzJ2r/ZBKAuHF3/cxGaGW)}
+  first-comment-size: ${FIRST_COMMENT_SIZE:ENC(RtHVkEg8bCEwtMqRh6B/knAJOi+o1pH/)}
+  second-comment-size: ${SECOND_COMMENT_SIZE:ENC(aleeydE6I3CEYesZDCQPtRELxqvU/fYR)}
+
+file:
+  logger:
+    handler: ${Logger:slf4j}
+    enable: true
+  image:
+    image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
+    image-type: ${IMAGE_TYPE:ENC(iJSGa95s7NSA3b9uMLIvCWu67Fp3tdMtUSVQ7VZVRRYsTkiRa9qW+Q==)}
+  model:
+    model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
+    model-type: ${MODEL_TYPE:ENC(s/b/P1wycc8fmvSEFCZfldt3xy99xZNDqVrl2less4c=)}
+
+labels:
+  allow_labels: ${LABELS:ENC(ZGOcc9GZKPsDfP3fQ4xgMxdUr4FgsQAYKvY5MD6ePaEi/4HkZH5yAQ==)}
+
+mq:
+  enable: ${DEFAULT_MQ:rabbit}
+assistant:
+  service:
+    id:
+      snowflake:
+        startTime: 2023-12-05 00:00:00
+        register: register-redis
