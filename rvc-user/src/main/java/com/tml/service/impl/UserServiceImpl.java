@@ -232,7 +232,7 @@ public class UserServiceImpl implements UserService {
         if(Objects.equals(uid, authUser.getUid())){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
-        if(userInfoMapper.exist("uid", uid)){
+        if(!userInfoMapper.exist("uid", uid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
         QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
