@@ -14,7 +14,9 @@ spring:
             refresh: true
             group: DEFAULT_GROUP
       discovery:
-        ip: ${SERVER_ADDR:ENC(Y5HcvI+7TfzJVRmAMpYDqR0bwJqzwMzdpQ8RCIr1y2w=)}
+        namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
+        cluster-name: BJ
+        ip: ${SERVER_ADDR:ENC(yVsRSHZRO9O+QrHzTL/fTZCkqkhB0PxjVlHuUCRWm48=)}
   datasource:
     driver-class-name: ${MYSQL_DRIVER:com.mysql.cj.jdbc.Driver}
     url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}

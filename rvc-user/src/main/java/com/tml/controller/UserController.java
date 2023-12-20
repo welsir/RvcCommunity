@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.api.R;
+import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
@@ -47,6 +48,7 @@ public class UserController {
         return Result.success(userService.login(loginDTO));
     }
     @PostMapping("/logout")
+    @WhiteApi
     public Result logout(){
         userService.logout();
         return Result.success();
@@ -101,6 +103,7 @@ public class UserController {
      * @return {@link Result}
      */
     @GetMapping("/one")
+    @InternalApi
     public Result one(@RequestParam
                           @Valid
                           @NotNull(message = "uid不能为空")
@@ -113,6 +116,7 @@ public class UserController {
      * @return {@link Result}
      */
     @PostMapping("/list")
+    @InternalApi
     public Result list(@RequestBody
                            @Valid
                            @ListNotEmpty
@@ -172,6 +176,7 @@ public class UserController {
     }
 
     @GetMapping("/exist")
+    @InternalApi
     public Result exist(@RequestParam String uid){
         return Result.success(userService.exist(uid));
     }
