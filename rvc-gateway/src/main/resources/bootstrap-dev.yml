@@ -13,6 +13,9 @@ spring:
       username: ${NACOS_USERNAME}
       password: ${NACOS_PASSWORD}
       server-addr: 117.21.200.55:18848
+      discovery:
+        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
+        cluster-name: BJ
       config:
         file-extension: yaml
         namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
