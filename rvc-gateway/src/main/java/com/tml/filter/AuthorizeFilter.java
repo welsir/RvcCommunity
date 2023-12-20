@@ -39,7 +39,7 @@ import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 @ConfigurationProperties("api")
 public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private HashSet<String> whiteApi;
+    private HashSet<String> whiteApi = new HashSet<>();
 
     @Resource
     CommonLogger commonLogger;

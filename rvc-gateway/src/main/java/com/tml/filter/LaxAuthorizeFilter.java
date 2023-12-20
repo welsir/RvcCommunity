@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
 
 import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
@@ -34,7 +35,7 @@ import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 @ConfigurationProperties("api")
 public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private ArrayList<String> laxTokenApi;
+    private HashSet<String> laxTokenApi = new HashSet<String>();
 
     @Resource
     CommonLogger commonLogger;

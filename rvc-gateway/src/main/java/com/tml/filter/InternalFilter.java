@@ -26,7 +26,7 @@ import java.util.HashSet;
 @ConfigurationProperties("api")
 public class InternalFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private HashSet<String> internalApi;
+    private HashSet<String> internalApi = new HashSet<>();
 
     @Resource
     CommonLogger commonLogger;
