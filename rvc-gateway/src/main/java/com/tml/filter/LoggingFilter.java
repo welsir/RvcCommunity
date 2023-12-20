@@ -5,6 +5,7 @@ import com.tml.service.RequestRecordService;
 import io.github.common.logger.CommonLogger;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
+import io.github.util.time.TimeUtil;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -22,8 +23,6 @@ import java.time.format.DateTimeFormatter;
 @Component
 @RefreshScope
 public class LoggingFilter implements GlobalFilter, Ordered {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
-
     @Resource
     RequestRecordService requestRecordService;
 
@@ -38,12 +37,13 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        InetSocketAddress remoteAddress = request.getRemoteAddress();
+        String url = request.getURI().toString();
+        String dateTime = TimeUtil.nowDateTimeFormat();
+        logger.info("request url: %s, remote address: %s,time: %s", url, remoteAddress.getHostName(), dateTime);
         taskExecutor.submit(()->{
-            InetSocketAddress remoteAddress = request.getRemoteAddress();
-            String url = request.getURI().toString();
-            LocalDateTime dateTime = LocalDateTime.now();
             try {
-                requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(snowflakeGenerator.generate()),remoteAddress.getHostName(),url,dateTime.format(formatter)));
+                requestRecordService.insertRequestRecord(new RequestRecordDO(String.valueOf(snowflakeGenerator.generate()),remoteAddress.getHostName(),url,dateTime));
             } catch (SnowflakeRegisterException e) {
                 logger.error("snowflake register exception %s",e);
             }
@@ -54,7 +54,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -1;
+        return 0;
     }
 
 }
