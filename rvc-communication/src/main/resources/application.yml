@@ -1,45 +1,20 @@
 server:
   port: ${SERVER_PORT:9200}
 
-
 spring:
-  application:
-    name: rvc-communication-service
-  redis:
-    host: ENC(/z6pqjelPktpAX0Fw+NeDCjXv9B4uprwmIirqcvhArM=) # Redis服务器地址
-    database: 0 # Redis数据库索引（默认为0）
-    port: 6379 # Redis服务器连接端口
-    password: ENC(d6of1OpEAxvbUq33A5AX4VBHJR7DVsdasTfDHjag88GxRmmZdzvdnA==) # Redis服务器连接密码（默认为空）
-    timeout: 3000ms # 连接超时时间（毫秒）
-  cloud:
-    nacos:
-      server-addr: ENC(h9fPwDGC5mr4amLRZUqhqxaVDKDuTSuxU6qhfeRHVmjggZhV/V18Sg==)
-      username: ENC(m5Mmtr/URq8EIAiJjCDYBN/xOxOXRjxE)
-      password: ENC(1ISjMJLMFYYBvvT4e55ULGXAaJ7jTfLjzgbTHMfYpU8=)
-      config:
-        file-extension: yaml
-        namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
-      discovery:
-#        ip: 127.0.0.1
-          ip: ENC(uajVh4s7dGIRUT5FJvQO2as0rP2ESoAaZLUu5oECIaM=)
-  rabbitmq:
-    host: ENC(X7bGW6b+0WdqetJkrjU3N/c+E5yFpy0Unqe7EfquEmE=)
-    port:  ${RABBITMQ_PORT:5672}
-    username: ENC(cz1NwvIQDGEjCqPzHKG8UqOk0gUEeOr7)
-    password: ENC(cIRXIjYpvlEUV3XsBSYx8EU+AQJZJn0NsIB+64adduNXJXYGBwIUmQ==)
-    virtualHost: /
-
   config:
     import: classpath:you-cant-see-that.yml
-  datasource:
-    url:  ${MYSQL_URL:ENC(Vz4sI7jkw9Sbd1riOc2b5haSPaxLXNkWR7vmRMDw4ZYpjim/I1a/pTh+LM7H65spXer1Ny0iJcXxXuHXLdAvVhTS6GvQwS2NFxh62z2/8l5e5t44fuHh2w==)}
-    username:  ${MYSQL_USERNAME:ENC(JlTsPNa31Qk3ONcVUSZt/r6LokLpTedJ)}
-    password: ${MYSQL_PASSWORD:ENC(lgvxMGjy+dBpZalxxf4wWS6oj2wJZYvP4/1rwEcqi1/T8qpC9/Q9Fg==)}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  servlet:
-    multipart:
-      max-file-size: 2MB
-      max-request-size: 5MB
+  profiles:
+    active: ${ACTIVE:dev}
 
-    database: 4
-    timeout: 2000
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 30000
+        read-timeout: 30000
+
+  httpclient:
+    enabled: true # 支持HttpClient的开关
+    max-connections: 200 # 最大连接数
+    max-connections-per-route: 50 # 单个路径的最大连接数

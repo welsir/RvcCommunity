@@ -47,11 +47,11 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
         String uid = loginInfoDTO.getId();
 
-        //帖子id不能为空
-        if (commentDto.getPostId() == null)
-        {
-            throw new SystemException(QUERY_ERROR);
-        }
+//        //帖子id不能为空
+//        if (commentDto.getPostId() == null)
+//        {
+//            throw new SystemException(QUERY_ERROR);
+//        }
 
         // 如果该评论为二级评论，查看其父评论是否存在
         String parentId = commentDto.getRootCommentId();
