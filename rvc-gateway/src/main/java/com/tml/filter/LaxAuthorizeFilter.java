@@ -55,12 +55,13 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌
             String token = headers.getFirst(AUTHORIZE_TOKEN);
+            ServerHttpRequest newRequest = null;
             // 判断请求头中是否有令牌
             if (StringUtils.isEmpty(token)) {
-                return chain.filter(exchange);
+                newRequest = request.mutate().header("uid","").header("username","").build();
+                return chain.filter(exchange.mutate().request(newRequest).build());
             }
             try {
-                ServerHttpRequest newRequest = null;
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
                 if (StpUtil.isLogin(loginID)) {
                     String[] vars = loginID.split("\\|");
@@ -72,7 +73,8 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
                     }
                 }
             } catch (NotLoginException e) {
-                return chain.filter(exchange);
+                newRequest = request.mutate().header("uid","").header("username","").build();
+                return chain.filter(exchange.mutate().request(newRequest).build());
             }
         }
 
