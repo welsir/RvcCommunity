@@ -34,10 +34,10 @@ public class WrapperUtil {
             case "1":
                 wrapper.orderByDesc("create_time");
                 break;
-            case "2":
+            case "3":
                 wrapper.orderByDesc("likes_num");
                 break;
-            case "3":
+            case "2":
                 wrapper.orderByDesc("view_num");
                 break;
             default:

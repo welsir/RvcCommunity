@@ -148,7 +148,6 @@ public class ModelListener implements ListenerInterface{
                         logger.error(e);
                         throw new BaseException(e.toString());
                     }
-
                 } else if(auditCountMap.get(lock)==1){
                     //审核成功
                     Object entity;
@@ -163,7 +162,6 @@ public class ModelListener implements ListenerInterface{
                         wrapper.eq("id",statusDTO.getId());
                         wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
                         //后置步骤，例如修改需要额外修改字段参数
-
                         logger.info("修改字段");
                         if(auditParams.get(statusDTO.getId())!=null){
                             for (String s : auditParams.get(statusDTO.getId()).keySet()) {

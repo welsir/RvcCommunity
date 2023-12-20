@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Description
@@ -33,6 +34,8 @@ public class AsyncService {
     ModelListener listener;
     @Resource
     ModelMapper mapper;
+
+    private  static final ConcurrentHashMap<String,Integer> modelViews = new ConcurrentHashMap<>();
     @Async
     public void processModelAsync(ModelDO modelDO) {
         try {
@@ -66,12 +69,15 @@ public class AsyncService {
     @Async
     public void asyncAddModelViewNums(String modelId){
         try {
-            UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id",modelId)
-                            .setSql("likes_num = likes_num+1");
-            mapper.update(null,wrapper);
+            modelViews.compute(modelId,(key,val)->{
+                if(val==null){
+                    val=1;
+                    return val;
+                }
+                return val+1;
+            });
         }catch (RuntimeException e){
-            logger.error("%s:"+e.getStackTrace()[0],e);
+            logger.error(e);
             throw new BaseException(ResultCodeEnum.UPDATE_MODEL_VIEWS_FAIL);
         }
     }

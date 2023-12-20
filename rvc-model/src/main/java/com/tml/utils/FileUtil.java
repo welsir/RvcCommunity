@@ -1,6 +1,8 @@
 package com.tml.utils;
 
+import com.tml.common.exception.BaseException;
 import com.tml.config.SystemConfig;
+import com.tml.pojo.ResultCodeEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,8 +13,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * @Description
@@ -28,11 +29,13 @@ public class FileUtil {
     private static String imageSize= "";
     private static String modelSize = "";
     private static String[] imageTypes;
+    private static String[] modelTypes;
     @PostConstruct
     public void init(){
         imageSize = systemConfig.getImageSize();
         modelSize = systemConfig.getModelFileSize();
         imageTypes = systemConfig.getImageType();
+        modelTypes = systemConfig.getModelType();
     }
 
     public static boolean isImageFile(String filename) {
@@ -80,7 +83,21 @@ public class FileUtil {
         return fileSizeInKB>realImageSize;
     }
 
-    public static boolean checkModelFileIsAvailable(MultipartFile file){
+    public static boolean checkModelFileIsAvailable(MultipartFile[] file){
+        if(file.length>2){
+            throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
+        }
+        if(file.length==1){
+            return !calculateModelFileSize(file[0]) && ".pth".equals(getExtension(Objects.requireNonNull(file[0].getOriginalFilename())));
+        }
+        String firstFileExtension = file[0].getOriginalFilename();
+        String secondFileExtension = file[1].getOriginalFilename();
+        boolean firstFileAvailable = isModelFile(firstFileExtension)&& !calculateModelFileSize(file[0]);
+        boolean secondFileAvailable = isModelFile(secondFileExtension) && !calculateModelFileSize(file[0]);
+        return firstFileAvailable&& secondFileAvailable && getExtension(firstFileExtension)!=getExtension(secondFileExtension);
+    }
+
+    private static boolean calculateModelFileSize(MultipartFile file){
         double fileSizeInKB = getFileSizeInKB(file);
         double defaultModelFileSize = Double.parseDouble(modelSize);
         return fileSizeInKB>defaultModelFileSize;
@@ -88,6 +105,6 @@ public class FileUtil {
 
     public static boolean isModelFile(String filename){
         String extension = getExtension(filename).toLowerCase();
-        return false;
+        return Arrays.asList(modelTypes).contains(extension);
     }
 }

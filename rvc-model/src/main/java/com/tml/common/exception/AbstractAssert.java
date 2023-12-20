@@ -2,6 +2,9 @@ package com.tml.common.exception;
 
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.tml.pojo.ResultCodeEnum;
+import org.springframework.lang.Nullable;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * @Description
@@ -29,6 +32,29 @@ public abstract class AbstractAssert {
 
     public static void isNull(Object object, ResultCodeEnum message) {
         if (object == null) {
+            throw new BaseException(message);
+        }
+    }
+
+    public static void isNull(String str, ResultCodeEnum message) {
+        if (StringUtils.isBlank(str)) {
+            throw new BaseException(message);
+        }
+    }
+
+    public static void notNull(@Nullable Object object, ResultCodeEnum message) {
+        if (object != null) {
+            throw new BaseException(message);
+        }
+    }
+    public static void notNull(String str, ResultCodeEnum message) {
+        if (StringUtils.isBlank(str)) {
+            throw new BaseException(message);
+        }
+    }
+
+    public static void isTrue(boolean expression,ResultCodeEnum message){
+        if(expression){
             throw new BaseException(message);
         }
     }

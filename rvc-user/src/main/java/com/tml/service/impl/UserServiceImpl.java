@@ -1,6 +1,5 @@
 package com.tml.service.impl;
 
-import com.alibaba.nacos.api.model.v2.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
 import com.tml.common.rabbitmq.RabbitMQListener;
@@ -12,6 +11,7 @@ import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
 import com.tml.pojo.DO.*;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
+import com.tml.pojo.Result;
 import com.tml.pojo.VO.UploadModelForm;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.enums.ResultEnums;

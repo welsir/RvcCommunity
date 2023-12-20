@@ -37,4 +37,8 @@ public interface LabelMapper extends BaseMapper<LabelDO> {
             "</foreach>" +
             "</script>")
     List<String> getLabels(List<String> labelsId);
+
+    @Select("select * from rvc_model_label where label = #{labelName}")
+    LabelDO queryLabelIsExits(String labelName);
+
 }

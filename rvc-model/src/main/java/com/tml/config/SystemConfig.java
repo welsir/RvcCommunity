@@ -35,8 +35,8 @@ public class SystemConfig {
     @Value("${file.image.image-type}")
     private String[] imageType;
 
-//    @Value("${file.model.model-type}")
-//    private String[] modelType;
+    @Value("${file.model.model-type}")
+    private String[] modelType;
 
     @Value("${file.model.model-file-size}")
     private String modelFileSize;

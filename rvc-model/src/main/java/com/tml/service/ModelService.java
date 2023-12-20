@@ -23,23 +23,21 @@ public interface ModelService {
 
     void insertOneModel(ModelInsertVO model,String uid);
 
-    String downloadModel(String modelId);
+    String downloadModel(String modelId,String uid);
 
-    Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO);
+    Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    ReceiveUploadFileDTO uploadModel(MultipartFile file);
+    List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid);
 
-    ReceiveUploadFileDTO uploadImage(MultipartFile file);
-
-    void insertRelative(String type,String modelId,String uid,String isClick);
+    ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 
     String insertLabel(String label,String uid);
 
-    List<UserLikesModelVO> getUserLikesList(String uid);
+    Page<ModelVO> getUserLikesList(String uid,String page,String limit,String order);
 
-    List<UserCollectionModelVO> getUserCollectionList(String uid);
+    Page<ModelVO> getUserCollectionList(String uid,String page,String limit,String order);
 
-    Boolean delSingleModel(String modelId);
+    Boolean delSingleModel(String modelId,String uid);
 
     Page<ModelVO> queryUserModelList(String uid,String page,String limit);
 

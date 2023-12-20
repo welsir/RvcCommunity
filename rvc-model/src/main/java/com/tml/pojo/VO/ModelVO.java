@@ -32,20 +32,21 @@ public class ModelVO {
     private String username;
     private String nickname;
     private String avatar;
+    private String createTime;
 
-    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo,List<String> labels,String... args){
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,List<String> labels,String... args){
         ModelVO modelVO = modelDOToModelVO(modelDO, userInfo, args);
         modelVO.setLabel(labels);
         return modelVO;
     }
-    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo,String... args){
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,String... args){
         ModelVO modelVO = modelDOToModelVO(modelDO, userInfo);
         modelVO.setType(args[0]);
         modelVO.setIsLike("".equals(args[1])||null==args[1]?"0":"1");
         modelVO.setIsCollection("".equals(args[2])||null==args[2]?"0":"1");
         return modelVO;
     }
-    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoDTO userInfo){
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo){
         return ModelVO.builder()
                 .id(modelDO.getId().toString())
                 .name(modelDO.getName())
@@ -59,6 +60,7 @@ public class ModelVO {
                 .avatar(userInfo.getAvatar())
                 .nickname(userInfo.getNickname())
                 .username(userInfo.getUsername())
+                .createTime(modelDO.getCreateTime())
                 .build();
     }
 }
