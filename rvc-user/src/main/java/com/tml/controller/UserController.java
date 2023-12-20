@@ -1,9 +1,7 @@
 package com.tml.controller;
 
-import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.client.UserServiceClient;
 import com.tml.common.UserContext;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
@@ -24,8 +22,6 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @Date 2023/12/10
@@ -52,8 +48,7 @@ public class UserController {
     @PostMapping("/logout")
     @WhiteApi
     public Result logout(@RequestHeader String uid,@RequestHeader String username){
-        UserContext.setCurruntUser(uid, username);
-        userService.logout();
+        userService.logout(uid, username);
         return Result.success();
     }
 
@@ -139,8 +134,7 @@ public class UserController {
                              UserInfoDTO userInfoDTO,
                          @RequestHeader String uid,
                          @RequestHeader String username){
-        UserContext.setCurruntUser(uid, username);
-        userService.update(userInfoDTO);
+        userService.update(userInfoDTO, uid, username);
         return Result.success();
     }
 
@@ -158,7 +152,7 @@ public class UserController {
                          @RequestHeader String uid,
                          @RequestHeader String username){
         UserContext.setCurruntUser(uid, username);
-        userService.follow(followUid);
+        userService.follow(followUid, uid, username);
         return Result.success();
     }
 
@@ -169,8 +163,7 @@ public class UserController {
                                      UpdatePasswordDTO updatePasswordDTO,
                                  @RequestHeader String uid,
                                  @RequestHeader String username){
-        UserContext.setCurruntUser(uid, username);
-        userService.updatePassword(updatePasswordDTO);
+        userService.updatePassword(updatePasswordDTO, uid, username);
         return Result.success();
     }
 
@@ -178,7 +171,7 @@ public class UserController {
     @WhiteApi
     public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
         UserContext.setCurruntUser(uid, username);
-        return Result.success(userService.getUserInfo());
+        return Result.success(userService.getUserInfo(uid, username));
     }
 
     @PostMapping("/avatar")
@@ -187,7 +180,7 @@ public class UserController {
                          @RequestHeader String uid,
                          @RequestHeader String username){
         UserContext.setCurruntUser(uid, username);
-        userService.avatar(file);
+        userService.avatar(file, uid, username);
         return Result.success("审核中");
     }
 
