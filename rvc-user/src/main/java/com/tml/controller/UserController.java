@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class UserController {
                              @Valid
                              UserInfoDTO userInfoDTO){
         userService.update(userInfoDTO);
-        return Result.success("审核中");
+        return Result.success();
     }
 
     /**
@@ -141,8 +142,8 @@ public class UserController {
     @WhiteApi
     public Result follow(@RequestPart
                              @Valid
+                             @NotBlank(message = "uid不能为空")
                              @Length(min = 19, max = 19, message = "uid长度为19")
-                             @NotNull(message = "uid不能为空")
                              String uid){
         userService.follow(uid);
         return Result.success();
