@@ -25,5 +25,5 @@ public interface UserServiceClient {
     Result<Map<String, UserInfoVO>> list(@RequestBody List<String> uidList);
 
     @GetMapping(value = RemoteUserURL.USER_EXIST)
-    Result exist(@RequestParam String uid);
+    Result<Boolean> exist(@RequestParam String uid);
 }
