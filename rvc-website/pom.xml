@@ -15,6 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <assistant.version>1.1.1</assistant.version>
     </properties>
 
     <dependencies>
@@ -113,6 +114,12 @@
         <dependency>
             <groupId>io.lettuce</groupId>
             <artifactId>lettuce-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-service</artifactId>
+            <version>${assistant.version}</version>
         </dependency>
     </dependencies>
 
