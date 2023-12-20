@@ -2,6 +2,7 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
+import com.tml.common.UserContext;
 import com.tml.common.rabbitmq.RabbitMQListener;
 import com.tml.config.FileConfig;
 import com.tml.exception.ServerException;
@@ -83,8 +84,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void logout() {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
+        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = userUtil.getCurrentUser();
         System.out.println("uid:" + authUser.getUid());
         System.out.println("username:" + authUser.getUsername());
         TokenUtil.logout(authUser.getUid(), authUser.getUsername());
@@ -166,8 +167,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void update(UserInfoDTO userInfoDTO) {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
+        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = userUtil.getCurrentUser();
         UserInfo user = userInfoMapper.selectById(authUser.getUid());
         boolean flag = false;
 
@@ -206,8 +207,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void follow(String uid) {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
+        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = userUtil.getCurrentUser();
         if(Objects.equals(uid, authUser.getUid())){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
@@ -247,14 +248,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoVO getUserInfo() {
-        AuthUser authUser = userUtil.getCurrentUser();
+        AuthUser authUser = UserContext.getCurrentUser();
+//        AuthUser authUser = userUtil.getCurrentUser();
         System.out.println("uid:" + authUser.getUid());
         System.out.println("username:" + authUser.getUsername());
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
         UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(userInfo, userInfoVO); //查询user为null，报错source不能为null
+        BeanUtils.copyProperties(userInfo, userInfoVO);                 //查询user为null，报错source不能为null
         QueryWrapper<UserData> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", authUser.getUid());
         UserData userData = userDataMapper.selectOne(queryWrapper);
@@ -265,7 +267,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void avatar(MultipartFile file){
         try {
-            AuthUser authUser = userUtil.getCurrentUser();
+            AuthUser authUser = UserContext.getCurrentUser();
+//            AuthUser authUser = userUtil.getCurrentUser();
             UploadModelForm form = UploadModelForm.builder()
                     .bucket(FileConfig.USER_BUCKET)
                     .path(FileConfig.USER_PATH)

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.client.UserServiceClient;
+import com.tml.common.UserContext;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
 import com.tml.pojo.dto.LoginDTO;
@@ -37,9 +38,6 @@ public class UserController {
     @Resource
     UserService userService;
 
-    @Resource
-    UserServiceClient userServiceClient;
-
 
     /**
      * @param loginDTO LoginDTO
@@ -54,8 +52,7 @@ public class UserController {
     @PostMapping("/logout")
     @WhiteApi
     public Result logout(@RequestHeader String uid,@RequestHeader String username){
-        System.out.println("uid:" + uid);
-        System.out.println("username:" + username);
+        UserContext.setCurruntUser(uid, username);
         userService.logout();
         return Result.success();
     }
@@ -139,7 +136,10 @@ public class UserController {
     @WhiteApi
     public Result update(@RequestBody
                              @Valid
-                             UserInfoDTO userInfoDTO){
+                             UserInfoDTO userInfoDTO,
+                         @RequestHeader String uid,
+                         @RequestHeader String username){
+        UserContext.setCurruntUser(uid, username);
         userService.update(userInfoDTO);
         return Result.success();
     }
@@ -154,8 +154,11 @@ public class UserController {
                              @Valid
                              @NotBlank(message = "uid不能为空")
                              @Length(min = 19, max = 19, message = "uid长度为19")
-                             String uid){
-        userService.follow(uid);
+                             String followUid,
+                         @RequestHeader String uid,
+                         @RequestHeader String username){
+        UserContext.setCurruntUser(uid, username);
+        userService.follow(followUid);
         return Result.success();
     }
 
@@ -163,7 +166,10 @@ public class UserController {
     @WhiteApi
     public Result updatePassword(@RequestBody
                                      @Valid
-                                     UpdatePasswordDTO updatePasswordDTO){
+                                     UpdatePasswordDTO updatePasswordDTO,
+                                 @RequestHeader String uid,
+                                 @RequestHeader String username){
+        UserContext.setCurruntUser(uid, username);
         userService.updatePassword(updatePasswordDTO);
         return Result.success();
     }
@@ -171,14 +177,16 @@ public class UserController {
     @GetMapping("/getUserInfo")
     @WhiteApi
     public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
-        System.out.println("uid:" + uid);
-        System.out.println("username:" + username);
+        UserContext.setCurruntUser(uid, username);
         return Result.success(userService.getUserInfo());
     }
 
     @PostMapping("/avatar")
     @WhiteApi
-    public Result avatar(@RequestPart("file") MultipartFile file){
+    public Result avatar(@RequestPart("file") MultipartFile file,
+                         @RequestHeader String uid,
+                         @RequestHeader String username){
+        UserContext.setCurruntUser(uid, username);
         userService.avatar(file);
         return Result.success("审核中");
     }
