@@ -15,6 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <assistant.version>1.1.1</assistant.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,23 @@
             <groupId>com.tml</groupId>
             <artifactId>rvc-rpc</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+<!--        genius-->
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-boot-start</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-service</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-cache</artifactId>
+            <version>${assistant.version}</version>
         </dependency>
 <!--        httpClient-->
         <dependency>
@@ -95,6 +113,14 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
         </dependency>
         <!--        Mybatis-plus驱动-->
         <dependency>

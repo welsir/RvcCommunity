@@ -110,7 +110,7 @@ public class ModelController {
 
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
-            MultipartFile file,
+            MultipartFile[] file,
             @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.uploadModel(file,uid));
     }

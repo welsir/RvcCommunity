@@ -1,6 +1,7 @@
 package com.tml.pojo.VO;
 
 import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 

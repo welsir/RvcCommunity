@@ -31,7 +31,10 @@ import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import com.tml.utils.WrapperUtil;
 import io.github.common.web.Result;
+import io.github.id.snowflake.SnowflakeGenerator;
+import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -80,6 +83,8 @@ public class ModelServiceImpl implements ModelService {
     ModelListener listener;
     @Resource
     SystemConfig systemConfig;
+    @Resource
+    SnowflakeGenerator snowflakeGenerator;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     /**
@@ -173,12 +178,17 @@ public class ModelServiceImpl implements ModelService {
         }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
+        try {
+            modelDO.setId(snowflakeGenerator.generate());
+        } catch (SnowflakeRegisterException e) {
+            throw new BaseException(e.toString());
+        }
         modelDO.setUpdateTime(DateUtil.formatDate());
         modelDO.setCreateTime(DateUtil.formatDate());
         modelDO.setLikesNum("0");
         modelDO.setCollectionNum("0");
         modelDO.setViewNum("0");
-        modelDO.setHasDelete("0");
+        modelDO.setHasDelete(false);
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
@@ -243,19 +253,23 @@ public class ModelServiceImpl implements ModelService {
 
     //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
-    public ReceiveUploadFileDTO uploadModel(MultipartFile file,String uid) {
-        if(FileUtil.checkModelFileIsAvailable(file)){
+    public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
+        if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         try {
-            UploadModelForm form = UploadModelForm.builder()
-                    .file(file)
-                    .path(ModelConstant.DEFAULT_MODEL_PATH)
-                    .bucket(ModelConstant.DEFAULT_BUCKET)
-                    .md5(FileUtil.getMD5Checksum(file.getInputStream()))
-                    .build();
-            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
-            return res.getData();
+            ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
+            for (MultipartFile multipartFile : file) {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(multipartFile)
+                        .path(ModelConstant.DEFAULT_MODEL_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
+                        .build();
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                fileForms.add(res.getData());
+            }
+            return fileForms;
         } catch (NoSuchAlgorithmException | IOException e) {
             logger.error("%s:"+e.getStackTrace()[0],e);
             throw new BaseException(e.toString());
@@ -377,10 +391,10 @@ public class ModelServiceImpl implements ModelService {
         return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
+    //todo:换成细粒度更小的事务控制
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
         if(StringUtils.isBlank(commentFormVO.getReplyId())){
             AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
@@ -416,10 +430,10 @@ public class ModelServiceImpl implements ModelService {
         }
     }
 
+    //todo:换成细粒度更小的事务控制
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
         if(ModelConstant.FLAG.equals(type)){
             AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
@@ -591,10 +605,10 @@ public class ModelServiceImpl implements ModelService {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
-        Result<Map<String, List<UserInfoVO>>> result = userServiceClient.list(uids);
-        List<UserInfoVO> userList = result.getData().get("userList");
+        Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
+        Map<String, UserInfoVO> userInfo = result.getData();
         List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userList.get(i)))
+                .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
                 .collect(Collectors.toList());
         return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }

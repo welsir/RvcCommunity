@@ -3,12 +3,17 @@ package com.tml.common.exception;
 import com.tml.common.Result;
 import com.tml.common.log.AbstractLogger;
 import com.tml.pojo.ResultCodeEnum;
+import io.github.exception.handler.AbstractExceptionHandler;
+import io.github.exception.handler.AssistantExceptionHandlerCondition;
+import io.github.exception.handler.annotation.AssistantControllerAdvice;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
@@ -22,13 +27,14 @@ import java.util.stream.Collectors;
  * @Author welsir
  * @Date 2023/12/4 13:38
  */
-@ControllerAdvice
-@ResponseBody
-public class GobalExceptionHandler {
+@AssistantControllerAdvice("rvc-model-service-exceptionHandler")
+@Conditional(AssistantExceptionHandlerCondition.class)
+public class GobalExceptionHandler extends AbstractExceptionHandler {
 
     @Resource
     AbstractLogger logger;
 
+    @ResponseBody
     @ExceptionHandler(BaseException.class)
     public Result handleException(HttpServletRequest request,
                                   Exception ex) {
@@ -53,27 +59,8 @@ public class GobalExceptionHandler {
         return result;
     }
 
-    @ExceptionHandler(BindException.class)
-    @ResponseBody
-    public Result bindExceptionHandler(BindException e){
-        String message = e.getBindingResult().getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining());
-        return Result.fail(message);
+    @Override
+    public int getOrder() {
+        return 1;
     }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseBody
-    public Result constraintViolationException(ConstraintViolationException e){
-        String message = e.getConstraintViolations().stream()
-                .map(ConstraintViolation::getMessage)
-                .collect(Collectors.joining(", "));
-        return Result.fail(message);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseBody
-    public Result MethodArgumentNotValidExceptionHandler(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining());
-        return Result.fail(message);
-    }
-
 }

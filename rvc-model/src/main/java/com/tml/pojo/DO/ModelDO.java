@@ -19,7 +19,6 @@ import java.util.Date;
 @NoArgsConstructor
 @TableName("rvc_model")
 public class ModelDO {
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private String fileId;
     private String name;
@@ -33,5 +32,5 @@ public class ModelDO {
     private String createTime;
     private String updateTime;
     private String hasShow;
-    private String hasDelete;
+    private boolean hasDelete;
 }

@@ -27,7 +27,7 @@ public interface ModelService {
 
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    ReceiveUploadFileDTO uploadModel(MultipartFile file,String uid);
+    List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid);
 
     ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 
