@@ -3,8 +3,6 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
 import com.tml.common.rabbitmq.RabbitMQListener;
-import com.tml.config.DetectionConfig;
-import com.tml.exception.GlobalExceptionHandler;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
@@ -18,11 +16,7 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +38,6 @@ import static com.tml.pojo.enums.EmailEnums.*;
  */
 @Service
 public class UserServiceImpl implements UserService {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @Resource
     UserInfoMapper userInfoMapper;
 
