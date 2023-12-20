@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.tml.annotation.SystemLog;
+import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,9 @@ public class PostTypeController {
 
     @GetMapping("/list")
     @SystemLog(businessName = "获取所有交流类型列表")
+    @LaxTokenApi
     public Result list(){
-        List<Object> listType = postTypeService.listType();
-        return Result.success(listType);
+        return Result.success(postTypeService.listType());
     }
 
 }

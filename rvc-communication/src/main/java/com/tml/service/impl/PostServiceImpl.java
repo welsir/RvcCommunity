@@ -74,7 +74,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 
     @Override
-    public List<PostVo> list(PageInfo<String> params,String tagId) {
+    public List<PostVo> list(PageInfo<String> params,String tagId,String uid) {
         /**
          * 1、分页获取数据（如果有tagId 添加条件）
          * 2、调用用户服务获取作者信息
@@ -84,9 +84,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
          * 6、排序返回结果
          */
 
-
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
 
         //分页
         Integer pageNum = params.getPage();
@@ -134,12 +131,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             //插入tag
             postVo.setPostType(postTypeCollect.get(records.get(i).getTagId()));
             //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
-        if (!Strings.isBlank(uuid)){
+        if (!Strings.isBlank(uid)){
                 LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-                collectPostQueryWrapper.eq(CollectPost::getUid, uuid)
+                collectPostQueryWrapper.eq(CollectPost::getUid, uid)
                         .eq(CollectPost::getPostId,postVo.getPostId());
                 LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-                likePostQueryWrapper.eq(LikePost::getUid, uuid)
+                likePostQueryWrapper.eq(LikePost::getUid, uid)
                         .eq(LikePost::getPostId,postVo.getPostId());
 
                 boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
@@ -160,7 +157,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public PostVo details(String postId) {
+    public PostVo details(String postId,String uid) {
         /**
          * 1、判断要查询的帖子是否存在
          * 2、调用用户服务获取作者信息
@@ -169,8 +166,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
          * 5、用户登录  返回 关联信息
          */
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
 
 
         Post post = this.getById(postId);
@@ -189,19 +184,19 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 
 //        如果用户未登录直接返回vo对象
-        if (Objects.isNull(uuid)){
+        if (Objects.isNull(uid)){
             return postVo;
         }
 
 
 //        异步 帖子浏览次数+1（1分钟内浏览 浏览次数不加1 并且更新上次浏览时间）
-        this.executor.execute(() -> watchPost(uuid,postId));
+        this.executor.execute(() -> watchPost(uid,postId));
 
         //去关系表查看用户是否点赞  收藏
         LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-        collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
+        collectPostQueryWrapper.eq(CollectPost::getUid,uid);
         LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-        likePostQueryWrapper.eq(LikePost::getUid,uuid);
+        likePostQueryWrapper.eq(LikePost::getUid,uid);
         boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
         boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
 
@@ -247,9 +242,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
-    public void favorite(CoinDto coinDto) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uid = loginInfoDTO.getId();
+    public void favorite(CoinDto coinDto,String uid) {
 
         /**
          * 判断用户是否存在
@@ -268,7 +261,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             try {
                 likePostMapper.insert(likePost);
             } catch (Exception e) {
-                throw new SystemException(SYSTEM_ERROR);
+                throw new SystemException(FAVORITE_ERROR);
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -292,9 +285,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public void collection(CoinDto coinDto) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uid = loginInfoDTO.getId();
+    public void collection(CoinDto coinDto,String uid) {
         /**
          * 判断用户和评论是否存在
          */
@@ -335,10 +326,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public void delete(String postId) {
+    public void delete(String postId,String uid) {
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
 
         //帖子是否存在
         Post DBpost = postMapper.selectById(postId);
@@ -349,7 +338,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post1 = postMapper.selectById(postId);
 //帖子不属于该用户
-        if (!post1.getUid().equals(uuid)){
+        if (!post1.getUid().equals(uid)){
             throw new SystemException(PERMISSIONS_ERROR);
         }
 
@@ -366,10 +355,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public String add(PostDto postDto) {
-
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String userid = loginInfoDTO.getId();
+    public String add(PostDto postDto,String uid) {
         String uuid = null;
         if (Strings.isBlank(postDto.getPostId())){
              Uuid.getUuid();
@@ -379,7 +365,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
-        post.setUid(userid);
+        post.setUid(uid);
 
         //判断tagid是否存在
         PostType postType = postTypeMapper.selectById(post.getTagId());
@@ -450,7 +436,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
-    public List<PostSimpleVo> userFavorite(PageInfo<String> params) {
+    public List<PostSimpleVo> userFavorite(PageInfo<String> params,String uid) {
 
         LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
         String uuid = loginInfoDTO.getId();
@@ -488,7 +474,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
+
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 
@@ -496,16 +485,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public List<PostSimpleVo> userCollect(PageInfo<String> params) {
-
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
-
+    public List<PostSimpleVo> userCollect(PageInfo<String> params,String uid) {
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<CollectPost> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(CollectPost::getUid, uuid);
+        likePostLambdaQueryWrapper.eq(CollectPost::getUid, uid);
         Page<CollectPost> likePostPage = collectPostMapper.selectPage(page, likePostLambdaQueryWrapper);
 
 
@@ -537,7 +522,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 
@@ -545,15 +532,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public List<PostSimpleVo> userCreate(PageInfo<String> params) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
+    public List<PostSimpleVo> userCreate(PageInfo<String> params,String uid) {
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<Post> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Post> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(Post::getUid, uuid);
+        likePostLambdaQueryWrapper.eq(Post::getUid, uid);
         Page<Post> likePostPage = postMapper.selectPage(page, likePostLambdaQueryWrapper);
         List<Post> records = likePostPage.getRecords();
         if (records.size() == 0){
@@ -584,7 +569,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 

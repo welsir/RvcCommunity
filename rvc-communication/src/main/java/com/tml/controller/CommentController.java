@@ -3,6 +3,8 @@ package com.tml.controller;
 
 import com.tml.annotation.ContentDetection;
 import com.tml.annotation.SystemLog;
+import com.tml.annotation.apiAuth.LaxTokenApi;
+import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
@@ -34,29 +36,30 @@ public class CommentController {
 
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
-    public Result list(
-            @Valid PageInfo<String> params){
-        List<CommentVo> commentListPage = commentService.list(params);
-        return Result.success(commentListPage);
+    @LaxTokenApi
+    public Result list(@Valid PageInfo<String> params){
+        return Result.success(commentService.list(params));
     }
 
 
     @PostMapping("/add")
     @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
+    @WhiteApi
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
-    public Result add(@RequestBody
-                          @Valid CommentDto commentDto){
-        String commentId = commentService.comment(commentDto);
-        return Result.success(commentId);
+    public Result add(@RequestBody @Valid CommentDto commentDto,
+                      @RequestHeader String uid){
+        System.out.println(uid);
+        return Result.success(commentService.comment(commentDto,uid));
     }
 
 
 
     @PutMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
-    public Result favorite(@RequestBody
-                               @Valid CoinDto coinDto){
-        commentService.favorite(coinDto);
+    @WhiteApi
+    public Result favorite(@RequestBody @Valid CoinDto coinDto,
+                           @RequestHeader String uid){
+        commentService.favorite(coinDto,uid);
         return Result.success();
     }
 
