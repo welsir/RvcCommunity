@@ -170,7 +170,9 @@ public class UserController {
 
     @GetMapping("/getUserInfo")
     @WhiteApi
-    public Result getUserInfo(){
+    public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
+        System.out.println("uid:" + uid);
+        System.out.println("username:" + username);
         return Result.success(userService.getUserInfo());
     }
 

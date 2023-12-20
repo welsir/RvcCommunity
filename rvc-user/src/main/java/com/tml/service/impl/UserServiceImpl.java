@@ -248,6 +248,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserInfoVO getUserInfo() {
         AuthUser authUser = userUtil.getCurrentUser();
+        System.out.println("uid:" + authUser.getUid());
+        System.out.println("username:" + authUser.getUsername());
         QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
