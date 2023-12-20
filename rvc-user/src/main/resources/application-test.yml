@@ -42,9 +42,3 @@ spring:
         acknowledge-mode: manual
     exchange-type: ${EXCHANGE_TYPE:ENC(WUANSPJwXgpu928eZLdjtHxqz08RemFd)}
     pre-command: ${PRE_COMMAND:ENC(nRHKgZnkufKa8nZmJ6MsMjF26vxXrT7mRxmRgSqW6Gs=)}
-
-user:
-  retry:
-    max-retries: 3
-    retry-interval: 1000
-

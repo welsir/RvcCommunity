@@ -21,7 +21,7 @@ public interface UserServiceClient {
     Result<UserInfoVO> one(@RequestParam String uid);
 
     @PostMapping(value = RemoteUserURL.USER_LIST)
-    Result<Map<String, List<UserInfoVO>>> list(@RequestBody List<String> uidList);
+    Result<Map<String, UserInfoVO>> list(@RequestBody List<String> uidList);
 
     @GetMapping(value = RemoteUserURL.USER_EXIST)
     Result exist(@RequestParam String uid);

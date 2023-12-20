@@ -38,6 +38,7 @@ public class UserInfo {
 
     private LocalDateTime birthday;
 
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime registerData;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)

@@ -8,6 +8,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import javax.validation.ConstraintViolationException;
 import java.util.List;
@@ -36,14 +37,11 @@ public class GlobalExceptionHandler {
     /*
     * HSR 303 校验 异常拦截器
     * * */
-//    @ExceptionHandler(ConstraintViolationException.class)
-//    public Result handleException(ConstraintViolationException e){
-//        List<ObjectError> errors = e.getBindingResult().getAllErrors();
-//        for (ObjectError error : errors) {
-//            logger.error("参数错误：" + error.getObjectName() + "参数错误 " + error.getDefaultMessage());
-//        }
-//        return Result.error("400", errors.get(0).getDefaultMessage());
-//    }
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public Result handleException(MissingServletRequestPartException e){
+        e.printStackTrace();
+        return Result.error("303", "需要参数" + e.getRequestPartName());
+    }
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Map<String, String>> handleConstraintViolationException(ConstraintViolationException ex) {
         ex.printStackTrace();
