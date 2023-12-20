@@ -20,7 +20,7 @@ ENV SERVER_PORT=${SERVER_PORT}
 ENV ACTIVE=${ACTIVE}
 ENV UNIQUE_ID=${UNIQUE_ID}
 EXPOSE ${SERVER_PORT}
-ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:10015","-jar","/rvc-gateway.jar"]
+ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=10015","-jar","/rvc-gateway.jar"]
 
 
 
