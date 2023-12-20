@@ -3,6 +3,7 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
 import com.tml.common.rabbitmq.RabbitMQListener;
+import com.tml.config.FileConfig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
@@ -18,6 +19,7 @@ import com.tml.service.UserService;
 import com.tml.util.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -83,6 +85,8 @@ public class UserServiceImpl implements UserService {
     public void logout() {
 //        AuthUser authUser = UserContext.getCurrentUser();
         AuthUser authUser = userUtil.getCurrentUser();
+        System.out.println("uid:" + authUser.getUid());
+        System.out.println("username:" + authUser.getUsername());
         TokenUtil.logout(authUser.getUid(), authUser.getUsername());
     }
 
@@ -248,7 +252,7 @@ public class UserServiceImpl implements UserService {
         userWrapper.eq("uid", authUser.getUid());
         UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
         UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(userInfo, userInfoVO);
+        BeanUtils.copyProperties(userInfo, userInfoVO); //查询user为null，报错source不能为null
         QueryWrapper<UserData> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", authUser.getUid());
         UserData userData = userDataMapper.selectOne(queryWrapper);
@@ -261,8 +265,8 @@ public class UserServiceImpl implements UserService {
         try {
             AuthUser authUser = userUtil.getCurrentUser();
             UploadModelForm form = UploadModelForm.builder()
-                    .bucket("rvc")
-                    .path("rvc/user/avatar")
+                    .bucket(FileConfig.USER_BUCKET)
+                    .path(FileConfig.USER_PATH)
                     .md5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()))
                     .file(file)
                     .build();

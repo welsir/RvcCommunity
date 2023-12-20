@@ -3,6 +3,7 @@ package com.tml.controller;
 import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
+import com.tml.client.UserServiceClient;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
 import com.tml.pojo.dto.LoginDTO;
@@ -36,6 +37,9 @@ public class UserController {
     @Resource
     UserService userService;
 
+    @Resource
+    UserServiceClient userServiceClient;
+
 
     /**
      * @param loginDTO LoginDTO
@@ -49,7 +53,9 @@ public class UserController {
     }
     @PostMapping("/logout")
     @WhiteApi
-    public Result logout(){
+    public Result logout(@RequestHeader String uid,@RequestHeader String username){
+        System.out.println("uid:" + uid);
+        System.out.println("username:" + username);
         userService.logout();
         return Result.success();
     }

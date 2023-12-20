@@ -20,4 +20,10 @@ public class UserContext {
         }
         return authUser;
     }
+
+
+    public static void setCurruntUser(String uid, String username){
+        AuthUser authUser = new AuthUser(uid, username);
+        threadLocal.set(authUser);
+    }
 }
