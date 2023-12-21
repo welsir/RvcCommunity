@@ -245,4 +245,12 @@ public class ModelController {
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
     }
 
+
+    @LaxTokenApi
+    public Result<?> queryLabelList(
+            @RequestHeader(value = "id",required = false) String uid
+    ){
+        return null;
+    }
+
 }

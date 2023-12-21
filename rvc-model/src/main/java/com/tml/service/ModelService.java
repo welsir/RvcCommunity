@@ -52,4 +52,6 @@ public interface ModelService {
     Boolean userLikesModel(String status,String modelId,String uid);
 
     Boolean userCollectionModel(String status,String modelId,String uid);
+
+    List<LabelVO> getLabelList();
 }
