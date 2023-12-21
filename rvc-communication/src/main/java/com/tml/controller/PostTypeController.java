@@ -23,12 +23,10 @@ import java.util.List;
 public class PostTypeController {
 
     private final PostTypeService postTypeService;
-
     @GetMapping("/list")
     @SystemLog(businessName = "获取所有交流类型列表")
     @LaxTokenApi
     public Result list(){
         return Result.success(postTypeService.listType());
     }
-
 }

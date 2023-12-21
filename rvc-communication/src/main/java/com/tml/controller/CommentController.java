@@ -33,14 +33,12 @@ public class CommentController {
 
     private final CommentService commentService;
 
-
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     @LaxTokenApi
     public Result list(@Valid PageInfo<String> params){
         return Result.success(commentService.list(params));
     }
-
 
     @PostMapping("/add")
     @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
@@ -51,7 +49,6 @@ public class CommentController {
         return Result.success(commentService.comment(commentDto,uid));
     }
 
-
     @PutMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
     @WhiteApi
@@ -60,6 +57,4 @@ public class CommentController {
         commentService.favorite(coinDto,uid);
         return Result.success();
     }
-
-
 }

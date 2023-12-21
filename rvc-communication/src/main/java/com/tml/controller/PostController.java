@@ -36,11 +36,8 @@ import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 @Validated
 public class PostController {
 
-
     private final PostService postService;
     private final RvcCommunicationServiceFeignClient rvcCommunicationServiceFeignClient;
-
-
     @SystemLog(businessName = "获取交流帖子列表")
     @GetMapping("/list")
     @LaxTokenApi
@@ -50,7 +47,6 @@ public class PostController {
     return Result.success(postService.list(params,tagId,uid));
     }
 
-
     @GetMapping("/details")
     @SystemLog(businessName = "获取某个帖子详情信息")
     @LaxTokenApi
@@ -58,7 +54,6 @@ public class PostController {
                           @RequestHeader(required = false) String uid){
         return Result.success(postService.details(postId,uid));
     }
-
 
     /**
      * 点赞帖子
@@ -73,8 +68,6 @@ public class PostController {
         return Result.success();
     }
 
-
-
     @PutMapping("/collection")
     @SystemLog(businessName = "收藏帖子 [T]")
     @WhiteApi
@@ -83,7 +76,6 @@ public class PostController {
         postService.collection(coinDto,uid);
         return Result.success();
     }
-
 
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
@@ -94,18 +86,14 @@ public class PostController {
         return Result.success(postService.add(postDto,uid));
     }
 
-
-
-    @DeleteMapping("/delete/{postId}")
+    @DeleteMapping("/delete")
     @SystemLog(businessName = "删除帖子   [T]")
     @WhiteApi
-    public Result delete(@PathVariable("postId") @NotBlank String postId,
+    public Result delete(@RequestParam("postId") @NotBlank String postId,
                          @RequestHeader String uid){
         postService.delete(postId,uid);
         return Result.success();
     }
-
-
 
     @GetMapping("/user/favorite")
     @SystemLog(businessName = "获取用户点赞的贴子")
@@ -131,16 +119,11 @@ public class PostController {
         return Result.success( postService.userCreate(params,uid));
     }
 
-
-    //用户上传头像
-    //文件上传
     @PostMapping("/cover")
     @SystemLog(businessName = "用户上传头像  文件上传")
     @WhiteApi
     public Result setUserProfile(@RequestPart("wangeditor-uploaded-image") MultipartFile profile,
                                  @RequestHeader String uid) throws IOException {
-
-
         String url = postService.updUserProfile(profile,uid);
         CoverDto build = CoverDto.builder()
                 .coverUrl(url)
@@ -150,9 +133,6 @@ public class PostController {
         return Result.success(url);
     }
 
-
-    //上传图片
-    //链接上传
     @PostMapping("/coverUrl")
     @SystemLog(businessName = "用户上传头像  url上传")
     @LaxTokenApi
@@ -160,5 +140,4 @@ public class PostController {
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }
-
 }
