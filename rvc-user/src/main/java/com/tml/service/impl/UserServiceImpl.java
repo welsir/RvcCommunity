@@ -159,7 +159,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void update(UserInfoDTO userInfoDTO, String uid, String username) {
-        UserInfo user = userInfoMapper.selectById(uid);
+        UserInfo user = userInfoMapper.selectByUid(uid);
         boolean flag = false;
 
         if(!userInfoDTO.getNickname().equals(user.getNickname())){
@@ -246,10 +246,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoVO getUserInfo(String uid, String username) {
-        UserInfo userInfo = userInfoMapper.selectById(uid);
+        UserInfo userInfo = userInfoMapper.selectByUid(uid);
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtils.copyProperties(userInfo, userInfoVO);
-        UserData userData = userDataMapper.selectById(uid);
+        UserData userData = userDataMapper.selectByUid(uid);
         BeanUtils.copyProperties(userData, userInfoVO);
         return userInfoVO;
     }
