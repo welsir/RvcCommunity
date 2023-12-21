@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${MYSQL_URL:ENC(Q/mUDDQ+0TwZ+60p9l6jr/F2nN/93jltB6EvwDqxGR5r91clGxM6slm0dskGePCLbdSFU+3NYgN1A3sJVjTNvd7r2XJs8V6coHAg0F9fe42NS087BTdFgrZjYRW09b2vlMFxo7KBJUwv2qZO8Kfa5VvulLkoBP28jdJsNkHbCDw=)}
@@ -37,6 +41,8 @@ spring:
         concurrency: ${MIN_CONCURRENCY:5}
         max-concurrency: ${MAX_CONCURRENCY:10}
         acknowledge-mode: manual
+    exchange-type: ${EXCHANGE_TYPE:ENC(WUANSPJwXgpu928eZLdjtHxqz08RemFd)}
+    pre-command: ${PRE_COMMAND:ENC(nRHKgZnkufKa8nZmJ6MsMjF26vxXrT7mRxmRgSqW6Gs=)}
 management:
   endpoints:
     web:
