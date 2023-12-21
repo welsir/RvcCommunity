@@ -1,6 +1,7 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.constant.QueryType;
 import com.tml.exception.RvcSQLException;
@@ -39,6 +40,9 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Resource
     IFeedbackDaoService feedbackDaoService;
+
+    @Resource
+    UserServiceClient userServiceClient;
 
     @Resource
     IFeedbackLikeDaoService likeDaoService;

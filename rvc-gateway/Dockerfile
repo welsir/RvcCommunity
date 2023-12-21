@@ -23,6 +23,6 @@ EXPOSE ${SERVER_PORT}
 ENTRYPOINT ["java","-jar","/rvc-gateway.jar"]
 
 
-#<Auto> -e:prod -m:rvc-gateway -v:1.0 -rp:10010 -de:<-e ACTIVE=prod -e UNIQUE_ID=0 -e SERVER_PORT=10010>
+#<Auto> -e:prod -m:rvc-gateway -v:1.0 -rp:10000 -de:<-e ACTIVE=prod -e UNIQUE_ID=0 -e SERVER_PORT=10000>
 
-#<Auto> -e:test -m:rvc-gateway -v:1.0 -rp:10010 -de:<-e ACTIVE=test -e UNIQUE_ID=0 -e SERVER_PORT=10010>
+#<Auto> -e:test -m:rvc-gateway -v:1.0 -rp:10000 -de:<-e ACTIVE=test -e UNIQUE_ID=0 -e SERVER_PORT=10000>
