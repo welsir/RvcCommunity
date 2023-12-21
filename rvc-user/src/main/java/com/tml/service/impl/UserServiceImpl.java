@@ -18,12 +18,14 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
+import io.github.util.time.TimeUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -181,8 +183,18 @@ public class UserServiceImpl implements UserService {
             user.setDescription("审核中");
             flag = true;
         }
-        if(!(user.getSex().equals(userInfoDTO.getSex()) && user.getBirthday() == userInfoDTO.getBirthday())){
-            user.setSex(userInfoDTO.getSex());
+        switch (userInfoDTO.getSex()){
+            case "男":
+            case "女":
+                if(user.getSex() == null || !user.getSex().equals(userInfoDTO.getSex())){
+                    user.setSex(userInfoDTO.getSex());
+                    flag = true;
+                }
+                break;
+            default: throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
+        }
+
+        if(user.getBirthday() == null || user.getBirthday() == userInfoDTO.getBirthday()){
             user.setBirthday(userInfoDTO.getBirthday());
             flag = true;
         }

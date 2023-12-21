@@ -26,6 +26,7 @@ public enum ResultEnums implements Serializable {
     ACCOUNT_NOT_EXIST("530", "用户不存在"),
     FAIL_GET_IMAGE_CODE("531", "获取图片验证码失败"),
     CANT_FOLLOW_YOURSELF("532", "不能关注你自己"),
+    SEX_VALUE_ERROR("533", "用户性别错误"),
     UID_NOT_EIXST("620", "uid不存在"),
     USER_NOT_EXIST("621", "用户不存在");
 

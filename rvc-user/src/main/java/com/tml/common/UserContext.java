@@ -10,6 +10,7 @@ import com.tml.pojo.enums.ResultEnums;
  */
 public class UserContext {
     private static final ThreadLocal<AuthUser> threadLocal = new ThreadLocal<>();
+    AuthUser authUser;
     public static AuthUser getCurrentUser(){
         AuthUser authUser;
         try {
@@ -23,7 +24,6 @@ public class UserContext {
 
 
     public static void setCurruntUser(String uid, String username){
-        AuthUser authUser = new AuthUser(uid, username);
-        threadLocal.set(authUser);
+
     }
 }
