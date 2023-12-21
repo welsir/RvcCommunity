@@ -247,6 +247,7 @@ public class ModelController {
 
 
     @LaxTokenApi
+    @GetMapping("/label/labelHot")
     public Result<?> queryLabelList(
             @RequestHeader(value = "id",required = false) String uid
     ){

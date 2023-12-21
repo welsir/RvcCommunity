@@ -25,6 +25,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +36,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.channels.Channel;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Description
@@ -64,6 +64,7 @@ public class ModelListener implements ListenerInterface{
     private final ConcurrentHashMap<String, String> lockMap = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<String,Map<String,String>> auditParams = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<String>> auditBindMap = new ConcurrentHashMap<>();
 
     public void setMap(String id,int count){
         this.auditCountMap.put(id,count);
@@ -155,40 +156,59 @@ public class ModelListener implements ListenerInterface{
                     Class<?> clazz = Class.forName(table);
                     entity = clazz.getDeclaredConstructor().newInstance();
                     mapper = getMapperByEntityType(clazz);
+                    if(mapper==null){
+                        throw new BaseException(ResultCodeEnum.SYSTEM_ERROR);
+                    }
                     UpdateWrapper wrapper;
                     wrapper = new UpdateWrapper<>(entity);
-                    if(checkLabelIsLegal(statusDTO.getLabels())){
-                        logger.info("[%s]审核完毕,更新数据库",statusDTO.getId());
-                        wrapper.eq("id",statusDTO.getId());
-                        wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
-                        //后置步骤，例如修改需要额外修改字段参数
-                        logger.info("修改字段");
-                        if(auditParams.get(statusDTO.getId())!=null){
-                            for (String s : auditParams.get(statusDTO.getId()).keySet()) {
-                                wrapper.set(s,auditParams.get(statusDTO.getId()).get(s));
+                    wrapper.eq("id",statusDTO.getId());
+                    if(!checkLabelIsLegal(statusDTO.getLabels())){
+                        logger.info("[%s]审核失败",statusDTO.getId());
+                        wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
+                        return;
+                    }
+                    //判断是否有子审核
+                    if(auditBindMap.get(lock)!=null){
+                        //判断子审核是否审核完毕
+                        CountDownLatch latch = new CountDownLatch(auditBindMap.get(lock).size());
+                        for (String sonId : auditBindMap.get(lock)) {
+                            if(auditCountMap.get(sonId)==-1){
+                                logger.info("[%s]审核失败",statusDTO.getId());
+                                wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
+                                return;
+                            }
+                            if(auditCountMap.get(sonId)!=0){
+                                try {
+                                    while (!latch.await(1, TimeUnit.SECONDS)) {
+                                        if (auditCountMap.get(sonId) == 0) {
+                                            break;
+                                        }
+                                    }
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    logger.error("等待子审核被中断", e);
+                                }
                             }
                         }
-                    }else {
-                        logger.info("[%s]审核失败",statusDTO.getId());
-                        wrapper.eq("id",statusDTO.getId());
-                        wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
                     }
-                    if(mapper==null){
-                        throw new BaseException();
+                    logger.info("[%s]审核成功,更新数据库",statusDTO.getId());
+                    wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());
+                    //后置步骤，例如修改需要额外修改字段参数
+                    if(auditParams.get(statusDTO.getId())!=null){
+                        for (String s : auditParams.get(statusDTO.getId()).keySet()) {
+                            wrapper.set(s,auditParams.get(statusDTO.getId()).get(s));
+                        }
                     }
                     mapper.update(null,wrapper);
+                    auditCountMap.compute(lock,(key,val)-> 0);
                 }else if(auditCountMap.get(lock)>0){
                     //优化判断逻辑
                     if(!checkLabelIsLegal(statusDTO.getLabels())){
-                        auditCountMap.compute(statusDTO.getId(), (key, value) -> -1);
+                        logger.info("[%s]审核失败:%s",statusDTO.getId(),statusDTO.getLabels());
+                        auditCountMap.compute(statusDTO.getId(),(key, value)-> -1);
                         return;
                     }
-                    auditCountMap.compute(statusDTO.getId(), (key, value) -> {
-                        if (value == null) {
-                            throw new BaseException(ResultCodeEnum.PARAM_ID_IS_ERROR);
-                        }
-                        return value - 1;
-                    });
+                    auditCountMap.compute(statusDTO.getId(), (key, value) -> value - 1);
                 }
             } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
                      IllegalAccessException | NoSuchMethodException e) {
