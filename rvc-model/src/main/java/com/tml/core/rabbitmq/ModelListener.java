@@ -180,7 +180,7 @@ public class ModelListener implements ListenerInterface{
                             if(auditCountMap.get(sonId)==-1){
                                 logger.info("[%s]审核失败",statusDTO.getId());
                                 wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
-
+                                auditStatusMapper.insertAuditStatus(lock,filed,DetectionStatusEnum.DETECTION_FAIL.getStatus().toString());
                                 return;
                             }
                             if(auditCountMap.get(sonId)!=0){
@@ -212,6 +212,7 @@ public class ModelListener implements ListenerInterface{
                     if(!checkLabelIsLegal(statusDTO.getLabels())){
                         logger.info("[%s]审核失败:%s",statusDTO.getId(),statusDTO.getLabels());
                         auditCountMap.compute(statusDTO.getId(),(key, value)-> -1);
+                        auditStatusMapper.insertAuditStatus(lock,filed,DetectionStatusEnum.DETECTION_FAIL.getStatus().toString());
                         return;
                     }
                     auditCountMap.compute(statusDTO.getId(), (key, value) -> value - 1);
