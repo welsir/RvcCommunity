@@ -7,5 +7,5 @@ package com.tml.config;
 public class FileConfig {
     public static final String USER_PATH = "rvc/user/avatar";
 
-    public static final String USER_BUCKET = "rvc";
+    public static final String USER_BUCKET = "rvc1";
 }

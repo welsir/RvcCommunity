@@ -86,16 +86,32 @@
             </exclusions>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>io.github.openfeign.form</groupId>-->
+<!--            <artifactId>feign-form</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>io.github.openfeign.form</groupId>-->
+<!--            <artifactId>feign-form-spring</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--        </dependency>-->
+        <!--        feign整合-->
         <dependency>
-            <groupId>io.github.openfeign.form</groupId>
-            <artifactId>feign-form</artifactId>
-            <version>3.3.0</version>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>io.github.openfeign.form</groupId>
-            <artifactId>feign-form-spring</artifactId>
-            <version>3.3.0</version>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-httpclient</artifactId>
         </dependency>
 
 
