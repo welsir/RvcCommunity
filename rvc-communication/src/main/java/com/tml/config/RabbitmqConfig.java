@@ -17,7 +17,6 @@ import static com.tml.constant.DetectionConstants.*;
  */
 @Configuration
 public class RabbitmqConfig {
-
     //声明交换机
     @Bean(RES_EXCHANGE_NAME)
     public Exchange RES_EXCHANGE_TOPICS_INFORM(){
