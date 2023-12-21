@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.tml.pojo.entity.Post;
 import com.tml.pojo.entity.PostType;
 import com.tml.utils.RedisCache;
+import io.netty.handler.codec.string.StringEncoder;
+import org.jasypt.encryption.StringEncryptor;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,15 @@ public class RedisTest {
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private StringEncryptor stringEncryptor;
+
+    @Test
+    public void Encryptor(){
+
+    }
+
 
     @Test
     public void  remove(){
