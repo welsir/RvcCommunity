@@ -55,8 +55,8 @@ public class ModelController {
      * @return Result<?>
      */
     @LaxTokenApi
-    @GetMapping("/list/{typeId}")
-    public Result<?> getModelListByType(@PathVariable @NotBlank(message = "id不能为空") String typeId,
+    @GetMapping("/listByType")
+    public Result<?> getModelListByType(@RequestParam @NotBlank(message = "id不能为空") String typeId,
                                         @RequestParam("page") @NotBlank(message = "page不能为空") String page,
                                         @RequestParam(value = "limit",required = false)  String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
@@ -72,8 +72,8 @@ public class ModelController {
      * @return Result<?>
      */
     @LaxTokenApi
-    @GetMapping("/one/{modelId}")
-    public Result<?> getOneModel(@PathVariable @NotBlank(message = "id不能为空") String modelId,
+    @GetMapping("/getModelMsg")
+    public Result<?> getOneModel(@RequestParam("modelId") @NotBlank(message = "id不能为空") String modelId,
                                  @RequestHeader(value = "uid",required = false) String uid){
         ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
@@ -87,7 +87,7 @@ public class ModelController {
      * @return: Result<?>
      **/
     @WhiteApi
-    @PostMapping("/one")
+    @PostMapping("/addModel")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
                                     @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         modelService.insertOneModel(model,uid);
@@ -101,8 +101,8 @@ public class ModelController {
      * @return: Result<?>
      **/
     @WhiteApi
-    @PostMapping("/download/{modelId}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
+    @PostMapping("/download")
+    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         String modelUrl = modelService.downloadModel(modelId,uid);
         return Result.success(modelUrl);
@@ -193,7 +193,7 @@ public class ModelController {
      * @return: Result<?>
      **/
     @WhiteApi
-    @DeleteMapping("/one")
+    @DeleteMapping("/delModel")
     public Result<?> delOneModel(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                  @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.delSingleModel(modelId,uid));

@@ -24,9 +24,10 @@ spring:
       config:
         file-extension: yaml
         namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
-        cluster-name: BJ
       discovery:
         ip: ${SERVER_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)}
+        namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
+        cluster-name: BJ
   rabbitmq:
     host: ${MQ_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)} # rabbitMQ的ip地址
     port: ${MQ_PORT:ENC(o4a1BoPYeYviHisCyAaRQJ9BRzQt7Yxp)} # 端口
