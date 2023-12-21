@@ -34,6 +34,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
 
     @Override
     public IPage<FeedbackVO> feedbackPageVO(int page, int limit, String order) {
+
         List<String> orders = !orderColumns.contains(order) ? List.of("fb_id") : List.of(order,"fb_id");
 
         JoinSection typeJoin = JoinSection.builder()
@@ -115,6 +116,13 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
     @Override
     public Boolean hasFeedback(Long fb_id) {
         return query().select("fb_id").eq("fb_id",fb_id).count()>0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Boolean changeLikeNum(Long fb_id, Boolean isLike) {
+        String setSql = isLike?"up_num = up_num+1":"up_num = up_num-1";
+        return update().setSql(setSql).eq("fb_id",fb_id).update();
     }
 
     @Override

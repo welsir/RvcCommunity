@@ -1,6 +1,7 @@
 package com.tml.filter;
 
 import io.github.common.logger.CommonLogger;
+import io.github.util.time.TimeUtil;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.InitializingBean;
@@ -26,7 +27,7 @@ import java.util.HashSet;
 @ConfigurationProperties("api")
 public class InternalFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private HashSet<String> internalApi;
+    private HashSet<String> internalApi = new HashSet<>();
 
     @Resource
     CommonLogger commonLogger;
@@ -56,4 +57,5 @@ public class InternalFilter implements GlobalFilter, Ordered, InitializingBean {
     public int getOrder() {
         return -1;
     }
+
 }

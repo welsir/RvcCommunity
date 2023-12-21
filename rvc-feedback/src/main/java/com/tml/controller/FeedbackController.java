@@ -1,5 +1,7 @@
 package com.tml.controller;
 
+import com.tml.annotation.apiAuth.LaxTokenApi;
+import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackTypeDO;
 import com.tml.pojo.form.FeedbackCommentForm;
@@ -39,6 +41,7 @@ public class FeedbackController {
     FeedbackCommentService commentService;
 
     @GetMapping("/list")
+    @LaxTokenApi
     public Result<PageVO<FeedbackVO>> getFeedbackList(@RequestHeader(required = false)String uid,
                                                       @RequestParam @Min(1) Integer page,
                                                       @RequestParam @Min(1) @Max(42) Integer limit,
@@ -47,12 +50,14 @@ public class FeedbackController {
     }
 
     @GetMapping("/getFeedback")
+    @LaxTokenApi
     public Result<?> getFeedbackList(@RequestHeader(required = false)String uid,
                                                       @RequestParam(name = "fbid") Long fbid){
         return feedbackService.getFeedbackVO(uid,fbid);
     }
 
     @PostMapping("/add")
+    @WhiteApi
     public Result<?> addFeedback(
             @RequestBody @Validated(value = {FeedbackForm.ADD.class}) FeedbackForm form,
             @RequestHeader String uid
@@ -61,11 +66,20 @@ public class FeedbackController {
     }
 
     @PostMapping("/update")
+    @WhiteApi
     public Result<?> updateFeedback(
             @RequestBody @Validated(value = {FeedbackForm.UPDATE.class}) FeedbackForm form,
             @RequestHeader String uid
     ) {
         return feedbackService.updateFeedback(form,uid);
+    }
+
+    @GetMapping("/like")
+    @WhiteApi
+    public Result<?> likeFeedback(@RequestHeader String uid,
+                                 @RequestParam Long fbId,
+                                 @RequestParam Boolean isLike) throws RvcSQLException, SnowflakeRegisterException {
+        return feedbackService.likeFeedback(uid,fbId,isLike);
     }
 
     @GetMapping("/type/list")
@@ -79,18 +93,28 @@ public class FeedbackController {
     }
 
     @GetMapping("/comment/list")
+    @LaxTokenApi
     public Result<PageVO<FeedbackCommentVO>> getCommentList(@RequestHeader(required = false)String uid,
                                                             @RequestParam Long fbid,
                                                             @RequestParam @Min(1) Integer page,
-                                                            @RequestParam @Min(1) @Max(42) Integer limit,
+                                                            @RequestParam @Min(1) @Max(value = 42,message = "页数过大") Integer limit,
                                                             @RequestParam(required = false,value = "") String order){
         return commentService.getCommentList(fbid,uid,page,limit,order);
     }
 
     @PostMapping("/comment/add")
+    @WhiteApi
     public Result<?> addComment(@RequestBody @Validated FeedbackCommentForm commentForm,
                                 @RequestHeader String uid) throws SnowflakeRegisterException, RvcSQLException {
         return commentService.addComment(commentForm,uid);
+    }
+
+    @GetMapping("/comment/like")
+    @WhiteApi
+    public Result<?> likeComment(@RequestHeader String uid,
+                                 @RequestParam Long cmId,
+                                 @RequestParam Boolean isLike) throws RvcSQLException, SnowflakeRegisterException {
+        return commentService.likeComment(cmId,uid,isLike);
     }
 
 }

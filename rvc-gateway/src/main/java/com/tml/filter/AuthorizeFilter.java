@@ -3,13 +3,11 @@ package com.tml.filter;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.config.ConfigService;
+
 import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -21,15 +19,11 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.yaml.snakeyaml.Yaml;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
 
 import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 
@@ -39,7 +33,7 @@ import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 @ConfigurationProperties("api")
 public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private HashSet<String> whiteApi;
+    private HashSet<String> whiteApi = new HashSet<>();
 
     @Resource
     CommonLogger commonLogger;
@@ -79,6 +73,8 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
                 }
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                return response.setComplete();
             } catch (NotLoginException e) {
                 e.printStackTrace();
                 //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
