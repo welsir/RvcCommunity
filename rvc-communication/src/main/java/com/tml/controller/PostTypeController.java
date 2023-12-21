@@ -1,17 +1,14 @@
 package com.tml.controller;
 
 import com.tml.annotation.SystemLog;
-import com.tml.feign.user.RvcUserServiceFeignClient;
-import com.tml.pojo.entity.PostType;
+import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -27,13 +24,11 @@ public class PostTypeController {
 
     private final PostTypeService postTypeService;
 
-
-
     @GetMapping("/list")
     @SystemLog(businessName = "获取所有交流类型列表")
+    @LaxTokenApi
     public Result list(){
-        List<Object> listType = postTypeService.listType();
-        return Result.success(listType);
+        return Result.success(postTypeService.listType());
     }
 
 }

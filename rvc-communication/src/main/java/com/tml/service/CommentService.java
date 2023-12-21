@@ -12,11 +12,9 @@ import com.tml.pojo.vo.CommentVo;
 import java.util.List;
 
 public interface CommentService  extends IService<Comment> {
-    String comment(CommentDto commentDto);
-
-
+    String comment(CommentDto commentDto,String uid);
 
     List<CommentVo> list(PageInfo<String> params);
 
-    void favorite(CoinDto coinDto);
+    void favorite(CoinDto coinDto,String uid);
 }

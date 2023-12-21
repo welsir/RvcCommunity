@@ -9,17 +9,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.FileServiceClient;
-import com.tml.feign.user.RvcUserServiceFeignClient;
+import com.tml.client.UserServiceClient;
+import com.tml.exception.SystemException;
 import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.*;
-import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.UploadModelForm;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.dto.*;
 import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
-import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.PostService;
 import com.tml.strategy.SortStrategy;
 import com.tml.strategy.impl.LikeSortStrategy;
@@ -43,7 +43,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
-import static com.tml.constant.DetectionConstants.UN_DETECTION;
+import static com.tml.enums.AppHttpCodeEnum.*;
 
 /**
  * @NAME: PostServiceImpl
@@ -60,10 +60,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final CoverMapper coverMapper;
     private final PostMapper postMapper;
     private final ThreadPoolTaskExecutor executor;
-    private final RvcUserServiceFeignClient rvcUserServiceFeignClient;
+    private final UserServiceClient rvcUserServiceFeignClient;
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
     private final FileServiceClient fileServiceClient;
+    private final UserServiceClient userServiceClient;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
@@ -74,19 +75,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 
     @Override
-    public List<PostVo> list(PageInfo<String> params,String tagId) {
-        /**
-         * 1、分页获取数据（如果有tagId 添加条件）
-         * 2、调用用户服务获取作者信息
-         * 3、从redis获取tag信息
-         * 4、将所有信息封装
-         * 5、如果用户登录去关系表查询 是否关联的信息
-         * 6、排序返回结果
-         */
+    public List<PostVo> list(PageInfo<String> params,String tagId,String uid) {
+// TODO: 2023/12/21 责任链
+        if (!Strings.isBlank(uid)){
+            Object data = userServiceClient.exist(uid).getData();
+            if (Objects.isNull(data)){
+                throw new SystemException(NEED_LOGIN);
+            }
+        }
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
-
+// TODO: 2023/12/21 代码优化
         //分页
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -107,8 +105,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         List<String> userIds = records.stream()
                 .map(post -> post.getUid())
                 .collect(Collectors.toList());
-        Result<Map<String, List<UserInfoVO>>> res = rvcUserServiceFeignClient.list(userIds);
-        List<UserInfoVO> userList = res.getData().get("userList");
+        Result<Map<String, UserInfoVO>> res = rvcUserServiceFeignClient.list(userIds);
+
+        Map<String, UserInfoVO> data = res.getData();
+
+
 
         //获取tag
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
@@ -126,16 +127,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postVos.size();i++){
             PostVo postVo = postVos.get(i);
             //插入作者
-            postVo.setAuthor(userList.get(i));
+            postVo.setAuthor(data.get(records.get(i).getUid()));
             //插入tag
             postVo.setPostType(postTypeCollect.get(records.get(i).getTagId()));
             //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
-        if (!Strings.isBlank(uuid)){
+        if (!Strings.isBlank(uid)){
                 LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-                collectPostQueryWrapper.eq(CollectPost::getUid, uuid)
+                collectPostQueryWrapper.eq(CollectPost::getUid, uid)
                         .eq(CollectPost::getPostId,postVo.getPostId());
                 LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-                likePostQueryWrapper.eq(LikePost::getUid, uuid)
+                likePostQueryWrapper.eq(LikePost::getUid, uid)
                         .eq(LikePost::getPostId,postVo.getPostId());
 
                 boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
@@ -156,24 +157,24 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public PostVo details(String postId) {
-        /**
-         * 1、判断要查询的帖子是否存在
-         * 2、调用用户服务获取作者信息
-         * 3、从redis获取tag信息
-         * 4、如果用户未登录 直接返回结果    否则异步浏览次数+1
-         * 5、用户登录  返回 关联信息
-         */
+    public PostVo details(String postId,String uid) {
+// TODO: 2023/12/21 责任链
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
+        if (!Strings.isBlank(uid)){
+            Object data = userServiceClient.exist(uid).getData();
+            if (Objects.isNull(data)){
+                throw new SystemException(NEED_LOGIN);
+            }
+        }
 
 
         Post post = this.getById(postId);
         if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
+
+        // TODO: 2023/12/21 sql优化
 
         //获取作者和tag
         Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
@@ -185,19 +186,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 
 //        如果用户未登录直接返回vo对象
-        if (Objects.isNull(uuid)){
+        if (Objects.isNull(uid)){
             return postVo;
         }
 
 
 //        异步 帖子浏览次数+1（1分钟内浏览 浏览次数不加1 并且更新上次浏览时间）
-        this.executor.execute(() -> watchPost(uuid,postId));
+        this.executor.execute(() -> watchPost(uid,postId));
 
+        // TODO: 2023/12/21 sql优化
         //去关系表查看用户是否点赞  收藏
         LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-        collectPostQueryWrapper.eq(CollectPost::getUid,uuid);
+        collectPostQueryWrapper.eq(CollectPost::getUid,uid);
         LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-        likePostQueryWrapper.eq(LikePost::getUid,uuid);
+        likePostQueryWrapper.eq(LikePost::getUid,uid);
         boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
         boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
 
@@ -243,17 +245,22 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
-    public void favorite(CoinDto coinDto) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uid = loginInfoDTO.getId();
+    public void favorite(CoinDto coinDto,String uid) {
 
-        /**
-         * 判断用户是否存在
-         */
+
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
+
+
         //帖子是否存在
         Post post = postMapper.selectById(coinDto.getId());
         if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
 
         //1、点赞    添加关系表中的记录       post表 like_num +1
@@ -264,7 +271,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             try {
                 likePostMapper.insert(likePost);
             } catch (Exception e) {
-                throw new RuntimeException("不允许重复点赞");
+                throw new SystemException(FAVORITE_ERROR);
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -276,28 +283,31 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                             .eq(LikePost::getPostId,coinDto.getId());
             int delete = likePostMapper.delete(likePostLambdaQueryWrapper);
               if (delete == 0){
-                  throw new RuntimeException("不允许重复取消点赞");
+                  throw new SystemException(SYSTEM_ERROR);
               }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("like_num = like_num - 1");
             postMapper.update(null,updateWrapper);
         }else {
-            throw new RuntimeException("类型错误");
+            throw new SystemException(TYPE_ERROR);
         }
     }
 
     @Override
-    public void collection(CoinDto coinDto) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uid = loginInfoDTO.getId();
-        /**
-         * 判断用户和评论是否存在
-         */
+    public void collection(CoinDto coinDto,String uid) {
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
+
         //帖子是否存在
         Post post = postMapper.selectById(coinDto.getId());
         if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
         //1、收藏    添加关系表中的记录       post表 colletc_num +1
         //0、取消收藏    删除关系表中的记录       post表 colletc_num -1
@@ -307,7 +317,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             try {
                 collectPostMapper.insert(collectPost);
             } catch (Exception e) {
-                throw new RuntimeException("不允许重复收藏");
+                throw new SystemException(COLLECT_ERROR);
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
@@ -319,34 +329,39 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                     .eq(CollectPost::getPostId,coinDto.getId());
             int delete = collectPostMapper.delete(likePostLambdaQueryWrapper);
             if (delete == 0){
-                throw new RuntimeException("操作失败");
+                throw new SystemException(SYSTEM_ERROR);
             }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("collect_num = collect_num - 1");
             postMapper.update(null,updateWrapper);
         }else {
-            throw new RuntimeException("类型错误");
+            throw new SystemException(TYPE_ERROR);
         }
     }
 
     @Override
-    public void delete(String postId) {
+    public void delete(String postId,String uid) {
+        // TODO: 2023/12/21 责任链
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
+
 
         //帖子是否存在
         Post DBpost = postMapper.selectById(postId);
         if (Objects.isNull(DBpost)){
-            throw new RuntimeException("帖子不存在");
+            throw new SystemException(POST_ERROR);
         }
 
 
         Post post1 = postMapper.selectById(postId);
 //帖子不属于该用户
-        if (!post1.getUid().equals(uuid)){
-            throw new RuntimeException("无权限");
+
+        if (!post1.getUid().equals(uid)){
+            throw new SystemException(PERMISSIONS_ERROR);
         }
 
         Post post = Post.builder()
@@ -357,39 +372,46 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         try {
             postMapper.updateById(post);
         } catch (Exception e) {
-            throw new RuntimeException("记录不存在");
+            throw new SystemException(POST_ERROR);
         }
     }
 
     @Override
-    public String add(PostDto postDto) {
-/**
- * 模拟获取userid
- */
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String userid = loginInfoDTO.getId();
+    public String add(PostDto postDto,String uid) {
+        // TODO: 2023/12/21 责任链
 
-        String uuid = Uuid.getUuid();
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+        String uuid = null;
+        if (Strings.isBlank(postDto.getPostId())){
+             Uuid.getUuid();
+        }else {
+            uuid = postDto.getPostId();
+        }
+
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
-        post.setUid(userid);
+        post.setUid(uid);
 
         //判断tagid是否存在
         PostType postType = postTypeMapper.selectById(post.getTagId());
         if (Objects.isNull(postType)){
-            throw new RuntimeException("tag不存在");
+            throw new SystemException(TAG_ERROR);
         }
 
         //判断cover是否存在 并且审核通过
         Cover dbCover = coverMapper.selectById(post.getCoverId());
         if (Objects.isNull(dbCover)){
-            throw new RuntimeException("Cover不存在");
+            throw new SystemException(COVER_ERROR);
         }
         if (dbCover.getDetectionStatus() == 2){
-            throw new RuntimeException("违规封面");
+            throw new SystemException(DETECTION_ERROR);
         }
 
-        save(post);
+        saveOrUpdate(post);
 
         //更新cover表映射
         Cover cover = Cover.builder()
@@ -443,11 +465,18 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
-    public List<PostSimpleVo> userFavorite(PageInfo<String> params) {
+    public List<PostSimpleVo> userFavorite(PageInfo<String> params,String uid) {
+
+        // TODO: 2023/12/21 责任链
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
 
         LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
         String uuid = loginInfoDTO.getId();
-
+// TODO: 2023/12/21 代码优化
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<LikePost> page = new Page<>(pageNum,pageSize);
@@ -456,7 +485,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Page<LikePost> likePostPage = likePostMapper.selectPage(page, likePostLambdaQueryWrapper);
         List<LikePost> records = likePostPage.getRecords();
         if (records.size() == 0){
-            throw new RuntimeException("无喜欢");
+            throw new SystemException(NOT_FAVORITE_ERROR);
         }
 
 
@@ -481,7 +510,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
+
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 
@@ -489,22 +521,25 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public List<PostSimpleVo> userCollect(PageInfo<String> params) {
+    public List<PostSimpleVo> userCollect(PageInfo<String> params,String uid) {
+// TODO: 2023/12/21 以下三个接口提取公共部分 代码优化
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<CollectPost> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(CollectPost::getUid, uuid);
+        likePostLambdaQueryWrapper.eq(CollectPost::getUid, uid);
         Page<CollectPost> likePostPage = collectPostMapper.selectPage(page, likePostLambdaQueryWrapper);
 
 
         List<CollectPost> records = likePostPage.getRecords();
         if (records.size() == 0){
-            throw new RuntimeException("无收藏");
+            throw new SystemException(NOT_COLLECT_ERROR);
         }
 
         List<String> collect = likePostPage.getRecords().stream()
@@ -530,7 +565,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 
@@ -538,19 +575,23 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public List<PostSimpleVo> userCreate(PageInfo<String> params) {
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
+    public List<PostSimpleVo> userCreate(PageInfo<String> params,String uid) {
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
 
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<Post> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Post> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(Post::getUid, uuid);
+        likePostLambdaQueryWrapper.eq(Post::getUid, uid);
         Page<Post> likePostPage = postMapper.selectPage(page, likePostLambdaQueryWrapper);
         List<Post> records = likePostPage.getRecords();
         if (records.size() == 0){
-            throw new RuntimeException("无创建");
+            throw new SystemException(NOT_CREATE_ERROR);
         }
 
 
@@ -577,7 +618,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         for (int i=0;i<postSimpleVos.size();i++){
             PostSimpleVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
-            postSimpleVo.setContent(content.substring(0, 200));
+            if (content.length()>200){
+                postSimpleVo.setContent(content.substring(0, 200));
+            }
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
         }
 
@@ -585,14 +628,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public String updUserProfile(MultipartFile profile) throws IOException {
+    public String updUserProfile(MultipartFile profile,String uid) throws IOException {
+
+        Object res = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(res)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
         //判断后缀名
         String fileSuffix = profile.getOriginalFilename().substring(profile.getOriginalFilename().lastIndexOf("."));
 
         if (!Arrays.stream(IMG_TYPE_LIST).anyMatch(
                 type -> fileSuffix.equals(type))
         ){
-            throw new RuntimeException("类型不支持");
+            throw new SystemException(TYPE_ERROR);
         }
 
 
@@ -608,7 +657,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         try {
             receiveUploadFileDTOResult = fileServiceClient.uploadModel(build);
         } catch (Exception e) {
-            throw new RuntimeException("调用文件服务出错");
+            throw new SystemException(SERVICE_ERROR);
         }
         ReceiveUploadFileDTO data = receiveUploadFileDTOResult.getData();
 
