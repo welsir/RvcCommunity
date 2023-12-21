@@ -12,6 +12,7 @@ import com.tml.common.constant.RabbitMQconstant;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
+import com.tml.mapper.AuditStatusMapper;
 import com.tml.mapper.ModelMapper;
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.DetectionStatusDTO;
@@ -59,6 +60,8 @@ public class ModelListener implements ListenerInterface{
     SystemConfig systemConfig;
     @Resource
     ApplicationContext applicationContext;
+    @Resource
+    AuditStatusMapper auditStatusMapper;
 
     private final ConcurrentHashMap<String,Integer> auditCountMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> lockMap = new ConcurrentHashMap<>();
@@ -130,6 +133,7 @@ public class ModelListener implements ListenerInterface{
         }
         String lock = statusDTO.getId();
         String table = statusDTO.getName().split("-")[1];
+        String filed = statusDTO.getName().split("-")[2];
         synchronized (lockMap.get(lock)){
             try {
                 if(auditCountMap.get(lock)==-1){
@@ -145,6 +149,7 @@ public class ModelListener implements ListenerInterface{
                         wrapper.eq("id",statusDTO.getId());
                         wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
                         Objects.requireNonNull(mapper).update(null,wrapper);
+                        auditStatusMapper.insertAuditStatus(lock,filed,DetectionStatusEnum.DETECTION_FAIL.getStatus().toString());
                     }catch (RuntimeException e){
                         logger.error(e);
                         throw new BaseException(e.toString());
@@ -175,6 +180,7 @@ public class ModelListener implements ListenerInterface{
                             if(auditCountMap.get(sonId)==-1){
                                 logger.info("[%s]审核失败",statusDTO.getId());
                                 wrapper.setSql("has_show="+DetectionStatusEnum.DETECTION_FAIL.getStatus());
+
                                 return;
                             }
                             if(auditCountMap.get(sonId)!=0){
