@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.api.R;
 import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackCommentDO;
+import com.tml.pojo.FeedbackCommentLike;
 import com.tml.pojo.form.FeedbackCommentForm;
 import com.tml.pojo.vo.FeedbackCommentVO;
 import com.tml.service.FeedbackCommentService;
+import com.tml.service.IFeedbackCommentLikeDaoService;
 import com.tml.service.IFeedbackDaoService;
 import io.github.common.PageVO;
 import io.github.common.logger.CommonLogger;
@@ -20,12 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class FeedbackCommentServiceImpl implements FeedbackCommentService {
 
     @Resource
     IFeedbackCommentDaoServiceImpl feedbackCommentDaoService;
+
+    @Resource
+    IFeedbackCommentLikeDaoService commentLikeDaoService;
 
     @Resource
     IFeedbackDaoService feedbackDaoService;
@@ -39,7 +48,21 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
     @Override
     public Result<PageVO<FeedbackCommentVO>> getCommentList(Long fb_id,String uid, int page, int limit, String orders) {
         IPage<FeedbackCommentVO> commentList = feedbackCommentDaoService.getCommentList(fb_id,page, limit, orders);
-        return Result.success(PageUtil.toPageVO(commentList));
+        PageVO<FeedbackCommentVO> pageVO = PageUtil.toPageVO(commentList);
+
+        List<Long> cmIdList = pageVO.getPageList().stream()
+                .map(FeedbackCommentVO::getCmid)
+                .collect(Collectors.toList());
+
+        //TODO 待优化
+        if(StringUtils.hasText(uid)){
+            HashSet<Long> likeSet = commentLikeDaoService.getCommentLikeList(uid, cmIdList);
+
+            pageVO.getPageList().forEach(
+                    cm -> cm.setHasLike(likeSet.contains(cm.getCmid())?1:0)
+            );
+        }
+        return Result.success(pageVO);
     }
 
     @Override
@@ -81,5 +104,33 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
             return Result.success(feedbackCommentDO);
         }
         return Result.error("403","评论失败");
+    }
+
+    @Override
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Result<?> likeComment(Long comment_id, String uid, Boolean likeStatus) throws RvcSQLException, SnowflakeRegisterException {
+
+        if (likeStatus) {
+            FeedbackCommentLike commentLike = FeedbackCommentLike.builder()
+                    .id(snowflakeGenerator.generate())
+                    .uid(uid)
+                    .cmId(comment_id)
+                    .createAt(LocalDateTime.now())
+                    .build();
+            logger.info("用户%s点赞评论%s",uid,comment_id);
+            if (!commentLikeDaoService.addCommentLike(commentLike)) {
+                return Result.error("403","你已经点过赞了1");
+            }
+        }else{
+            logger.info("用户%s取消点赞评论%s",uid,comment_id);
+            if (!commentLikeDaoService.deleteCommentLike(uid,comment_id)) {
+                return Result.error("403","你还没有点过赞");
+            }
+        }
+
+        if (feedbackCommentDaoService.changeCommentLike(comment_id,likeStatus)) {
+            return Result.success(Map.of("success",true));
+        }
+        return Result.error("403","操作点赞失败");
     }
 }

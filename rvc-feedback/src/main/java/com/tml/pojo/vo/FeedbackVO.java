@@ -74,7 +74,7 @@ public class FeedbackVO {
     /**
      * 该用户是否对该反馈帖子点赞
      */
-    private Boolean hasUp = false;
+    private Integer hasUp;
     /**
      * 评论数
      */
