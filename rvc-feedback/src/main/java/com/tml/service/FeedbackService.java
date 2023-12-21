@@ -1,6 +1,7 @@
 package com.tml.service;
 
 import com.baomidou.mybatisplus.extension.api.R;
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackDO;
 import com.tml.pojo.form.FeedbackForm;
 import com.tml.pojo.vo.FeedbackVO;
@@ -26,4 +27,6 @@ public interface FeedbackService {
     Result<?> changeStatus(String uid,String fb_id,Integer status);
 
     Result<?> deleteFeedback(String uid,Long fb_id);
+
+    Result<?> likeFeedback(String uid,Long fb_id,Boolean isLike) throws SnowflakeRegisterException, RvcSQLException;
 }

@@ -42,4 +42,5 @@ EXPOSE ${SERVER_PORT}
 
 ENTRYPOINT ["java","-jar","/rvc-website.jar"]
 
-#<Auto> -e:test -m:rvc-website -v:1.0 -rp:9300 -de:<-e ACTIVE=test -e UNIQUE_ID=0 -e SERVER_PORT=9300>
+
+#<Auto> -e:prod -m:rvc-website -v:1.0 -rp:9300 -de:<-e ACTIVE=prod -e UNIQUE_ID=0 -e SERVER_PORT=9300>

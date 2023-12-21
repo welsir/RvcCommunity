@@ -5,11 +5,17 @@ import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.pojo.WebInfoDO;
 import com.tml.service.*;
 import io.github.common.web.Result;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.annotation.Resource;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.constraints.Max;
 import java.util.Map;
 
+@Validated
 @RestController
 @RequestMapping("/web")
 public class WebController {

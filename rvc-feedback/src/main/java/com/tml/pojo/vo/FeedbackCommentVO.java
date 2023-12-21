@@ -50,6 +50,8 @@ public class FeedbackCommentVO {
 
     private Integer hasShow;
 
+    private Integer hasLike;
+
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")

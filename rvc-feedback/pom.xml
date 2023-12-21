@@ -15,13 +15,19 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <assistant.version>1.1.0</assistant.version>
+        <assistant.version>1.1.1</assistant.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.tml</groupId>
             <artifactId>rvc-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tml</groupId>
+            <artifactId>rvc-rpc</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!--        nacos-->
@@ -65,7 +71,7 @@
             <artifactId>mybatis-plus-join</artifactId>
         </dependency>
 
-        <!--        redis-->
+        <!--   redis-->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-redis</artifactId>

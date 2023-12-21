@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
 
 import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
@@ -34,7 +35,7 @@ import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
 @ConfigurationProperties("api")
 public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private ArrayList<String> laxTokenApi;
+    private HashSet<String> laxTokenApi = new HashSet<String>();
 
     @Resource
     CommonLogger commonLogger;
@@ -47,19 +48,19 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
-        if(laxTokenApi.contains(requestUrl)){
+        String path = request.getURI().getPath();
+        if(laxTokenApi.contains(path)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌
             String token = headers.getFirst(AUTHORIZE_TOKEN);
+            ServerHttpRequest newRequest = null;
             // 判断请求头中是否有令牌
             if (StringUtils.isEmpty(token)) {
-                return chain.filter(exchange);
+                newRequest = request.mutate().header("uid","").header("username","").build();
+                return chain.filter(exchange.mutate().request(newRequest).build());
             }
             try {
-                ServerHttpRequest newRequest = null;
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
                 if (StpUtil.isLogin(loginID)) {
                     String[] vars = loginID.split("\\|");
@@ -71,7 +72,8 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
                     }
                 }
             } catch (NotLoginException e) {
-                return chain.filter(exchange);
+                newRequest = request.mutate().header("uid","").header("username","").build();
+                return chain.filter(exchange.mutate().request(newRequest).build());
             }
         }
 
