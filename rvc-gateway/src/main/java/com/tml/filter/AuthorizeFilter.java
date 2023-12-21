@@ -46,10 +46,9 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
+        String path = request.getURI().getPath();
 
-        if(whiteApi.contains(requestUrl)){
+        if(whiteApi.contains(path)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌

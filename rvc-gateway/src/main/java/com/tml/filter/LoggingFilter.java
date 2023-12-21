@@ -38,7 +38,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         InetSocketAddress remoteAddress = request.getRemoteAddress();
-        String url = request.getURI().toString();
+        String url = request.getURI().getPath();
         String dateTime = TimeUtil.nowDateTimeFormat();
         logger.info("request url: %s, remote address: %s,time: %s", url, remoteAddress.getHostName(), dateTime);
         taskExecutor.submit(()->{

@@ -42,9 +42,8 @@ public class InternalFilter implements GlobalFilter, Ordered, InitializingBean {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
-        if (internalApi.contains(requestUrl)){
+        String path = request.getURI().getPath();
+        if (internalApi.contains(path)){
             //7. 响应中放入返回的状态吗, 没有权限访问
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             //8. 返回
