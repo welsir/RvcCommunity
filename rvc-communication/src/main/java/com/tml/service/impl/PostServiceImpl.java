@@ -64,6 +64,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final RedisCache redisCache;
     private final PostTypeMapper postTypeMapper;
     private final FileServiceClient fileServiceClient;
+    private final UserServiceClient userServiceClient;
 
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
@@ -75,16 +76,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public List<PostVo> list(PageInfo<String> params,String tagId,String uid) {
-        /**
-         * 1、分页获取数据（如果有tagId 添加条件）
-         * 2、调用用户服务获取作者信息
-         * 3、从redis获取tag信息
-         * 4、将所有信息封装
-         * 5、如果用户登录去关系表查询 是否关联的信息
-         * 6、排序返回结果
-         */
+// TODO: 2023/12/21 责任链
+        if (!Strings.isBlank(uid)){
+            Object data = userServiceClient.exist(uid).getData();
+            if (Objects.isNull(data)){
+                throw new SystemException(NEED_LOGIN);
+            }
+        }
 
-
+// TODO: 2023/12/21 代码优化
         //分页
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -158,14 +158,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public PostVo details(String postId,String uid) {
-        /**
-         * 1、判断要查询的帖子是否存在
-         * 2、调用用户服务获取作者信息
-         * 3、从redis获取tag信息
-         * 4、如果用户未登录 直接返回结果    否则异步浏览次数+1
-         * 5、用户登录  返回 关联信息
-         */
+// TODO: 2023/12/21 责任链
 
+        if (!Strings.isBlank(uid)){
+            Object data = userServiceClient.exist(uid).getData();
+            if (Objects.isNull(data)){
+                throw new SystemException(NEED_LOGIN);
+            }
+        }
 
 
         Post post = this.getById(postId);
@@ -173,6 +173,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new SystemException(POST_ERROR);
         }
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
+
+        // TODO: 2023/12/21 sql优化
 
         //获取作者和tag
         Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
@@ -192,6 +194,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //        异步 帖子浏览次数+1（1分钟内浏览 浏览次数不加1 并且更新上次浏览时间）
         this.executor.execute(() -> watchPost(uid,postId));
 
+        // TODO: 2023/12/21 sql优化
         //去关系表查看用户是否点赞  收藏
         LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
         collectPostQueryWrapper.eq(CollectPost::getUid,uid);
@@ -244,9 +247,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public void favorite(CoinDto coinDto,String uid) {
 
-        /**
-         * 判断用户是否存在
-         */
+
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
+
+
         //帖子是否存在
         Post post = postMapper.selectById(coinDto.getId());
         if (Objects.isNull(post)){
@@ -286,9 +296,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void collection(CoinDto coinDto,String uid) {
-        /**
-         * 判断用户和评论是否存在
-         */
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
+
         //帖子是否存在
         Post post = postMapper.selectById(coinDto.getId());
         if (Objects.isNull(post)){
@@ -327,6 +342,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void delete(String postId,String uid) {
+        // TODO: 2023/12/21 责任链
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
 
 
         //帖子是否存在
@@ -338,6 +359,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post1 = postMapper.selectById(postId);
 //帖子不属于该用户
+
         if (!post1.getUid().equals(uid)){
             throw new SystemException(PERMISSIONS_ERROR);
         }
@@ -356,6 +378,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public String add(PostDto postDto,String uid) {
+        // TODO: 2023/12/21 责任链
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
         String uuid = null;
         if (Strings.isBlank(postDto.getPostId())){
              Uuid.getUuid();
@@ -438,9 +467,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public List<PostSimpleVo> userFavorite(PageInfo<String> params,String uid) {
 
+        // TODO: 2023/12/21 责任链
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
         LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
         String uuid = loginInfoDTO.getId();
-
+// TODO: 2023/12/21 代码优化
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<LikePost> page = new Page<>(pageNum,pageSize);
@@ -486,6 +522,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public List<PostSimpleVo> userCollect(PageInfo<String> params,String uid) {
+// TODO: 2023/12/21 以下三个接口提取公共部分 代码优化
+
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<CollectPost> page = new Page<>(pageNum,pageSize);
@@ -534,6 +577,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public List<PostSimpleVo> userCreate(PageInfo<String> params,String uid) {
 
+        Object data = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(data)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
+
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<Post> page = new Page<>(pageNum,pageSize);
@@ -579,7 +628,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public String updUserProfile(MultipartFile profile) throws IOException {
+    public String updUserProfile(MultipartFile profile,String uid) throws IOException {
+
+        Object res = userServiceClient.exist(uid).getData();
+        if (Objects.isNull(res)){
+            throw new SystemException(NEED_LOGIN);
+        }
+
         //判断后缀名
         String fileSuffix = profile.getOriginalFilename().substring(profile.getOriginalFilename().lastIndexOf("."));
 

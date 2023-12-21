@@ -35,7 +35,7 @@ public interface PostService {
 
     List<PostSimpleVo> userCreate(PageInfo<String> params,String uid);
 
-    String updUserProfile(MultipartFile profile) throws IOException;
+    String updUserProfile(MultipartFile profile,String uid) throws IOException;
 
     String coverUrl(CoverDto coverDto);
 }

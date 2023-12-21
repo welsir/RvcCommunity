@@ -48,10 +48,8 @@ public class CommentController {
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody @Valid CommentDto commentDto,
                       @RequestHeader String uid){
-        System.out.println(uid);
         return Result.success(commentService.comment(commentDto,uid));
     }
-
 
 
     @PutMapping("/favorite")

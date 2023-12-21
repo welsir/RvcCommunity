@@ -140,7 +140,8 @@ public class PostController {
     public Result setUserProfile(@RequestPart("wangeditor-uploaded-image") MultipartFile profile,
                                  @RequestHeader String uid) throws IOException {
 
-        String url = postService.updUserProfile(profile);
+
+        String url = postService.updUserProfile(profile,uid);
         CoverDto build = CoverDto.builder()
                 .coverUrl(url)
                 .uid(uid)
