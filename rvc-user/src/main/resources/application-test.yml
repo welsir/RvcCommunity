@@ -14,6 +14,8 @@ spring:
             refresh: true
             group: DEFAULT_GROUP
       discovery:
+        namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
+        cluster-name: BJ
         ip: ${SERVER_ADDR:ENC(Y5HcvI+7TfzJVRmAMpYDqR0bwJqzwMzdpQ8RCIr1y2w=)}
   datasource:
     driver-class-name: ${MYSQL_DRIVER:com.mysql.cj.jdbc.Driver}

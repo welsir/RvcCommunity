@@ -2,12 +2,13 @@ package com.tml.client;
 
 import com.tml.constant.RemoteUserURL;
 import com.tml.pojo.VO.UserInfoVO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 import io.github.common.web.Result;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 import java.util.Map;
 
@@ -24,5 +25,5 @@ public interface UserServiceClient {
     Result<Map<String, UserInfoVO>> list(@RequestBody List<String> uidList);
 
     @GetMapping(value = RemoteUserURL.USER_EXIST)
-    Result exist(@RequestParam String uid);
+    Result<Boolean> exist(@RequestParam String uid);
 }

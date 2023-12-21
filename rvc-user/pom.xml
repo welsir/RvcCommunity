@@ -137,6 +137,12 @@
             <version>1.35.0.RC</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-boot-start</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -2,9 +2,9 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
+import com.tml.common.UserContext;
 import com.tml.common.rabbitmq.RabbitMQListener;
-import com.tml.config.DetectionConfig;
-import com.tml.exception.GlobalExceptionHandler;
+import com.tml.config.FileConfig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
@@ -18,16 +18,14 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.github.util.time.TimeUtil;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +42,6 @@ import static com.tml.pojo.enums.EmailEnums.*;
  */
 @Service
 public class UserServiceImpl implements UserService {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
     @Resource
     UserInfoMapper userInfoMapper;
 
@@ -63,9 +59,6 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     CodeUtil codeUtil;
-
-    @Resource
-    UserUtil userUtil;
 
     @Override
     public Map<String, String> login(LoginDTO loginDTO) {
@@ -88,10 +81,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logout() {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
-        TokenUtil.logout(authUser.getUid(), authUser.getUsername());
+    public void logout(String uid, String username) {
+        TokenUtil.logout(uid, username);
     }
 
     @Override
@@ -99,11 +90,9 @@ public class UserServiceImpl implements UserService {
         String email = registerDTO.getEmail();
         String emailCode = registerDTO.getEmailCode();
         String password = registerDTO.getPassword();
-//
-//        if(!codeUtil.emailVerify(email, REGISTER, emailCode)) {
-//            throw new ServerException(ResultEnums.VER_CODE_ERROR);
-//        }
-
+        if(!codeUtil.emailVerify(email, REGISTER, emailCode)) {
+            throw new ServerException(ResultEnums.VER_CODE_ERROR);
+        }
         UserInfo userInfo = new UserInfo();
         UserData userData = new UserData("0",0,0,0,0);
         userInfo.setEmail(email);
@@ -169,15 +158,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(UserInfoDTO userInfoDTO) {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
-        UserInfo user = userInfoMapper.selectById(authUser.getUid());
+    public void update(UserInfoDTO userInfoDTO, String uid, String username) {
+        UserInfo user = userInfoMapper.selectByUid(uid);
         boolean flag = false;
 
         if(!userInfoDTO.getNickname().equals(user.getNickname())){
             DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
-                    .id(authUser.getUid())
+                    .id(uid)
                     .name(USER_NICKNAME)
                     .content(userInfoDTO.getNickname())
                     .build();
@@ -188,7 +175,7 @@ public class UserServiceImpl implements UserService {
 
         if(!userInfoDTO.getDescription().equals(user.getDescription())){
             DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
-                    .id(authUser.getUid())
+                    .id(uid)
                     .name(USER_DESCRIPTION)
                     .content(userInfoDTO.getDescription())
                     .build();
@@ -196,8 +183,18 @@ public class UserServiceImpl implements UserService {
             user.setDescription("审核中");
             flag = true;
         }
-        if(!(user.getSex().equals(userInfoDTO.getSex()) && user.getBirthday() == userInfoDTO.getBirthday())){
-            user.setSex(userInfoDTO.getSex());
+        switch (userInfoDTO.getSex()){
+            case "男":
+            case "女":
+                if(user.getSex() == null || !user.getSex().equals(userInfoDTO.getSex())){
+                    user.setSex(userInfoDTO.getSex());
+                    flag = true;
+                }
+                break;
+            default: throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
+        }
+
+        if(user.getBirthday() == null || user.getBirthday() == userInfoDTO.getBirthday()){
             user.setBirthday(userInfoDTO.getBirthday());
             flag = true;
         }
@@ -209,26 +206,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void follow(String uid) {
-//        AuthUser authUser = UserContext.getCurrentUser();
-        AuthUser authUser = userUtil.getCurrentUser();
-        if(Objects.equals(uid, authUser.getUid())){
+    public void follow(String followUid, String uid, String username) {
+        if(Objects.equals(followUid, uid)){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
-        if(!userInfoMapper.exist("uid", uid)){
+        if(!userInfoMapper.exist("uid", followUid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
         QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
         followWrapper
-                .eq("follow_uid", authUser.getUid())
-                .eq("followed_uid", uid);
+                .eq("follow_uid", uid)
+                .eq("followed_uid", followUid);
         if(userFollowMapper.selectCount(followWrapper) > 0){
             userFollowMapper.delete(followWrapper);
             return;
         }
         UserFollow follow = new UserFollow();
-        follow.setFollowUid(authUser.getUid());
-        follow.setFollowedUid(uid);
+        follow.setFollowUid(uid);
+        follow.setFollowedUid(followUid);
         try {
             userFollowMapper.insert(follow);
         } catch (Exception e){
@@ -237,7 +232,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(UpdatePasswordDTO updatePasswordDTO) {
+    public void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid, String username) {
         if(!codeUtil.emailVerify(updatePasswordDTO.getEmail(), PASSWORD, updatePasswordDTO.getEmailCode())){
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
@@ -250,27 +245,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserInfoVO getUserInfo() {
-        AuthUser authUser = userUtil.getCurrentUser();
-        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
-        userWrapper.eq("uid", authUser.getUid());
-        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
+    public UserInfoVO getUserInfo(String uid, String username) {
+        UserInfo userInfo = userInfoMapper.selectByUid(uid);
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtils.copyProperties(userInfo, userInfoVO);
-        QueryWrapper<UserData> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("uid", authUser.getUid());
-        UserData userData = userDataMapper.selectOne(queryWrapper);
+        UserData userData = userDataMapper.selectByUid(uid);
         BeanUtils.copyProperties(userData, userInfoVO);
         return userInfoVO;
     }
 
     @Override
-    public void avatar(MultipartFile file){
+    public void avatar(MultipartFile file, String uid, String username){
         try {
-            AuthUser authUser = userUtil.getCurrentUser();
             UploadModelForm form = UploadModelForm.builder()
-                    .bucket("rvc")
-                    .path("rvc/user/avatar")
+                    .bucket(FileConfig.USER_BUCKET)
+                    .path(FileConfig.USER_PATH)
                     .md5(org.springframework.util.DigestUtils.md5DigestAsHex(file.getInputStream()))
                     .file(file)
                     .build();
@@ -280,7 +269,7 @@ public class UserServiceImpl implements UserService {
             }
             ReceiveUploadFileDTO receiveUploadFileDTO = result.getData();
             DetectionTaskDTO imageTask = DetectionTaskDTO.builder()
-                    .id(authUser.getUid())
+                    .id(uid)
                     .name(USER_AVATAR)
                     .content(receiveUploadFileDTO.getUrl())
                     .build();

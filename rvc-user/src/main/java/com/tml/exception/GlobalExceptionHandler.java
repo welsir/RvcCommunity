@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
@@ -29,8 +30,7 @@ public class GlobalExceptionHandler {
     * * */
     @ExceptionHandler(ServerException.class)
     public Result handleException(ServerException e){
-        logger.error("数据错误：" + e.getMessage());
-        e.printStackTrace();
+        logger.error("自定义错误：" + e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
     }
 
@@ -39,12 +39,12 @@ public class GlobalExceptionHandler {
     * * */
     @ExceptionHandler(MissingServletRequestPartException.class)
     public Result handleException(MissingServletRequestPartException e){
-        e.printStackTrace();
+        logger.error("303校验：" + "需要参数" + e.getRequestPartName());
         return Result.error("303", "需要参数" + e.getRequestPartName());
     }
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Map<String, String>> handleConstraintViolationException(ConstraintViolationException ex) {
-        ex.printStackTrace();
+        logger.error("303校验：" + ex.getConstraintViolations().iterator().next().getMessage());
         return Result.error("303", ex.getConstraintViolations().iterator().next().getMessage());
     }
 
@@ -52,9 +52,21 @@ public class GlobalExceptionHandler {
     public Result handleBindException(BindException ex) {
         List<ObjectError> errors = ex.getBindingResult().getAllErrors();
         for (ObjectError error : errors) {
-            logger.error("参数错误：" + error.getObjectName() + "参数错误 " + error.getDefaultMessage());
+            logger.error("303校验：" + error.getObjectName() + "参数错误 " + error.getDefaultMessage());
         }
-        ex.printStackTrace();
         return Result.error("303", errors.get(0).getDefaultMessage());
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public Result handleException(MissingRequestHeaderException e){
+        logger.error("请求头缺失：" + e.getHeaderName());
+        return Result.error("303", "缺失请求头" + e.getHeaderName());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Result handleBindException(Exception ex) {
+        logger.error("未定义错误：" + ex.getMessage());
+        ex.printStackTrace();
+        return Result.error("400", ex.getMessage());
     }
 }

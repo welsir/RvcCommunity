@@ -16,4 +16,7 @@ public interface UserInfoMapper extends BaseMapper<UserInfo> {
     @Select("SELECT CASE WHEN COUNT(*) >= 1 THEN true ELSE false END AS Result " +
             "FROM rvc_user_info WHERE ${clunme} = '${value}'")
     boolean exist(@Param("clunme") String clunme, @Param("value") String value);
+
+    @Select("SELECT * FROM rvc_user_info WHERE uid = ${uid}")
+    UserInfo selectByUid(@Param("uid") String uid);
 }

@@ -21,5 +21,4 @@ public class UserUtil {
     public AuthUser getCurrentUser(){
         return new AuthUser(request.getHeader("uid"), request.getHeader("username"));
     }
-
 }
