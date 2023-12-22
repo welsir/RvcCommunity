@@ -220,73 +220,65 @@ public class ModelServiceImpl implements ModelService {
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
-        List<DetectionTaskDTO> dtos = Arrays.asList(
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getPicture(), name)
-        );
-        List<String> types = Arrays.asList(
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.IMAGE_TYPE
-        );
-        List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
-                .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
-                .collect(Collectors.toList());
-        HashMap<String, String> map = new HashMap<>();
-        map.put("description",modelUpdateFormVO.getDescription());
-        map.put("name",modelUpdateFormVO.getName());
-        map.put("note",modelUpdateFormVO.getNote());
-        map.put("picture",modelUpdateFormVO.getPicture());
-        listener.setMap(modelUpdateFormVO.getId(),map);
-        asyncService.listenerMq(forms);
-        return true;
+        try {
+            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder().file(modelUpdateFormVO.getFile())
+                    .md5(FileUtil.getMD5Checksum(modelUpdateFormVO.getFile().getInputStream()))
+                    .path("/model/image")
+                    .bucket("rvc1")
+                    .build());
+            List<DetectionTaskDTO> dtos = Arrays.asList(
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(),res.getData().getUrl(), name)
+            );
+            List<String> types = Arrays.asList(
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.IMAGE_TYPE
+            );
+            List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
+                    .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
+                    .collect(Collectors.toList());
+            HashMap<String, String> map = new HashMap<>();
+            map.put("description",modelUpdateFormVO.getDescription());
+            map.put("name",modelUpdateFormVO.getName());
+            map.put("note",modelUpdateFormVO.getNote());
+            map.put("picture",res.getData().getUrl());
+            listener.setMap(modelUpdateFormVO.getId(),map);
+            asyncService.listenerMq(forms);
+            return true;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
+    public com.tml.pojo.Result<List<ReceiveUploadFileDTO>> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
-        ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(file.length);
+        ArrayList<UploadModelForm> forms = new ArrayList<>();
         for (MultipartFile multipartFile : file) {
-            executorService.submit(() -> {
-                try {
-                    UploadModelForm form;
-                    try {
-                        form = UploadModelForm.builder()
-                                .file(multipartFile)
-                                .path(ModelConstant.DEFAULT_MODEL_PATH)
-                                .bucket(ModelConstant.DEFAULT_BUCKET)
-                                .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
-                                .build();
-                    } catch (NoSuchAlgorithmException e) {
-                        throw new RuntimeException(e);
-                    }
-                    com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
-                    // 使用同步块来确保线程安全地修改集合
-                    synchronized (fileForms) {
-                        fileForms.add(res.getData());
-                        logger.info("上传完毕");
-                    }
-                } catch (IOException e) {
-                    logger.error("文件上传失败: " + e.getMessage());
-                }finally {
-                    latch.countDown();
-                }
-            });
+            try {
+                forms.add(UploadModelForm.builder()
+                        .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
+                        .bucket("rvc1")
+                        .file(multipartFile)
+                        .build());
+            } catch (NoSuchAlgorithmException | IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         try {
-            latch.await();
-
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage());
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModel(forms);
+            return res;
+        }catch (RuntimeException e){
             throw new BaseException(e.toString());
         }
-        return fileForms;
     }
 
     @Override
@@ -491,7 +483,7 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isTrue(firsComments==null||firsComments.isEmpty(),ResultCodeEnum.COMMENT_NOT_EXITS);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",firsComments);
-        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",""));
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
         return getFirstComment(wrapper,page,limit,uid);
     }
 

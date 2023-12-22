@@ -133,7 +133,11 @@ public class ModelListener implements ListenerInterface{
         }
         String lock = statusDTO.getId();
         String table = statusDTO.getName().split("-")[1];
-        String filed = statusDTO.getName().split("-")[2];
+        String filed;
+        try {
+            filed = statusDTO.getName().split("-")[2];
+        }catch (RuntimeException e){
+        }
         synchronized (lockMap.get(lock)){
             try {
                 if(auditCountMap.get(lock)==-1){

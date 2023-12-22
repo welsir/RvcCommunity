@@ -102,12 +102,10 @@ public class AsyncService {
             logger.info("异步审核完毕");
         } catch (Exception e) {
             // 异常处理
-            logger.error("调用审核服务失败%s:%s ", e.getMessage(), e);
-            throw new BaseException();
+            logger.error("调用审核服务失败%s:%s ",e.toString(), e.getStackTrace()[0]);
+            throw new BaseException(e.toString());
         }
-
     }
-
     @Async
     public void asyncAddModelViewNums(String modelId){
         try {

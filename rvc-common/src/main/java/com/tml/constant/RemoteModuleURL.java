@@ -11,6 +11,10 @@ public class RemoteModuleURL {
      * 文件模块上传URL
      */
     public static final String UPLOAD_FILE_TO_OSS = "file/oss/upload";
+    /*
+     * 文件list上传
+     **/
+    public static final String UPLOAD_FILE_LIST_TO_OSS = "file/oss/upload/list";
 
     /*
      * 文件模块下载URL

@@ -17,7 +17,6 @@ import java.util.List;
  */
 @Data
 public class ModelInsertVO {
-    @NotBlank
     private String[] fileId;
     @NotBlank(message = "名称不能为空")
     @Length(max = 10,message = "模型名称不能超过5个字")
