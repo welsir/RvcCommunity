@@ -1,6 +1,6 @@
 package com.tml.controller;
 
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.service.PostTypeService;
 import io.github.common.web.Result;
@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * @NAME: PostTypeController

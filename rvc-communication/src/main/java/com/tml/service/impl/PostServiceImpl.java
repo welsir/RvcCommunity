@@ -21,16 +21,17 @@ import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
-import com.tml.strategy.SortStrategy;
-import com.tml.strategy.impl.LikeSortStrategy;
-import com.tml.strategy.impl.TimeSortStrategy;
-import com.tml.strategy.impl.ViewSortStrategy;
+import com.tml.designpattern.strategy.SortStrategy;
+import com.tml.designpattern.strategy.impl.LikeSortStrategy;
+import com.tml.designpattern.strategy.impl.TimeSortStrategy;
+import com.tml.designpattern.strategy.impl.ViewSortStrategy;
 import com.tml.utils.*;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -169,8 +170,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
         }
 
+        LambdaQueryWrapper<Post> postLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        postLambdaQueryWrapper.eq(Post::getHasDelete,0)
+                .eq(Post::getPostId,postId)
+                .eq(Post::getDetectionStatus,1);
+        Post post = this.getOne(postLambdaQueryWrapper);
 
-        Post post = this.getById(postId);
+        //条件  是否删除  是否违规
+
+
         if (Objects.isNull(post)){
             throw new SystemException(POST_ERROR);
         }
@@ -247,6 +255,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
+    @Transactional
     public void favorite(CoinDto coinDto,String uid) {
 
 
@@ -297,6 +306,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
+    @Transactional
     public void collection(CoinDto coinDto,String uid) {
 
         Object data = userServiceClient.exist(uid).getData();
@@ -361,7 +371,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post1 = postMapper.selectById(postId);
 //帖子不属于该用户
-
         if (!post1.getUid().equals(uid)){
             throw new SystemException(PERMISSIONS_ERROR);
         }
@@ -379,6 +388,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
+    @Transactional
     public String add(PostDto postDto,String uid) {
         // TODO: 2023/12/21 责任链
 
@@ -412,6 +422,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (dbCover.getDetectionStatus() == 2){
             throw new SystemException(DETECTION_ERROR);
         }
+
+        //判断 post 是不是你的
 
 
         saveOrUpdate(post);

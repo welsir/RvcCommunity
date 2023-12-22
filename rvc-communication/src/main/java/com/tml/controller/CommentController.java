@@ -1,22 +1,21 @@
 package com.tml.controller;
 
 
-import com.tml.annotation.ContentDetection;
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.ContentDetection;
+import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
 import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
-import java.util.List;
+
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 
 /**
@@ -36,8 +35,17 @@ public class CommentController {
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     @LaxTokenApi
-    public Result list(@Valid PageInfo<String> params){
-        return Result.success(commentService.list(params));
+    public Result list(@Valid PageInfo<String> params,
+                        @RequestHeader String uid){
+        return Result.success(commentService.list(params,uid));
+    }
+
+    @GetMapping("/childrenList")
+    @SystemLog(businessName = "获取某个帖子的子评论列表")
+    @LaxTokenApi
+    public Result childrenList(@Valid PageInfo<String> params,
+                              @RequestHeader String uid){
+        return Result.success(commentService.childrenList(params,uid));
     }
 
     @PostMapping("/add")
