@@ -40,7 +40,7 @@ public class RedisTest {
 
     @Test
     public void Encryptor(){
-
+        System.out.println(stringEncryptor.encrypt("1.94.28.8"));
 
 
     }
