@@ -1,6 +1,8 @@
 package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.annotation.apiAuth.LaxTokenApi;
+import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
@@ -33,6 +35,7 @@ public class ModelController {
      * @param uid 用户uid，用于显式是否点赞收藏信息
      * @return Result<?>
      */
+    @LaxTokenApi
     @GetMapping("/list")
     public Result<?> getModelList(@RequestParam("page") @NotBlank(message = "page不能为空") String page,
                                   @RequestParam(value = "limit",required = false) String limit,
@@ -51,8 +54,9 @@ public class ModelController {
      * @param uid 同上
      * @return Result<?>
      */
-    @GetMapping("/list/{typeId}")
-    public Result<?> getModelListByType(@PathVariable @NotBlank(message = "id不能为空") String typeId,
+    @LaxTokenApi
+    @GetMapping("/listByType")
+    public Result<?> getModelListByType(@RequestParam @NotBlank(message = "id不能为空") String typeId,
                                         @RequestParam("page") @NotBlank(message = "page不能为空") String page,
                                         @RequestParam(value = "limit",required = false)  String limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
@@ -67,8 +71,9 @@ public class ModelController {
      * @param uid
      * @return Result<?>
      */
-    @GetMapping("/one/{modelId}")
-    public Result<?> getOneModel(@PathVariable @NotBlank(message = "id不能为空") String modelId,
+    @LaxTokenApi
+    @GetMapping("/getModelMsg")
+    public Result<?> getOneModel(@RequestParam("modelId") @NotBlank(message = "id不能为空") String modelId,
                                  @RequestHeader(value = "uid",required = false) String uid){
         ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
@@ -81,7 +86,8 @@ public class ModelController {
      * @param uid
      * @return: Result<?>
      **/
-    @PostMapping("/one")
+    @WhiteApi
+    @PostMapping("/addModel")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
                                     @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         modelService.insertOneModel(model,uid);
@@ -94,46 +100,49 @@ public class ModelController {
      * @param uid
      * @return: Result<?>
      **/
-    @PostMapping("/download/{modelId}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
+    @WhiteApi
+    @PostMapping("/download")
+    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         String modelUrl = modelService.downloadModel(modelId,uid);
         return Result.success(modelUrl);
     }
-
+    @WhiteApi
     @PostMapping("/update")
     public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
                                @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
     }
-
+    @WhiteApi
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
             MultipartFile[] file,
             @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.uploadModel(file,uid));
     }
-
+    @WhiteApi
     @PostMapping("/upload/image")
     public Result<?> uploadImage(
             MultipartFile file,
             @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.uploadImage(file,uid));
     }
-
+    @WhiteApi
     @PostMapping("/relative/likes")
     public Result<?> modelUserLike(@RequestParam("status") @NotBlank(message = "status为空") String status,
                                    @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
                                    @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userLikesModel(status,modelId,uid));
     }
+    @WhiteApi
     @PostMapping("/relative/collection")
     public Result<?> modelUserCollection(@RequestParam("status") @NotBlank(message = "status为空") String status,
                                    @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userCollectionModel(status,modelId,uid));
     }
+    @WhiteApi
     @PostMapping("/label")
     public Result<?> insertLabel(
             @RequestParam("label") @NotBlank(message = "label为空") String label,
@@ -147,6 +156,7 @@ public class ModelController {
      * @param: uid
      * @return: Result<?>
      **/
+    @WhiteApi
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
@@ -165,6 +175,7 @@ public class ModelController {
      * @param order
      * @return: Result<?>
      **/
+    @WhiteApi
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
@@ -181,12 +192,14 @@ public class ModelController {
      * @param uid
      * @return: Result<?>
      **/
-    @DeleteMapping("/one")
+    @WhiteApi
+    @DeleteMapping("/delModel")
     public Result<?> delOneModel(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                  @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.delSingleModel(modelId,uid));
     }
 
+    @WhiteApi
     @GetMapping("user/model")
     public Result<?> queryUserModelList(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
                                         @RequestParam("page") @NotBlank(message = "page为空") String page,
@@ -195,12 +208,14 @@ public class ModelController {
     }
 
 
+    @WhiteApi
     @PostMapping("/comment")
     public Result<?> addComment(@RequestBody @Validated CommentFormVO commentFormVO,
                                      @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.commentModel(commentFormVO,uid));
     }
 
+    @WhiteApi
     @PostMapping("/comment/likes")
     public Result<?> likeComment(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
                                  @RequestParam("type") @NotBlank(message = "type为空") String type,
@@ -208,6 +223,7 @@ public class ModelController {
         return Result.success(modelService.likeComment(uid,commentId,type));
     }
 
+    @LaxTokenApi
     @GetMapping("/comment/first")
     public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                         @RequestParam(value = "limit",required = false) String limit,
@@ -217,6 +233,7 @@ public class ModelController {
         return Result.success(modelService.queryFirstCommentList(modelId,page,limit,sortType,uid));
     }
 
+    @LaxTokenApi
     @GetMapping("/comment/second")
     public Result<?> querySecondComments(
             @RequestParam("id") @NotBlank(message = "id为空") String commentId,
@@ -226,6 +243,15 @@ public class ModelController {
             @RequestHeader(value = "uid",required = false) String uid
     ){
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
+    }
+
+
+    @LaxTokenApi
+    @GetMapping("/label/labelHot")
+    public Result<?> queryLabelList(
+            @RequestHeader(value = "id",required = false) String uid
+    ){
+        return null;
     }
 
 }
