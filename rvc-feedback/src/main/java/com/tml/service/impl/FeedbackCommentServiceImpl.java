@@ -2,11 +2,14 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.api.R;
+import com.tml.client.UserServiceClient;
 import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackCommentDO;
 import com.tml.pojo.FeedbackCommentLike;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.form.FeedbackCommentForm;
 import com.tml.pojo.vo.FeedbackCommentVO;
+import com.tml.pojo.vo.FeedbackVO;
 import com.tml.service.FeedbackCommentService;
 import com.tml.service.IFeedbackCommentLikeDaoService;
 import com.tml.service.IFeedbackDaoService;
@@ -43,6 +46,9 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
     SnowflakeGenerator snowflakeGenerator;
 
     @Resource
+    UserServiceClient userServiceClient;
+
+    @Resource
     CommonLogger logger;
 
     @Override
@@ -50,12 +56,55 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
         IPage<FeedbackCommentVO> commentList = feedbackCommentDaoService.getCommentList(fb_id,page, limit, orders);
         PageVO<FeedbackCommentVO> pageVO = PageUtil.toPageVO(commentList);
 
-        List<Long> cmIdList = pageVO.getPageList().stream()
-                .map(FeedbackCommentVO::getCmid)
+
+        List<String> uidList = pageVO.getPageList().stream()
+                .map(FeedbackCommentVO::getUid)
                 .collect(Collectors.toList());
 
+        List<String> replyUidList = pageVO.getPageList().stream()
+                .map(FeedbackCommentVO::getReplyUid)
+                .filter(replyUid -> StringUtils.hasText(replyUid))
+                .collect(Collectors.toList());
+
+        //TODO 待聚合
+        Map<String, UserInfoVO> map = userServiceClient.list(uidList).getData();
+
+        Map<String, UserInfoVO> replyUidMap = userServiceClient.list(replyUidList).getData();
+
+        if(map!=null){
+            pageVO.getPageList().forEach(
+                    feedbackCommentVO -> {
+                        String search_uid = feedbackCommentVO.getUid();
+                        UserInfoVO userInfoVO = map.get(search_uid);
+                        if(userInfoVO!=null){
+                            feedbackCommentVO.setAvatar(userInfoVO.getAvatar());
+                            feedbackCommentVO.setNickname(userInfoVO.getNickname());
+                            feedbackCommentVO.setUsername(userInfoVO.getUsername());
+                        }
+                    }
+            );
+        }
+
+        if(replyUidMap!=null){
+            pageVO.getPageList().forEach(
+                    feedbackCommentVO -> {
+                        String search_reply_uid = feedbackCommentVO.getReplyUid();
+                        UserInfoVO replyUserInfoVO = replyUidMap.get(search_reply_uid);
+                        if(replyUserInfoVO!=null){
+                            feedbackCommentVO.setReplyAvatar(replyUserInfoVO.getAvatar());
+                            feedbackCommentVO.setReplyNickname(replyUserInfoVO.getNickname());
+                            feedbackCommentVO.setReplyUsername(replyUserInfoVO.getUsername());
+                        }
+                    }
+            );
+        }
         //TODO 待优化
         if(StringUtils.hasText(uid)){
+
+            List<Long> cmIdList = pageVO.getPageList().stream()
+                    .map(FeedbackCommentVO::getCmid)
+                    .collect(Collectors.toList());
+
             HashSet<Long> likeSet = commentLikeDaoService.getCommentLikeList(uid, cmIdList);
 
             pageVO.getPageList().forEach(

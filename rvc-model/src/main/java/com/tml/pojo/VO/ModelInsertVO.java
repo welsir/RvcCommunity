@@ -24,7 +24,7 @@ public class ModelInsertVO {
     private String name;
     @NotBlank(message = "模型类型id不能为空")
     private String typeId;
-    private List<String> labelId;
+    private List<String> label;
     @NotBlank(message = "模型描述不能为空")
     private String description;
     @NotBlank(message = "模型注意事项不能为空")
