@@ -44,10 +44,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -254,6 +251,7 @@ public class ModelServiceImpl implements ModelService {
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(file.length);
         for (MultipartFile multipartFile : file) {
             executorService.submit(() -> {
                 try {
@@ -276,8 +274,17 @@ public class ModelServiceImpl implements ModelService {
                     }
                 } catch (IOException e) {
                     logger.error("文件上传失败: " + e.getMessage());
+                }finally {
+                    latch.countDown();
                 }
             });
+        }
+        try {
+            latch.await();
+
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage());
+            throw new BaseException(e.toString());
         }
         return fileForms;
     }
