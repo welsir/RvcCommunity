@@ -46,7 +46,6 @@ public class CommentController {
     public Result childrenList(@Valid PageInfo<String> params,
                                @RequestHeader(required = false) String uid){
         return Result.success(commentService.childrenList(params,uid));
-
     }
 
     @PostMapping("/add")
