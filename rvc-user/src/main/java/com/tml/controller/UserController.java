@@ -105,6 +105,7 @@ public class UserController {
     public Result one(@RequestParam String uid){
         return Result.success(userService.one(uid));
     }
+
     /**
      * @param uidList List<String>
      * @return {@link Result}
