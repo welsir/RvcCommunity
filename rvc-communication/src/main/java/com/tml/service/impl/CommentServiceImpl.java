@@ -50,7 +50,6 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
     private final UserServiceClient userServiceClient;
     private final PostMapper postMapper;
 
-
     @Override
     public String comment(CommentDto commentDto,String uid) {
 
