@@ -207,9 +207,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // TODO: 2023/12/21 sql优化
         //去关系表查看用户是否点赞  收藏
         LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-        collectPostQueryWrapper.eq(CollectPost::getUid,uid);
+        collectPostQueryWrapper.eq(CollectPost::getUid,uid)
+                .eq(CollectPost::getPostId,postId);
         LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-        likePostQueryWrapper.eq(LikePost::getUid,uid);
+        likePostQueryWrapper.eq(LikePost::getUid,uid)
+                .eq(LikePost::getPostId,postId);
         boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
         boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
 

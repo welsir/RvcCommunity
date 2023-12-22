@@ -36,7 +36,7 @@ public class CommentController {
     @SystemLog(businessName = "获取某个帖子的评论列表")
     @LaxTokenApi
     public Result list(@Valid PageInfo<String> params,
-                        @RequestHeader String uid){
+                       @RequestHeader(required = false) String uid){
         return Result.success(commentService.list(params,uid));
     }
 
@@ -44,7 +44,7 @@ public class CommentController {
     @SystemLog(businessName = "获取某个帖子的子评论列表")
     @LaxTokenApi
     public Result childrenList(@Valid PageInfo<String> params,
-                              @RequestHeader String uid){
+                               @RequestHeader(required = false) String uid){
         return Result.success(commentService.childrenList(params,uid));
     }
 

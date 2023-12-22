@@ -22,6 +22,7 @@ import com.tml.utils.BeanCopyUtils;
 import com.tml.utils.Uuid;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -156,8 +157,22 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         }
 
         List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+
+
         for (int i = 0; i < commentVos.size(); i++) {
             CommentVo commentVo = commentVos.get(i);
+            commentVo.setLike(false);
+            if (!Strings.isBlank(uid)){
+                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid, uid)
+                        .eq(LikeComment::getCommentId, commentVo.getPostCommentId());
+                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+                if (!Objects.isNull(likeComment)){
+                    commentVo.setLike(true);
+                }
+            }
+
+
             commentVo.setUser(data.get(records.get(i).getUserId()));
 
         }
@@ -318,6 +333,16 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
         for (int i = 0; i < commentVos.size(); i++) {
             CommentVo commentVo = commentVos.get(i);
+            commentVo.setLike(false);
+            if (!Strings.isBlank(uid)){
+                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid,uid)
+                        .eq(LikeComment::getCommentId,commentVo.getPostCommentId());
+                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+                if (!Objects.isNull(likeComment)){
+                    commentVo.setLike(true);
+                }
+            }
             commentVo.setUser(data.get(records.get(i).getUserId()));
             commentVo.setReplayUser(data.get(records.get(i).getToUserId()));
         }
