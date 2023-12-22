@@ -31,6 +31,8 @@ public interface ModelService {
 
     ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 
+    ReceiveUploadFileDTO uploadAudio(MultipartFile file,String uid);
+
     String insertLabel(String label,String uid);
 
     Page<ModelVO> getUserLikesList(String uid,String page,String limit,String order);
@@ -53,5 +55,5 @@ public interface ModelService {
 
     Boolean userCollectionModel(String status,String modelId,String uid);
 
-    List<LabelVO> getLabelList();
+    List<LabelVO> getLabelList(String limit,String page);
 }

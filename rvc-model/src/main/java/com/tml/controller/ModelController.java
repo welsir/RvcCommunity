@@ -128,6 +128,15 @@ public class ModelController {
             @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.uploadImage(file,uid));
     }
+
+    @WhiteApi
+    @PostMapping("/upload/audio")
+    public Result<?> uploadAudio(
+            MultipartFile file,
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
+    ){
+        return Result.success(modelService.uploadAudio(file,uid));
+    }
     @WhiteApi
     @PostMapping("/relative/likes")
     public Result<?> modelUserLike(@RequestParam("status") @NotBlank(message = "status为空") String status,
@@ -249,9 +258,11 @@ public class ModelController {
     @LaxTokenApi
     @GetMapping("/label/labelHot")
     public Result<?> queryLabelList(
-            @RequestHeader(value = "id",required = false) String uid
+            @RequestHeader(value = "uid",required = false) String uid,
+            @RequestParam(value = "page") String page,
+            @RequestParam(value = "limit",required = false) String limit
     ){
-        return null;
+        return Result.success(modelService.getLabelList(limit,page));
     }
 
 }

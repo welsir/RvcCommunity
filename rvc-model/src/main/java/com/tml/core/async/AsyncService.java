@@ -58,12 +58,14 @@ public class AsyncService {
                     labelDO.setId(snowflakeGenerator.generate());
                     labelDO.setLabel(label);
                     labelDO.setHasShow("0");
+                    labelDO.setHot(0);
                     labelDO.setCreateTime(DateUtil.formatDate());
                     labelMapper.labelIsExit(labelDO);
                     labelAudit.add(label);
                 } catch (SnowflakeRegisterException e) {
                     throw new BaseException(e.toString());
                 } catch (DuplicateKeyException e){
+                    labelMapper.updateHot(label);
                 }
             }
 
@@ -96,6 +98,7 @@ public class AsyncService {
                         .build();
                 listener.sendMsgToMQ(audit,"text");
             }
+
             logger.info("异步审核完毕");
         } catch (Exception e) {
             // 异常处理

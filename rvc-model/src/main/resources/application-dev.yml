@@ -63,6 +63,11 @@ feign:
     enabled: true
     max-connections: 200 # 最大的连接数
     max-connections-per-route: 50 # 每个路径的最大连接数
+  client:
+    config:
+      default:
+        connect-timeout: 600000
+        read-timeout: 600000
 server:
   port: 9100
 
@@ -81,6 +86,9 @@ file:
   model:
     model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
     model-type: ${MODEL_TYPE:ENC(s/b/P1wycc8fmvSEFCZfldt3xy99xZNDqVrl2less4c=)}
+  audio:
+    audio-type: ${AUDIO_TYPE:ENC(qgyb5bmrlcXsQ44XrEbIlOgksdwArXo2tJfSadByCLRj5YrrRiDVXMZJvCgfMvEn)}
+    audio-file-size: ${AUDIO_FILE_SIZE:ENC(/0Nymk2YtBobya24vOgl+vBVp2q6Ly0Y)}
 
 labels:
   allow_labels: ${LABELS:ENC(ZGOcc9GZKPsDfP3fQ4xgMxdUr4FgsQAYKvY5MD6ePaEi/4HkZH5yAQ==)}
@@ -93,3 +101,4 @@ assistant:
       snowflake:
         startTime: 2023-12-05 00:00:00
         register: register-redis
+

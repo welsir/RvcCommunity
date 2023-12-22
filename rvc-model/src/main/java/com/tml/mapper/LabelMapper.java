@@ -1,10 +1,14 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.pojo.DO.LabelDO;
 import com.tml.pojo.DO.ModelLabelDO;
+import com.tml.pojo.VO.LabelVO;
+import io.github.common.web.PageVO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -47,4 +51,6 @@ public interface LabelMapper extends BaseMapper<LabelDO> {
     @Insert("insert into rvc_model_label (id,label,has_show,create_time) values(#{id},#{label},#{hasShow},#{createTime})")
     int labelIsExit(LabelDO labelDO);
 
+    @Update("UPDATE rvc_model_label SET hot = hot + 10 WHERE label = #{label}")
+    void updateHot(String label);
 }

@@ -196,6 +196,7 @@ public class ModelListener implements ListenerInterface{
                                 }
                             }
                         }
+
                     }
                     logger.info("[%s]审核成功,更新数据库",statusDTO.getId());
                     wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());

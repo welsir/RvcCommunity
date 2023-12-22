@@ -3,6 +3,7 @@ package com.tml.service.Impl;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.api.R;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
@@ -173,6 +174,9 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
         AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
+        if(model.getFileId().length!=2){
+            throw new BaseException(ResultCodeEnum.SYSTEM_ERROR);
+        }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
         try {
@@ -196,6 +200,10 @@ public class ModelServiceImpl implements ModelService {
         modelUserDO.setUid(uid);
         try {
             modelUserMapper.insert(modelUserDO);
+            String index = model.getFileId()[0];
+            String pth = model.getFileId()[1];
+            String audio = model.getAudioId();
+            mapper.insertModelFileRelative(modelDO.getId().toString(),index,pth,audio);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.INSERT_MODEL_USER_RELATIVE_FAIL);
@@ -240,34 +248,43 @@ public class ModelServiceImpl implements ModelService {
         return true;
     }
 
-    //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
     public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
-        try {
-            ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
-            for (MultipartFile multipartFile : file) {
-                UploadModelForm form = UploadModelForm.builder()
-                        .file(multipartFile)
-                        .path(ModelConstant.DEFAULT_MODEL_PATH)
-                        .bucket(ModelConstant.DEFAULT_BUCKET)
-                        .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
-                        .build();
-                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
-                fileForms.add(res.getData());
-            }
-            return fileForms;
-        } catch (NoSuchAlgorithmException | IOException e) {
-            logger.error("%s:"+e.getStackTrace()[0],e);
-            throw new BaseException(e.toString());
+        ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
+        for (MultipartFile multipartFile : file) {
+            executorService.submit(() -> {
+                try {
+                    UploadModelForm form;
+                    try {
+                        form = UploadModelForm.builder()
+                                .file(multipartFile)
+                                .path(ModelConstant.DEFAULT_MODEL_PATH)
+                                .bucket(ModelConstant.DEFAULT_BUCKET)
+                                .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
+                                .build();
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                    com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                    // 使用同步块来确保线程安全地修改集合
+                    synchronized (fileForms) {
+                        fileForms.add(res.getData());
+                        logger.info("上传完毕");
+                    }
+                } catch (IOException e) {
+                    logger.error("文件上传失败: " + e.getMessage());
+                }
+            });
         }
+        return fileForms;
     }
 
     @Override
     public ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid) {
-        if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
+        if(FileUtil.checkImageFileIsAvailable(file)){
             try {
                 UploadModelForm form = UploadModelForm.builder()
                         .file(file)
@@ -283,6 +300,28 @@ public class ModelServiceImpl implements ModelService {
             }
         }else{
             throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
+        }
+    }
+
+    @Override
+    public ReceiveUploadFileDTO uploadAudio(MultipartFile file, String uid) {
+
+        if(FileUtil.checkAudioFileIsAvailable(file)){
+            try {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(file)
+                        .path(ModelConstant.DEFAULT_MODEL_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(file.getInputStream()))
+                        .build();
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                return res.getData();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                logger.error("%s:"+e.getStackTrace()[0],e);
+                throw new BaseException(e.toString());
+            }
+        }else{
+            throw new BaseException(ResultCodeEnum.UPLOAD_AUDIO_FAIL);
         }
     }
 
@@ -496,8 +535,14 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public List<LabelVO> getLabelList() {
-        return null;
+    public List<LabelVO> getLabelList(String limit,String page) {
+        limit = limit== null? systemConfig.getPageSize():limit;
+        QueryWrapper<LabelDO> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("hot");
+        Page<LabelDO> label = labelMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), wrapper);
+        return label.getRecords().stream()
+                .map(labelDO -> new LabelVO(labelDO.getId().toString(), labelDO.getLabel()))
+                .collect(Collectors.toList());
     }
 
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
@@ -599,12 +644,15 @@ public class ModelServiceImpl implements ModelService {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
-        Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
-        Map<String, UserInfoVO> userInfo = result.getData();
-        List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
-                .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
+        try {
+            Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
+            Map<String, UserInfoVO> userInfo = result.getData();
+            List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
+                    .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                    .collect(Collectors.toList());
+            return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
+        }catch (RuntimeException e){
+            throw new BaseException(e.toString());
+        }
     }
-
 }
