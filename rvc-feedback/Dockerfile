@@ -42,5 +42,4 @@ EXPOSE ${SERVER_PORT}
 ENTRYPOINT ["java","-jar","/rvc-website.jar"]
 
 
-
 #<Auto> -e:test -m:rvc-feedback -v:1.0 -rp:9400 -de:<-e ACTIVE=test -e UNIQUE_ID=0 -e SERVER_PORT=9400>
