@@ -48,9 +48,8 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
-        if(laxTokenApi.contains(requestUrl)){
+        String path = request.getURI().getPath();
+        if(laxTokenApi.contains(path)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌

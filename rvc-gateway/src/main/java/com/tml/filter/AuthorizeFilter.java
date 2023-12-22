@@ -46,10 +46,9 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
+        String path = request.getURI().getPath();
 
-        if(whiteApi.contains(requestUrl)){
+        if(whiteApi.contains(path)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
             // 请求头中获取令牌
@@ -69,11 +68,12 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                     if(vars.length==2){
                         String uid = vars[0];
                         String username = vars[1];
-                        commonLogger.info("uid:%s,username:%s",uid,username);
                         newRequest = request.mutate().header("uid",uid).header("username",username).build();
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
                 }
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                return response.setComplete();
             } catch (NotLoginException e) {
                 e.printStackTrace();
                 //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现

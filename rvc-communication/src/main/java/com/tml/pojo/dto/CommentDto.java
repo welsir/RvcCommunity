@@ -21,16 +21,16 @@ public class CommentDto {
     @NotNull(message = "postId 不能为空")
     private String postId;
 
-    @NotNull
-    @NotNull(message = "rootCommentId 不能为空")
+//    @NotNull
+//    @NotNulls(message = "rootCommentId 不能为空")
     private String rootCommentId;
 
-    @NotNull
-    @NotNull(message = "toUserId 不能为空")
+//    @NotNull
+//    @NotNull(message = "toUserId 不能为空")
     private String toUserId;
 
-    @NotNull
-    @NotNull(message = "toCommentId 不能为空")
+//    @NotNull
+//    @NotNull(message = "toCommentId 不能为空")
     private String toCommentId;
 }
 

@@ -23,8 +23,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName(value = dbTableConfig.RVC_FEEDBACK_COMMENT_LIKE )
-public class FeedbackCommentLike {
+@TableName(value = dbTableConfig.RVC_FEEDBACK_LIKE )
+public class FeedbackLike {
 
     @TableId(value = "id")
     @TableField(updateStrategy = FieldStrategy.NEVER)
@@ -33,7 +33,7 @@ public class FeedbackCommentLike {
      * 反馈ID
      */
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private Long cmId;
+    private Long fbId;
 
     /**
      * 用户uid
@@ -49,5 +49,4 @@ public class FeedbackCommentLike {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
     private LocalDateTime createAt;
-
 }

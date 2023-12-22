@@ -102,11 +102,7 @@ public class UserController {
      */
     @GetMapping("/one")
     @InternalApi
-    public Result one(@RequestParam
-                          @Valid
-                          @NotNull(message = "uid不能为空")
-                          @Length(min = 19, max = 19, message = "uid长度必须为19")
-                          String uid){
+    public Result one(@RequestParam String uid){
         return Result.success(userService.one(uid));
     }
     /**
@@ -116,10 +112,8 @@ public class UserController {
     @PostMapping("/list")
     @InternalApi
     public Result list(@RequestBody
-                           @Valid
                            @ListNotEmpty
-                           @ListElementSize(min = 19, max = 19, message = "uid长度为19")
-                       List<String> uidList){
+                           List<String> uidList){
         return Result.success(userService.list(uidList));
     }
 

@@ -4,7 +4,7 @@ public class dbTableConfig {
 
     public static final String RVC_FEEDBACK = "rvc_feedback";
 
-    public static final String RVC_FEEDBACK_LIKE = "rvc_feedback";
+    public static final String RVC_FEEDBACK_LIKE = "rvc_feedback_like";
 
     public static final String RVC_FEEDBACK_COMMENT = "rvc_feedback_comment";
     public static final String RVC_FEEDBACK_COMMENT_LIKE = "rvc_feedback_comment_like";

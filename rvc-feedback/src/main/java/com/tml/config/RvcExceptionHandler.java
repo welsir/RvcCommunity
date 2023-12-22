@@ -23,7 +23,6 @@ public class RvcExceptionHandler {
     public Result SqlErrorHandler(HttpServletRequest httpServletRequest, Exception e){
         logger.error("数据库异常:{}",e.getMessage());
         return Result.error("503",e.getMessage());
-
     }
 
 }

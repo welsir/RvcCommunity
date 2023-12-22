@@ -13,4 +13,6 @@ public interface IFeedbackCommentDaoService {
     IPage<FeedbackCommentVO> getCommentList(Long fb_id,int page, int limit, String order);
 
     Boolean hasComment(Long replyFbId,Long replyCmId);
+
+    Boolean changeCommentLike(Long commentId,Boolean likeStatus);
 }
