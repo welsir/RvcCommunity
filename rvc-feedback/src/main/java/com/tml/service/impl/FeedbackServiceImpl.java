@@ -8,6 +8,7 @@ import com.tml.exception.RvcSQLException;
 import com.tml.pojo.FeedbackCommentLike;
 import com.tml.pojo.FeedbackDO;
 import com.tml.pojo.FeedbackLike;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.form.FeedbackForm;
 import com.tml.pojo.vo.FeedbackCommentVO;
 import com.tml.pojo.vo.FeedbackVO;
@@ -29,10 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,12 +59,33 @@ public class FeedbackServiceImpl implements FeedbackService {
         IPage<FeedbackVO> feedbackVOIPage = feedbackDaoService.feedbackPageVO(page, limit, order);
         PageVO<FeedbackVO> pageVO = PageUtil.toPageVO(feedbackVOIPage);
 
-        List<Long> fbIdList = pageVO.getPageList().stream()
-                .map(FeedbackVO::getFbid)
+        List<String> uidList = pageVO.getPageList().stream()
+                .map(FeedbackVO::getUid)
                 .collect(Collectors.toList());
+
+        //TODO 待聚合
+        Map<String, UserInfoVO> map = userServiceClient.list(uidList).getData();
+
+        if(map!=null){
+            pageVO.getPageList().forEach(
+                    feedbackVO -> {
+                        String search_uid = feedbackVO.getUid();
+                        UserInfoVO userInfoVO = map.get(search_uid);
+                        if(userInfoVO!=null){
+                            feedbackVO.setAvatar(userInfoVO.getAvatar());
+                            feedbackVO.setNickname(userInfoVO.getNickname());
+                        }
+                    }
+            );
+        }
 
         //TODO 待优化
         if(StringUtils.hasText(uid)){
+
+            List<Long> fbIdList = pageVO.getPageList().stream()
+                    .map(FeedbackVO::getFbid)
+                    .collect(Collectors.toList());
+
             HashSet<Long> likeSet = likeDaoService.getLikeList(uid, fbIdList);
 
             pageVO.getPageList().forEach(
@@ -78,7 +97,15 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public Result<?> getFeedbackVO(String uid, Long fb_id) {
+
         FeedbackVO feedbackVO = feedbackDaoService.feedbackVO(fb_id);
+
+        UserInfoVO userInfoVO = userServiceClient.one(uid).getData();
+
+        if(userInfoVO!=null){
+            feedbackVO.setAvatar(userInfoVO.getAvatar());
+            feedbackVO.setNickname(userInfoVO.getNickname());
+        }
 
         if(feedbackVO!=null){
             if(StringUtils.hasText(uid)){

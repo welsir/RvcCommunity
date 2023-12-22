@@ -20,6 +20,10 @@ spring:
       config:
         file-extension: yaml
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
+        shared-configs:
+          - dataId: feign-config.yaml
+            refresh: true
+            group: DEFAULT_GROUP
       discovery:
         ip: ${SERVER_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
