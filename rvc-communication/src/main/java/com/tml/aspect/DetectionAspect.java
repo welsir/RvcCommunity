@@ -107,6 +107,7 @@ public class DetectionAspect {
                         .build();
                 //在此处 上传任务到mq
                 rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
+
             }
         }
     }
