@@ -109,7 +109,7 @@ public class ModelController {
     }
     @WhiteApi
     @PostMapping("/update")
-    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
+    public Result<?> editModel(@Validated ModelUpdateFormVO modelUpdateFormVO,
                                @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);

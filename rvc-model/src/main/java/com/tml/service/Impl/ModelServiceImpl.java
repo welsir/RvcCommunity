@@ -219,6 +219,9 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
+        if(!FileUtil.isImageFile(modelUpdateFormVO.getFile().getOriginalFilename())){
+            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
+        }
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
         try {
             com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder().file(modelUpdateFormVO.getFile())
@@ -227,10 +230,10 @@ public class ModelServiceImpl implements ModelService {
                     .bucket("rvc1")
                     .build());
             List<DetectionTaskDTO> dtos = Arrays.asList(
-                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
-                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
-                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
-                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(),res.getData().getUrl(), name)
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name+"-description"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name+"-name"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name+"-note"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(),res.getData().getUrl(), name+"-picture")
             );
             List<String> types = Arrays.asList(
                     ModelConstant.TEXT_TYPE,
@@ -445,7 +448,7 @@ public class ModelServiceImpl implements ModelService {
             DetectionTaskDTO dto = DetectionTaskDTO.builder()
                     .id(commentDO.getId().toString())
                     .content(commentFormVO.getContent())
-                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO").build();
+                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO-content").build();
             AsyncDetectionForm form = new AsyncDetectionForm();
             form.setTaskDTO(dto);
             form.setType(ModelConstant.TEXT_TYPE);
