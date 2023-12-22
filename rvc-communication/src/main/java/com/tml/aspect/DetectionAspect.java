@@ -109,10 +109,6 @@ public class DetectionAspect {
                 rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
             }
         }
-
-
-
-
     }
 
 
