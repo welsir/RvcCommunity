@@ -25,8 +25,7 @@ spring:
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
         cluster-name: BJ
 #      discovery:
-#        ip: ${SERVER_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
-        ip : 127.0.0.1
+        ip: ${SERVER_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
 #        正式服务器
   rabbitmq:
     host: 117.21.200.55
