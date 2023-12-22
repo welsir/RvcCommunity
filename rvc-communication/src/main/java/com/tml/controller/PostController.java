@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
@@ -129,8 +130,12 @@ public class PostController {
                 .coverUrl(url)
                 .uid(uid)
                 .build();
-        rvcCommunicationServiceFeignClient.coverUrl(build);
-        return Result.success(url);
+        Result result = rvcCommunicationServiceFeignClient.coverUrl(build);
+        HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put("id", (String) result.getData());
+        stringStringHashMap.put("url",url);
+
+        return Result.success(stringStringHashMap);
     }
 
     @PostMapping("/coverUrl")
