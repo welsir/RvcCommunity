@@ -88,7 +88,7 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
         if(replyUidMap!=null){
             pageVO.getPageList().forEach(
                     feedbackCommentVO -> {
-                        String search_reply_uid = feedbackCommentVO.getUid();
+                        String search_reply_uid = feedbackCommentVO.getReplyUid();
                         UserInfoVO replyUserInfoVO = replyUidMap.get(search_reply_uid);
                         if(replyUserInfoVO!=null){
                             feedbackCommentVO.setReplyAvatar(replyUserInfoVO.getAvatar());
