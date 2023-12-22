@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
+import static com.tml.constant.DetectionConstants.UN_DETECTION;
 import static com.tml.enums.AppHttpCodeEnum.*;
 
 /**
@@ -387,7 +389,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         String uuid = null;
         if (Strings.isBlank(postDto.getPostId())){
-             Uuid.getUuid();
+            uuid = Uuid.getUuid();
         }else {
             uuid = postDto.getPostId();
         }
@@ -402,7 +404,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new SystemException(TAG_ERROR);
         }
 
-        //判断cover是否存在 并且审核通过
+        //判断cover是否存在 并且审核通过    ？？？并且是这个用户的
         Cover dbCover = coverMapper.selectById(post.getCoverId());
         if (Objects.isNull(dbCover)){
             throw new SystemException(COVER_ERROR);
@@ -411,12 +413,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new SystemException(DETECTION_ERROR);
         }
 
+
         saveOrUpdate(post);
 
         //更新cover表映射
         Cover cover = Cover.builder()
                 .postId(uuid)
-                .coverId(post.getCoverId())
+                .coverId(postDto.getCoverId())
                 .build();
 
         int i = coverMapper.updateById(cover);
@@ -670,6 +673,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Cover build = Cover.builder()
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
+                .createAt(LocalDate.now())
+                .detectionStatus(UN_DETECTION)
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);
