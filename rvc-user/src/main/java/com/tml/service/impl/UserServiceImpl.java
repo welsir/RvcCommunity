@@ -5,6 +5,7 @@ import com.tml.client.FileServiceClient;
 import com.tml.common.UserContext;
 import com.tml.common.rabbitmq.RabbitMQListener;
 import com.tml.config.FileConfig;
+import com.tml.exception.RvcSQLException;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
@@ -21,6 +22,7 @@ import com.tml.util.*;
 import io.github.util.time.TimeUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -86,7 +88,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<String, String> register(RegisterDTO registerDTO) {
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Map<String, String> register(RegisterDTO registerDTO) throws RvcSQLException {
         String email = registerDTO.getEmail();
         String emailCode = registerDTO.getEmailCode();
         String password = registerDTO.getPassword();
@@ -100,9 +103,14 @@ public class UserServiceImpl implements UserService {
         userInfo.setRegisterData(LocalDateTime.now());
         userInfo.setUpdatedAt(LocalDateTime.now());
         userInfo.setUsername(RandomStringUtil.generateRandomString());
-        userInfoMapper.insert(userInfo);
+        userInfo.setNickname(userInfo.getUsername());
         userData.setUid(userInfo.getUid());
-        userDataMapper.insert(userData);
+        try {
+            userInfoMapper.insert(userInfo);
+            userDataMapper.insert(userData);
+        } catch (Exception e){
+            throw new RvcSQLException(e.getMessage());
+        }
         return Map.of("token", TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername()));
     }
 
@@ -206,7 +214,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void follow(String followUid, String uid, String username) {
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public void follow(String followUid, String uid, String username) throws RvcSQLException {
         if(Objects.equals(followUid, uid)){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
@@ -218,16 +227,32 @@ public class UserServiceImpl implements UserService {
                 .eq("follow_uid", uid)
                 .eq("followed_uid", followUid);
         if(userFollowMapper.selectCount(followWrapper) > 0){
-            userFollowMapper.delete(followWrapper);
+            try {
+                userFollowMapper.delete(followWrapper);
+                UserData userData = userDataMapper.selectByUid(uid);
+                userData.setFollowNum(userData.getFollowNum() - 1);
+                UserData followUserData = userDataMapper.selectByUid(followUid);
+                followUserData.setFansNum(followUserData.getFansNum() - 1);
+                userDataMapper.updateById(userData);
+                userDataMapper.updateById(followUserData);
+            } catch (Exception e){
+                throw new RvcSQLException(e.getMessage());
+            }
             return;
         }
-        UserFollow follow = new UserFollow();
-        follow.setFollowUid(uid);
-        follow.setFollowedUid(followUid);
         try {
+            UserFollow follow = new UserFollow();
+            follow.setFollowUid(uid);
+            follow.setFollowedUid(followUid);
+            UserData userData = userDataMapper.selectByUid(uid);
+            userData.setFollowNum(userData.getFollowNum() + 1);
+            UserData followUserData = userDataMapper.selectByUid(followUid);
+            followUserData.setFansNum(followUserData.getFansNum() + 1);
+            userDataMapper.updateById(userData);
+            userDataMapper.updateById(followUserData);
             userFollowMapper.insert(follow);
         } catch (Exception e){
-            throw new ServerException(ResultEnums.FAIL_FOLLOW);
+            throw new RvcSQLException(e.getMessage());
         }
     }
 

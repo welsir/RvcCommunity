@@ -1,5 +1,6 @@
 package com.tml.service;
 
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -21,7 +22,7 @@ public interface UserService {
 
     void logout(String uid, String username);
 
-    Map<String, String> register(RegisterDTO registerDTO);
+    Map<String, String> register(RegisterDTO registerDTO) throws RvcSQLException;
 
     Map<String, String> preCode();
 
@@ -33,7 +34,7 @@ public interface UserService {
 
     void update(UserInfoDTO userInfoDTO, String uid, String username);
 
-    void follow(String followUid, String uid, String username);
+    void follow(String followUid, String uid, String username) throws RvcSQLException;
 
     void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid, String username);
 
