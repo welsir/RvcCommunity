@@ -7,15 +7,22 @@ import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.core.rabbitmq.ModelListener;
+import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
+import com.tml.pojo.DO.LabelDO;
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.AsyncDetectionForm;
 import com.tml.pojo.DTO.DetectionTaskDTO;
 import com.tml.pojo.ResultCodeEnum;
+import com.tml.utils.DateUtil;
+import io.github.id.snowflake.SnowflakeGenerator;
+import io.github.id.snowflake.SnowflakeRegisterException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,29 +41,61 @@ public class AsyncService {
     ModelListener listener;
     @Resource
     ModelMapper mapper;
+    @Resource
+    LabelMapper labelMapper;
+    @Resource
+    SnowflakeGenerator snowflakeGenerator;
 
     private  static final ConcurrentHashMap<String,Integer> modelViews = new ConcurrentHashMap<>();
     @Async
-    public void processModelAsync(ModelDO modelDO) {
+    public void processModelAsync(ModelDO modelDO,List<String> labels) {
         try {
+            ArrayList<String> labelAudit = new ArrayList<>();
+            //判断label是否存在
+            for (String label : labels) {
+                LabelDO labelDO = new LabelDO();
+                try {
+                    labelDO.setId(snowflakeGenerator.generate());
+                    labelDO.setLabel(label);
+                    labelDO.setHasShow("0");
+                    labelDO.setCreateTime(DateUtil.formatDate());
+                    labelMapper.labelIsExit(labelDO);
+                    labelAudit.add(label);
+                } catch (SnowflakeRegisterException e) {
+                    throw new BaseException(e.toString());
+                } catch (DuplicateKeyException e){
+                }
+            }
+
             String auditId = String.valueOf(modelDO.getId());
             String name = ModelConstant.SERVICE_NAME +"-com.tml.pojo.DO.ModelDO";
             DetectionTaskDTO build = DetectionTaskDTO.builder()
                     .id(auditId)
                     .content(modelDO.getDescription())
-                    .name(name)
+                    .name(name+"-description")
                     .build();
-            // 调用审核模块接口
-            //todo:下一版本优化调用方式，或许可以封装一个抽象框架去将所有需要审核的信息存放并且构建事务方法保证统一性
-            listener.setMap(auditId,4);
-            listener.setMap(auditId,auditId+name);
+            listener.setMap(auditId,4+labelAudit.size());
+            listener.setMap(auditId,auditId);
             listener.sendMsgToMQ(build,"text");
             build.setContent(modelDO.getName());
+            build.setName(name+"-name");
             listener.sendMsgToMQ(build,"text");
             build.setContent(modelDO.getNote());
+            build.setName(name+"-note");
             listener.sendMsgToMQ(build,"text");
             build.setContent(modelDO.getPicture());
+            build.setName(name+"-picture");
             listener.sendMsgToMQ(build,"image");
+            String labelName = ModelConstant.SERVICE_NAME+"-com.tml.pojo.DO.labelDO";
+            //审核用户自建label
+            for (String label : labelAudit) {
+                DetectionTaskDTO audit = DetectionTaskDTO.builder()
+                        .id(auditId)
+                        .content(label)
+                        .name(labelName + "-label")
+                        .build();
+                listener.sendMsgToMQ(audit,"text");
+            }
             logger.info("异步审核完毕");
         } catch (Exception e) {
             // 异常处理
