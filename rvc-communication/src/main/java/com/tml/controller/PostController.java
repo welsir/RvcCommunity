@@ -1,15 +1,13 @@
 package com.tml.controller;
 
-import com.tml.annotation.ContentDetection;
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.ContentDetection;
+import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.enums.ContentDetectionEnum;
-import com.tml.feign.communication.RvcCommunicationServiceFeignClient;
-import com.tml.interceptor.UserLoginInterceptor;
+
+import com.tml.feign.RvcCommunicationServiceFeignClient;
 import com.tml.pojo.dto.*;
-import com.tml.pojo.vo.PostSimpleVo;
-import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
-import java.util.List;
+import java.util.HashMap;
 
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 
@@ -36,11 +34,8 @@ import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 @Validated
 public class PostController {
 
-
     private final PostService postService;
     private final RvcCommunicationServiceFeignClient rvcCommunicationServiceFeignClient;
-
-
     @SystemLog(businessName = "获取交流帖子列表")
     @GetMapping("/list")
     @LaxTokenApi
@@ -50,7 +45,6 @@ public class PostController {
     return Result.success(postService.list(params,tagId,uid));
     }
 
-
     @GetMapping("/details")
     @SystemLog(businessName = "获取某个帖子详情信息")
     @LaxTokenApi
@@ -58,7 +52,6 @@ public class PostController {
                           @RequestHeader(required = false) String uid){
         return Result.success(postService.details(postId,uid));
     }
-
 
     /**
      * 点赞帖子
@@ -73,8 +66,6 @@ public class PostController {
         return Result.success();
     }
 
-
-
     @PutMapping("/collection")
     @SystemLog(businessName = "收藏帖子 [T]")
     @WhiteApi
@@ -83,7 +74,6 @@ public class PostController {
         postService.collection(coinDto,uid);
         return Result.success();
     }
-
 
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
@@ -94,18 +84,14 @@ public class PostController {
         return Result.success(postService.add(postDto,uid));
     }
 
-
-
-    @DeleteMapping("/delete/{postId}")
+    @DeleteMapping("/delete")
     @SystemLog(businessName = "删除帖子   [T]")
     @WhiteApi
-    public Result delete(@PathVariable("postId") @NotBlank String postId,
+    public Result delete(@RequestParam("postId") @NotBlank String postId,
                          @RequestHeader String uid){
         postService.delete(postId,uid);
         return Result.success();
     }
-
-
 
     @GetMapping("/user/favorite")
     @SystemLog(businessName = "获取用户点赞的贴子")
@@ -131,28 +117,24 @@ public class PostController {
         return Result.success( postService.userCreate(params,uid));
     }
 
-
-    //用户上传头像
-    //文件上传
     @PostMapping("/cover")
     @SystemLog(businessName = "用户上传头像  文件上传")
     @WhiteApi
     public Result setUserProfile(@RequestPart("wangeditor-uploaded-image") MultipartFile profile,
                                  @RequestHeader String uid) throws IOException {
-
-
         String url = postService.updUserProfile(profile,uid);
         CoverDto build = CoverDto.builder()
                 .coverUrl(url)
                 .uid(uid)
                 .build();
-        rvcCommunicationServiceFeignClient.coverUrl(build);
-        return Result.success(url);
+        Result result = rvcCommunicationServiceFeignClient.coverUrl(build);
+        HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put("id", (String) result.getData());
+        stringStringHashMap.put("url",url);
+
+        return Result.success(stringStringHashMap);
     }
 
-
-    //上传图片
-    //链接上传
     @PostMapping("/coverUrl")
     @SystemLog(businessName = "用户上传头像  url上传")
     @LaxTokenApi
@@ -160,5 +142,4 @@ public class PostController {
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }
-
 }

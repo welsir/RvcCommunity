@@ -3,12 +3,10 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.UserServiceClient;
 import com.tml.exception.SystemException;
-import com.tml.interceptor.UserLoginInterceptor;
 import com.tml.mapper.CommentMapper;
 
 import com.tml.mapper.LikeCommentMapper;
@@ -26,6 +24,7 @@ import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -50,10 +49,13 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
     private final LikeCommentMapper likeCommentMapper;
     private final UserServiceClient userServiceClient;
     private final PostMapper postMapper;
+
+
     @Override
     public String comment(CommentDto commentDto,String uid) {
 
-        // TODO: 2023/12/21 此处的判断放到责任链中 
+
+        // TODO: 2023/12/21 此处的判断放到责任链中
         Object data = userServiceClient.exist(uid).getData();
         if (Objects.isNull(data)){
             throw new SystemException(NEED_LOGIN);
@@ -67,7 +69,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             getById(parentId);
         }
 
-        // TODO: 2023/12/21 此处的ifelse想办法优化 
+        // TODO: 2023/12/21 此处的ifelse想办法优化
         String replyId = commentDto.getToCommentId();
         if (!replyId.isBlank()){
             // 如果回复评论id不为空，则不允许为一级评论（如果通过这步，说明该评论为二级评论）
@@ -82,8 +84,7 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             commentLambdaQueryWrapper.eq(Comment::getPostCommentId,replyId)
                     .eq(Comment::getDetectionStatus,1);
             Comment replayComment = getOne(commentLambdaQueryWrapper);
-//            Comment replayComment = commentRepository.findByReplayUserId(replyId);
-
+//               Comment replayComment = commentRepository.findByReplayUserId(replyId);
             if (replayComment != null && (!replayComment.getRootCommentId().equals(parentId) || replayComment.getRootCommentId().isBlank()))
             {
                 throw new SystemException(QUERY_ERROR);
@@ -117,13 +118,16 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
 
 
+
     @Override
-    public List<CommentVo> list(PageInfo<String> params) {
+    public List<CommentVo> list(PageInfo<String> params,String uid) {
         /// TODO: 2023/12/21 逻辑需要优化 
 
         String postId = params.getData();
         LambdaUpdateWrapper<Post> postQueryWrapper = new LambdaUpdateWrapper<>();
-        postQueryWrapper.eq(Post::getPostId, postId);
+        postQueryWrapper.eq(Post::getPostId, postId)
+                .eq(Post::getHasDelete,0)
+                .eq(Post::getDetectionStatus,1);
         if (postMapper.selectCount(postQueryWrapper) == 0){
             //post不存在
             throw new SystemException(POST_ERROR);
@@ -143,6 +147,37 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         //所有的父评论   夫评论只有用户id  没有回复人的id
         List<Comment> records = list.getRecords();
 
+        List<String> collect = records.stream()
+                .map(record -> record.getUserId())
+                .collect(Collectors.toList());
+
+        Map<String, UserInfoVO> data = null;
+        try {
+            data = userServiceClient.list(collect).getData();
+        } catch (Exception e) {
+            throw new RuntimeException("用户服务调用异常");
+        }
+
+        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+
+
+        for (int i = 0; i < commentVos.size(); i++) {
+            CommentVo commentVo = commentVos.get(i);
+            commentVo.setLike(false);
+            if (!Strings.isBlank(uid)){
+                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid, uid)
+                        .eq(LikeComment::getCommentId, commentVo.getPostCommentId());
+                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+                if (!Objects.isNull(likeComment)){
+                    commentVo.setLike(true);
+                }
+            }
+
+
+            commentVo.setUser(data.get(records.get(i).getUserId()));
+
+        }
 
 //        List<String> collect = records.stream()
 //                .map(comment -> comment.getPostCommentId())
@@ -170,43 +205,40 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 //        for (int i = 0; i < records.size(); i++) {
 //            CommentVo commentVo = BeanCopyUtils.copyBean(records.get(i), CommentVo.class);
 //            commentVo.setUser(sonUser.getData().get(records.get(i).getUserId()));
-//
-//
-//
-//
 //        }
 
-        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+//        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
 
-        //        获取每一个评论的子评论
-        for (int i = 0; i < commentVos.size(); i++) {
-            CommentVo commentVo = commentVos.get(i);
-
-            String userId = records.get(i).getUserId();
-            UserInfoVO data = userServiceClient.one(userId).getData();
-            commentVo.setUser(data);
-
-
-            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            commentLambdaQueryWrapper.eq(Comment::getRootCommentId,commentVo.getPostCommentId())
-                    .eq(Comment::getRootCommentId,commentVo.getPostCommentId())
-                    .eq(Comment::getDetectionStatus, DETECTION_SUCCESS);
-            List<Comment> comments = commentMapper.selectList(commentLambdaQueryWrapper);
-            List<CommentVo> childrenCommentVos = BeanCopyUtils.copyBeanList(comments, CommentVo.class);
-            for (int j = 0; j < childrenCommentVos.size(); j++) {
-                CommentVo childrenCommentVo = childrenCommentVos.get(i);
-                String userId1 = comments.get(j).getUserId();
-               childrenCommentVo.setUser(userServiceClient.one(userId1).getData());
-                String userId2 = comments.get(j).getToUserId();
-                childrenCommentVo.setReplayUser(userServiceClient.one(userId2).getData());
-            }
-            commentVo.setChildrenComment(childrenCommentVos);
-        }
+//        //        获取每一个评论的子评论  (3条)
+//        for (int i = 0; i < commentVos.size(); i++) {
+//            CommentVo commentVo = commentVos.get(i);
+//
+//            String userId = records.get(i).getUserId();
+//            UserInfoVO data = userServiceClient.one(userId).getData();
+//            commentVo.setUser(data);
+//
+//
+//            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+//            commentLambdaQueryWrapper.eq(Comment::getRootCommentId,commentVo.getPostCommentId())
+//                    .eq(Comment::getRootCommentId,commentVo.getPostCommentId())
+//                    .eq(Comment::getDetectionStatus, DETECTION_SUCCESS);
+//            List<Comment> comments = commentMapper.selectList(commentLambdaQueryWrapper);
+//            List<CommentVo> childrenCommentVos = BeanCopyUtils.copyBeanList(comments, CommentVo.class);
+//            for (int j = 0; j < childrenCommentVos.size(); j++) {
+//                CommentVo childrenCommentVo = childrenCommentVos.get(i);
+//                String userId1 = comments.get(j).getUserId();
+//                childrenCommentVo.setUser(userServiceClient.one(userId1).getData());
+//                String userId2 = comments.get(j).getToUserId();
+//                childrenCommentVo.setReplayUser(userServiceClient.one(userId2).getData());
+//            }
+//            commentVo.setChildrenComment(childrenCommentVos);
+//        }
 
         return commentVos;
     }
 
     @Override
+    @Transactional
     public void favorite(CoinDto coinDto,String uid) {
         // TODO: 2023/12/21 责任链 
 
@@ -267,5 +299,55 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
 
             return;
         }
+    }
+
+    @Override
+    public List<CommentVo> childrenList(PageInfo<String> params,String uid) {
+        String rootCommentId = params.getData();
+        /**
+         *         父评论通过审核
+         */
+
+        Integer pageNum = params.getPage();
+        Integer pageSize = params.getLimit();
+
+        Page<Comment> page = new Page<>(pageNum,pageSize);
+        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Comment::getRootCommentId, rootCommentId)
+                .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
+                .eq(Comment::getRootCommentId,rootCommentId);
+        Page<Comment> list = this.page(page,queryWrapper);
+
+        //所有的父评论   夫评论只有用户id  没有回复人的id
+        List<Comment> records = list.getRecords();
+
+        List<String> sonUserIds = records.stream()
+                .flatMap(son -> Stream.of(son.getUserId(), son.getToUserId()))
+                .collect(Collectors.toList());
+
+        Map<String, UserInfoVO> data = null;
+        try {
+            data = userServiceClient.list(sonUserIds).getData();
+        } catch (Exception e) {
+            throw new RuntimeException("用户服务调用异常");
+        }
+
+        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+        for (int i = 0; i < commentVos.size(); i++) {
+            CommentVo commentVo = commentVos.get(i);
+            commentVo.setLike(false);
+            if (!Strings.isBlank(uid)){
+                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid,uid)
+                        .eq(LikeComment::getCommentId,commentVo.getPostCommentId());
+                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+                if (!Objects.isNull(likeComment)){
+                    commentVo.setLike(true);
+                }
+            }
+            commentVo.setUser(data.get(records.get(i).getUserId()));
+            commentVo.setReplayUser(data.get(records.get(i).getToUserId()));
+        }
+        return commentVos;
     }
 }

@@ -1,7 +1,7 @@
 package com.tml.aspect;
 
 import com.alibaba.fastjson.JSON;
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.SystemLog;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 @Aspect
 @Slf4j
 public class LogAspect {
-    @Pointcut("@annotation(com.tml.annotation.SystemLog)")
+    @Pointcut("@annotation(com.tml.aspect.annotation.SystemLog)")
     public void pt(){
 
     }

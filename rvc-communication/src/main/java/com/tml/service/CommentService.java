@@ -14,7 +14,9 @@ import java.util.List;
 public interface CommentService  extends IService<Comment> {
     String comment(CommentDto commentDto,String uid);
 
-    List<CommentVo> list(PageInfo<String> params);
+    List<CommentVo> list(PageInfo<String> params,String uid);
 
     void favorite(CoinDto coinDto,String uid);
+
+    List<CommentVo> childrenList(PageInfo<String> params,String uid);
 }

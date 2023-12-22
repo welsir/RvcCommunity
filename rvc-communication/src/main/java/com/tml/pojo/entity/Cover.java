@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COVER;
 
 /**
@@ -21,7 +23,7 @@ public class Cover {
     private String coverId;
     private String postId;
     private String coverUrl;
-    private String createAt;
+    private LocalDate createAt;
     //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
     private Integer detectionStatus;
     private String labels;
