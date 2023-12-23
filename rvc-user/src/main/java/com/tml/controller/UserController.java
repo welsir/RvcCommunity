@@ -186,6 +186,7 @@ public class UserController {
         return Result.success("审核中");
     }
 
+
     @GetMapping("/exist")
     @InternalApi
     public Result exist(@RequestParam String uid){
