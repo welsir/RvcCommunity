@@ -280,10 +280,12 @@ public class ModelServiceImpl implements ModelService {
                     ModelConstant.DEFAULT_BUCKET);
             return res.getData();
         } catch (NoSuchAlgorithmException e) {
+            logger.error(e);
             throw new RuntimeException(e);
         } catch (IOException e) {
+            logger.error(e);
             throw new RuntimeException(e);
-        }catch (RuntimeException e){
+        }catch (Exception e){
             logger.error(e);
             throw new BaseException(e.toString());
         }
