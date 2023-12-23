@@ -95,6 +95,8 @@ public class DetectionAspect {
                         }
                     }
                 }
+
+
                 DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
                         .id(uuid)
                         .content(contentValue)
