@@ -66,8 +66,9 @@ feign:
   client:
     config:
       default:
-        connect-timeout: 600000
-        read-timeout: 600000
+        connect-timeout: 6000
+        read-timeout: 6000
+        loggerLevel: full
 server:
   port: 9100
 
@@ -101,4 +102,6 @@ assistant:
       snowflake:
         startTime: 2023-12-05 00:00:00
         register: register-redis
-
+logging:
+  level:
+    feign.Logger: debug

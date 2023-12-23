@@ -4,7 +4,6 @@ import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.constant.ModelConstant;
@@ -13,16 +12,15 @@ import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
 import com.tml.core.async.AsyncService;
-
+import com.tml.core.client.FileServiceClient;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.*;
 import com.tml.pojo.DO.*;
-
-import com.tml.pojo.DTO.*;
+import com.tml.pojo.DTO.AsyncDetectionForm;
+import com.tml.pojo.DTO.DetectionTaskDTO;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.*;
-import com.tml.pojo.VO.DownloadModelForm;
-import com.tml.pojo.VO.UploadModelForm;
 import com.tml.service.ModelService;
 import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
@@ -39,8 +37,14 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -78,6 +82,8 @@ public class ModelServiceImpl implements ModelService {
     SystemConfig systemConfig;
     @Resource
     SnowflakeGenerator snowflakeGenerator;
+    @Resource
+    com.tml.core.client.FileServiceClient modelFileClient;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     /**
@@ -269,9 +275,11 @@ public class ModelServiceImpl implements ModelService {
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         try {
-            String[] path = new String[]{ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH};
-            String[] md5 = new String[]{FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())};
-            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModelList(file, path, md5, ModelConstant.DEFAULT_BUCKET);
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = modelFileClient.uploadModelList(
+                    file,
+                    List.of(ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH),
+                    List.of(FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())),
+                    ModelConstant.DEFAULT_BUCKET);
             return res.getData();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
