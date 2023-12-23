@@ -66,8 +66,8 @@ feign:
   client:
     config:
       default:
-        connect-timeout: 6000
-        read-timeout: 6000
+        connect-timeout: 600000
+        read-timeout: 600000
         loggerLevel: full
 server:
   port: 9100
