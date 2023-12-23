@@ -1,6 +1,7 @@
 package com.tml.pojo.VO;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 
@@ -17,8 +18,7 @@ public class ModelUpdateFormVO {
     private String name;
     @NotBlank(message = "模型描述不能为空")
     private String description;
-    @NotBlank(message = "模型图片不能为空")
-    private String picture;
+    private MultipartFile file;
     @NotBlank(message = "模型注意事项不能为空")
     private String note;
 }

@@ -2,10 +2,12 @@ package com.tml.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import com.tml.pojo.DO.ModelFileDO;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,13 +25,15 @@ public interface ModelService {
 
     void insertOneModel(ModelInsertVO model,String uid);
 
-    String downloadModel(String modelId,String uid);
+    List<String> downloadModel(String modelId,String uid);
 
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid);
+    List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file, String uid);
 
     ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
+
+    ReceiveUploadFileDTO uploadAudio(MultipartFile file,String uid);
 
     String insertLabel(String label,String uid);
 
@@ -53,5 +57,7 @@ public interface ModelService {
 
     Boolean userCollectionModel(String status,String modelId,String uid);
 
-    List<LabelVO> getLabelList();
+    List<LabelVO> getLabelList(String limit,String page);
+
+    ModelFileDO getModelFies(String modelId);
 }

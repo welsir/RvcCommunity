@@ -19,7 +19,7 @@ public class ModelVO {
     private String id;
     private String name;
     private String type;
-    private List<String> label;
+    private List<LabelVO> label;
     private String picture;
     private String description;
     private String note;
@@ -33,8 +33,9 @@ public class ModelVO {
     private String nickname;
     private String avatar;
     private String createTime;
-
-    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,List<String> labels,String... args){
+    private String updateTime;
+    private String isFollow;
+    public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,List<LabelVO> labels,String... args){
         ModelVO modelVO = modelDOToModelVO(modelDO, userInfo, args);
         modelVO.setLabel(labels);
         return modelVO;
@@ -61,6 +62,7 @@ public class ModelVO {
                 .nickname(userInfo.getNickname())
                 .username(userInfo.getUsername())
                 .createTime(modelDO.getCreateTime())
+                .updateTime(modelDO.getUpdateTime())
                 .build();
     }
 }
