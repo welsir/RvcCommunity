@@ -3,6 +3,7 @@ package com.tml.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tml.pojo.DO.ModelCollectionDO;
 import com.tml.pojo.DO.ModelDO;
+import com.tml.pojo.DO.ModelFileDO;
 import com.tml.pojo.DO.ModelLikeDO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
@@ -49,4 +50,7 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
 
     @Insert("insert into rvc_model_model_file (model_id,index_file_id,pth_file_id,audio_file_id) values(#{modelId},#{modelId},#{modelId},#{audioId})")
     int insertModelFileRelative(String modelId,String indexId,String pthId,String audioId);
+
+    @Select("select * from rvc_model_model_file where model_id = #{modelId}")
+    ModelFileDO queryModelFile(String modelId);
 }

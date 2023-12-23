@@ -6,6 +6,7 @@ import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,11 +24,11 @@ public interface ModelService {
 
     void insertOneModel(ModelInsertVO model,String uid);
 
-    String downloadModel(String modelId,String uid);
+    List<String> downloadModel(String modelId,String uid);
 
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    com.tml.pojo.Result<List<ReceiveUploadFileDTO>> uploadModel(MultipartFile[] file,String uid);
+    ArrayList<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file, String uid);
 
     ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 

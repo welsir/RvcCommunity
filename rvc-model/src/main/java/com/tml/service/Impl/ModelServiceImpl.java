@@ -3,7 +3,6 @@ package com.tml.service.Impl;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.api.R;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
@@ -24,8 +23,6 @@ import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.*;
 import com.tml.pojo.VO.DownloadModelForm;
 import com.tml.pojo.VO.UploadModelForm;
-import com.tml.pojo.VO.UserCollectionModelVO;
-import com.tml.pojo.VO.UserLikesModelVO;
 import com.tml.service.ModelService;
 import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
@@ -35,7 +32,6 @@ import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,7 +41,6 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -209,13 +204,20 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String downloadModel(String modelId,String uid) {
-        com.tml.pojo.Result<String> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+    public List<String> downloadModel(String modelId, String uid) {
+        ModelFileDO modelFileDO = mapper.queryModelFile(modelId);
+        AbstractAssert.isNull(modelFileDO,ResultCodeEnum.MODEL_NOT_EXITS);
+        com.tml.pojo.Result<String> pthUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getPthFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
         );
-        return result.getData();
+        com.tml.pojo.Result<String> indexUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getIndexFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+        );
+        com.tml.pojo.Result<String> audioUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getAudioFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+        );
+        return List.of(pthUrl.getData(), indexUrl.getData(), audioUrl.getData());
     }
-
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
@@ -224,10 +226,11 @@ public class ModelServiceImpl implements ModelService {
         }
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
         try {
-            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder().file(modelUpdateFormVO.getFile())
+            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder()
+                    .file(modelUpdateFormVO.getFile())
                     .md5(FileUtil.getMD5Checksum(modelUpdateFormVO.getFile().getInputStream()))
-                    .path("/model/image")
-                    .bucket("rvc1")
+                    .path(ModelConstant.DEFAULT_MODEL_PATH)
+                    .bucket(ModelConstant.DEFAULT_MODEL_PATH)
                     .build());
             List<DetectionTaskDTO> dtos = Arrays.asList(
                     DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name+"-description"),
@@ -260,28 +263,25 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public com.tml.pojo.Result<List<ReceiveUploadFileDTO>> uploadModel(MultipartFile[] file,String uid) {
+    public ArrayList<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
-        ArrayList<UploadModelForm> forms = new ArrayList<>();
+        ArrayList<ReceiveUploadFileDTO> forms = new ArrayList<>();
         for (MultipartFile multipartFile : file) {
             try {
-                forms.add(UploadModelForm.builder()
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder()
                         .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
-                        .bucket("rvc1")
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .path(ModelConstant.DEFAULT_MODEL_PATH)
                         .file(multipartFile)
                         .build());
+                forms.add(res.getData());
             } catch (NoSuchAlgorithmException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
-        try {
-            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModel(forms);
-            return res;
-        }catch (RuntimeException e){
-            throw new BaseException(e.toString());
-        }
+        return forms;
     }
 
     @Override
@@ -400,6 +400,7 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Boolean delSingleModel(String modelId,String uid) {
         AbstractAssert.isNull(modelUserMapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        AbstractAssert.isNull(modelUserMapper.queryModelUserRelative(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
@@ -520,7 +521,6 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
