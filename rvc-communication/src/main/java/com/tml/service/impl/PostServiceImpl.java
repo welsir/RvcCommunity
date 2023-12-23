@@ -186,13 +186,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         // TODO: 2023/12/21 sql优化
 
-        //获取作者和tag
+        //获取作者和tag 还有cover
         Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
         UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
         postVo.setAuthor(userInfoVO);
 
         PostType postType = postTypeMapper.selectById(post.getTagId());
         postVo.setPostType(postType);
+
+        Cover cover = coverMapper.selectById(post.getCoverId());
+        postVo.setCover(cover.getCoverUrl());
 
 
 //        如果用户未登录直接返回vo对象
