@@ -1,4 +1,4 @@
-package com.tml.annotation;
+package com.tml.aspect.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

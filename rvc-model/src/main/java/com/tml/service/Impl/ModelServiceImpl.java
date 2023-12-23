@@ -173,9 +173,6 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
         AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
-        if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
-            AbstractAssert.isTrue(labelMapper.getLabels(model.getLabelId()).size()!=model.getLabelId().size(),ResultCodeEnum.LABEL_NOT_EXIT);
-        }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
         try {
@@ -192,14 +189,6 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
-        if(model.getLabelId()!=null&&!model.getLabelId().isEmpty()){
-            try{
-                labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
-            }catch (RuntimeException e){
-                logger.error(e);
-                throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
-            }
-        }
         String typeId = model.getTypeId();
         typeMapper.insertModelType(modelDO.getId().toString(),typeId);
         ModelUserDO modelUserDO = new ModelUserDO();
@@ -211,7 +200,7 @@ public class ModelServiceImpl implements ModelService {
             logger.error(e);
             throw new BaseException(ResultCodeEnum.INSERT_MODEL_USER_RELATIVE_FAIL);
         }
-        asyncService.processModelAsync(modelDO);
+        asyncService.processModelAsync(modelDO, model.getLabel());
     }
 
     @Override
@@ -504,6 +493,11 @@ public class ModelServiceImpl implements ModelService {
             return mapper.delModelCollection(uid,modelId)==1;
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
+    }
+
+    @Override
+    public List<LabelVO> getLabelList() {
+        return null;
     }
 
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){

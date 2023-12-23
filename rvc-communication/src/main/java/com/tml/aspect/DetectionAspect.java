@@ -2,12 +2,9 @@ package com.tml.aspect;
 
 
 import com.alibaba.fastjson.JSON;
-import com.tml.annotation.ContentDetection;
+import com.tml.aspect.annotation.ContentDetection;
 import com.tml.enums.ContentDetectionEnum;
-import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.DetectionTaskDto;
-import com.tml.utils.BeanUtils;
-import com.tml.utils.Uuid;
 import io.github.common.web.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,9 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
-import java.util.Map;
 
-import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 import static com.tml.constant.DetectionConstants.DETECTION_ROUTER_KEY_HEADER;
 
 
@@ -43,7 +38,7 @@ public class DetectionAspect {
     /**
      * 定义切点
      */
-    @Pointcut("@annotation(com.tml.annotation.ContentDetection)")
+    @Pointcut("@annotation(com.tml.aspect.annotation.ContentDetection)")
     public void pt2(){}
 
 
@@ -107,12 +102,9 @@ public class DetectionAspect {
                         .build();
                 //在此处 上传任务到mq
                 rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
+
             }
         }
-
-
-
-
     }
 
 

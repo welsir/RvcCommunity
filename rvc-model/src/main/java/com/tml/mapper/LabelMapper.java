@@ -41,4 +41,10 @@ public interface LabelMapper extends BaseMapper<LabelDO> {
     @Select("select * from rvc_model_label where label = #{labelName}")
     LabelDO queryLabelIsExits(String labelName);
 
+    @Select("select id from rvc_model_label where label = #{label}")
+    String queryLabelId(String label);
+
+    @Insert("insert into rvc_model_label (id,label,has_show,create_time) values(#{id},#{label},#{hasShow},#{createTime})")
+    int labelIsExit(LabelDO labelDO);
+
 }

@@ -21,7 +21,7 @@ public enum AppHttpCodeEnum {
     COLLECT_ERROR("504","不允许重复收藏"),
     FAVORITE_ERROR("505","不允许重复点赞"),
     TYPE_ERROR("506","类型错误"),
-    POST_ERROR("507","帖子不存在"),
+    POST_ERROR("507","帖子不存在或违规"),
     TAG_ERROR("508","标签不存在"),
     COVER_ERROR("508","封面不存在"),
     DETECTION_ERROR("509","审核失败"),

@@ -21,19 +21,21 @@ import com.tml.pojo.entity.*;
 import com.tml.pojo.vo.PostSimpleVo;
 import com.tml.pojo.vo.PostVo;
 import com.tml.service.PostService;
-import com.tml.strategy.SortStrategy;
-import com.tml.strategy.impl.LikeSortStrategy;
-import com.tml.strategy.impl.TimeSortStrategy;
-import com.tml.strategy.impl.ViewSortStrategy;
+import com.tml.designpattern.strategy.SortStrategy;
+import com.tml.designpattern.strategy.impl.LikeSortStrategy;
+import com.tml.designpattern.strategy.impl.TimeSortStrategy;
+import com.tml.designpattern.strategy.impl.ViewSortStrategy;
 import com.tml.utils.*;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
+import static com.tml.constant.DetectionConstants.UN_DETECTION;
 import static com.tml.enums.AppHttpCodeEnum.*;
 
 /**
@@ -167,8 +170,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
         }
 
+        LambdaQueryWrapper<Post> postLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        postLambdaQueryWrapper.eq(Post::getHasDelete,0)
+                .eq(Post::getPostId,postId)
+                .eq(Post::getDetectionStatus,1);
+        Post post = this.getOne(postLambdaQueryWrapper);
 
-        Post post = this.getById(postId);
+        //条件  是否删除  是否违规
+
+
         if (Objects.isNull(post)){
             throw new SystemException(POST_ERROR);
         }
@@ -197,9 +207,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // TODO: 2023/12/21 sql优化
         //去关系表查看用户是否点赞  收藏
         LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-        collectPostQueryWrapper.eq(CollectPost::getUid,uid);
+        collectPostQueryWrapper.eq(CollectPost::getUid,uid)
+                .eq(CollectPost::getPostId,postId);
         LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-        likePostQueryWrapper.eq(LikePost::getUid,uid);
+        likePostQueryWrapper.eq(LikePost::getUid,uid)
+                .eq(LikePost::getPostId,postId);
         boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
         boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
 
@@ -245,6 +257,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 //    }
 
     @Override
+    @Transactional
     public void favorite(CoinDto coinDto,String uid) {
 
 
@@ -295,6 +308,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
+    @Transactional
     public void collection(CoinDto coinDto,String uid) {
 
         Object data = userServiceClient.exist(uid).getData();
@@ -359,7 +373,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post1 = postMapper.selectById(postId);
 //帖子不属于该用户
-
         if (!post1.getUid().equals(uid)){
             throw new SystemException(PERMISSIONS_ERROR);
         }
@@ -377,6 +390,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
+    @Transactional
     public String add(PostDto postDto,String uid) {
         // TODO: 2023/12/21 责任链
 
@@ -387,7 +401,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         String uuid = null;
         if (Strings.isBlank(postDto.getPostId())){
-             Uuid.getUuid();
+            uuid = Uuid.getUuid();
         }else {
             uuid = postDto.getPostId();
         }
@@ -402,7 +416,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new SystemException(TAG_ERROR);
         }
 
-        //判断cover是否存在 并且审核通过
+        //判断cover是否存在 并且审核通过    ？？？并且是这个用户的
         Cover dbCover = coverMapper.selectById(post.getCoverId());
         if (Objects.isNull(dbCover)){
             throw new SystemException(COVER_ERROR);
@@ -411,12 +425,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new SystemException(DETECTION_ERROR);
         }
 
+        //判断 post 是不是你的
+
+
         saveOrUpdate(post);
 
         //更新cover表映射
         Cover cover = Cover.builder()
                 .postId(uuid)
-                .coverId(post.getCoverId())
+                .coverId(postDto.getCoverId())
                 .build();
 
         int i = coverMapper.updateById(cover);
@@ -670,6 +687,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Cover build = Cover.builder()
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
+                .createAt(LocalDate.now())
+                .detectionStatus(UN_DETECTION)
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);
