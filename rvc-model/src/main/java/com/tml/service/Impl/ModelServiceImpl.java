@@ -262,6 +262,7 @@ public class ModelServiceImpl implements ModelService {
         }
     }
 
+    //todo:优化方向，要么聚合调用次数要么文件服务去优化上传时间或者并发上传
     @Override
     public ArrayList<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
