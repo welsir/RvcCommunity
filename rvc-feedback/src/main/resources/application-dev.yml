@@ -18,15 +18,17 @@ spring:
       username: ENC(qqqHXA1bwhhYPJ9SXXZqyO5j//wygYDK)
       password: ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)
       discovery:
-        namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
+        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
       config:
-        file-extension: yaml
-#        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
-        namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
+        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
         shared-configs:
           - dataId: feign-config.yaml
             refresh: true
             group: DEFAULT_GROUP
+          - dataId: feedback-query-param.yaml
+            refresh: true
+            group: DEFAULT_GROUP
+
 management:
   endpoints:
     web:
