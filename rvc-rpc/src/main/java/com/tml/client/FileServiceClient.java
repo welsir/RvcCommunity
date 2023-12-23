@@ -18,7 +18,7 @@ import java.util.List;
  * @Author welsir
  * @Date 2023/12/6 16:01
  */
-@FeignClient(name = "rvc-file-service",url = "1.94.28.8:8089",configuration = FeignConfig.class)
+@FeignClient(name = "rvc-file-service",configuration = FeignConfig.class)
 public interface FileServiceClient {
 
     @PostMapping(value = RemoteModuleURL.UPLOAD_FILE_TO_OSS,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
