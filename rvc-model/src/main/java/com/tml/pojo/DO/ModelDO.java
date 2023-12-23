@@ -20,7 +20,6 @@ import java.util.Date;
 @TableName("rvc_model")
 public class ModelDO {
     private Long id;
-    private String fileId;
     private String name;
     private String typeId;
     private String collectionNum;

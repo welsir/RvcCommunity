@@ -102,14 +102,13 @@ public class ModelController {
      **/
     @WhiteApi
     @PostMapping("/download")
-    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
+    public Result<?> downloadModel(@RequestParam("fileId") @NotBlank String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
-        String modelUrl = modelService.downloadModel(modelId,uid);
-        return Result.success(modelUrl);
+        return Result.success(modelService.downloadModel(modelId,uid));
     }
     @WhiteApi
     @PostMapping("/update")
-    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
+    public Result<?> editModel(@Validated ModelUpdateFormVO modelUpdateFormVO,
                                @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
@@ -127,6 +126,15 @@ public class ModelController {
             MultipartFile file,
             @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.uploadImage(file,uid));
+    }
+
+    @WhiteApi
+    @PostMapping("/upload/audio")
+    public Result<?> uploadAudio(
+            MultipartFile file,
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
+    ){
+        return Result.success(modelService.uploadAudio(file,uid));
     }
     @WhiteApi
     @PostMapping("/relative/likes")
@@ -249,9 +257,18 @@ public class ModelController {
     @LaxTokenApi
     @GetMapping("/label/labelHot")
     public Result<?> queryLabelList(
-            @RequestHeader(value = "id",required = false) String uid
+            @RequestHeader(value = "uid",required = false) String uid,
+            @RequestParam(value = "page") String page,
+            @RequestParam(value = "limit",required = false) String limit
     ){
-        return null;
+        return Result.success(modelService.getLabelList(limit,page));
+    }
+
+    @WhiteApi
+    @GetMapping("/model/modelFile")
+    public Result<?> queryModelFiles(@RequestHeader(value = "uid")String uid,
+                                     @RequestParam(value = "modelId")String modelId){
+        return Result.success(modelService.getModelFies(modelId));
     }
 
 }
