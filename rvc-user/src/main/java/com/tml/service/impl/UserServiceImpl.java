@@ -18,6 +18,7 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,15 +89,13 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = RvcSQLException.class)
     public Map<String, String> register(RegisterDTO registerDTO) throws RvcSQLException {
         String email = registerDTO.getEmail();
-        String emailCode = registerDTO.getEmailCode();
-        String password = registerDTO.getPassword();
-        if(!codeUtil.emailVerify(email, REGISTER, emailCode)) {
+        if(!codeUtil.emailVerify(email, REGISTER, registerDTO.getEmailCode())) {
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
         UserInfo userInfo = new UserInfo();
         UserData userData = new UserData("0",0,0,0,0);
         userInfo.setEmail(email);
-        userInfo.setPassword(password);
+        userInfo.setPassword(DigestUtils.md5Hex(registerDTO.getPassword()));
         userInfo.setRegisterData(LocalDateTime.now());
         userInfo.setUpdatedAt(LocalDateTime.now());
         userInfo.setUsername(RandomStringUtil.generateRandomString());
@@ -358,7 +357,7 @@ public class UserServiceImpl implements UserService {
 
         UserInfo userInfo = userInfoMapper.selectOne(queryWrapper);
 
-        if(userInfo == null || !userInfo.getPassword().equals(password)){
+        if(userInfo == null || !DigestUtils.md5Hex(password).equals(userInfo.getPassword())){
             throw new ServerException(ResultEnums.WRONG_USERNAME_OR_PASSWORD);
         }
         return TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername());

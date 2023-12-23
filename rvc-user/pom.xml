@@ -114,6 +114,11 @@
             <artifactId>feign-httpclient</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+
 
         <!--        redis-->
         <dependency>
