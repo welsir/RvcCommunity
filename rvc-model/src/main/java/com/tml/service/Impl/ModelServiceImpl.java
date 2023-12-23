@@ -276,7 +276,7 @@ public class ModelServiceImpl implements ModelService {
         }
         try {
             com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = modelFileClient.uploadModelList(
-                    file,
+                    List.of(file[0],file[1]),
                     List.of(ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH),
                     List.of(FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())),
                     ModelConstant.DEFAULT_BUCKET);

@@ -31,7 +31,7 @@ public interface FileServiceClient {
     com.tml.pojo.Result<String> downloadModel(@RequestBody DownloadModelForm form);
 
     @PostMapping(value = RemoteModuleURL.UPLOAD_FILE_LIST_TO_OSS,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Result<List<ReceiveUploadFileDTO>> uploadModelList(@RequestPart(value = "file") MultipartFile[] fies,
+    Result<List<ReceiveUploadFileDTO>> uploadModelList(@RequestPart(value = "file") List<MultipartFile> fies,
                                                        @RequestParam("pathList") List<String> pathList,
                                                        @RequestParam("md5List") List<String> md5List,
                                                        @RequestParam("bucket") String bucket);
