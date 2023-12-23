@@ -4,6 +4,7 @@ import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
 import com.tml.common.constant.ModelConstant;
@@ -12,7 +13,6 @@ import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
 import com.tml.core.async.AsyncService;
-import com.tml.core.client.FileServiceClient;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.*;
 import com.tml.pojo.DO.*;
@@ -82,8 +82,6 @@ public class ModelServiceImpl implements ModelService {
     SystemConfig systemConfig;
     @Resource
     SnowflakeGenerator snowflakeGenerator;
-    @Resource
-    com.tml.core.client.FileServiceClient modelFileClient;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     /**
@@ -275,7 +273,7 @@ public class ModelServiceImpl implements ModelService {
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         try {
-            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = modelFileClient.uploadModelList(
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModelList(
                     List.of(file[0],file[1]),
                     List.of(ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH),
                     List.of(FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())),
