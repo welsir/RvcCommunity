@@ -40,7 +40,13 @@ public interface UserService {
 
     UserInfoVO getUserInfo(String uid, String username);
 
+    UserInfoVO getUserInfoById(String uid);
+
     void avatar(MultipartFile file, String uid, String username);
 
     boolean exist(String uid);
+
+    List<UserInfoVO> getMyFollowUser(String uid, String username);
+
+    boolean isFollowed(String uid1, String uid2);
 }

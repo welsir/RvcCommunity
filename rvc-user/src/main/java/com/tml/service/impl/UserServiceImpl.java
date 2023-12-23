@@ -2,7 +2,6 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
-import com.tml.common.UserContext;
 import com.tml.common.rabbitmq.RabbitMQListener;
 import com.tml.config.FileConfig;
 import com.tml.exception.RvcSQLException;
@@ -19,7 +18,6 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
-import io.github.util.time.TimeUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -280,6 +277,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserInfoVO getUserInfoById(String uid) {
+        if(!userInfoMapper.exist("uid", uid)){
+            throw new ServerException(ResultEnums.USER_NOT_EXIST);
+        }
+        UserInfo userInfo = userInfoMapper.selectById(uid);
+        UserInfoVO userInfoVO = new UserInfoVO();
+        BeanUtils.copyProperties(userInfo, userInfoVO);
+        UserData userData = userDataMapper.selectByUid(uid);
+        BeanUtils.copyProperties(userData, userInfoVO);
+        return userInfoVO;
+    }
+
+    @Override
     public void avatar(MultipartFile file, String uid, String username){
         try {
             UploadModelForm form = UploadModelForm.builder()
@@ -299,6 +309,7 @@ public class UserServiceImpl implements UserService {
                     .content(receiveUploadFileDTO.getUrl())
                     .build();
             rabbitMQListener.submit(imageTask, "image");
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -310,6 +321,34 @@ public class UserServiceImpl implements UserService {
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
         return true;
+    }
+
+    @Override
+    public List<UserInfoVO> getMyFollowUser(String uid, String username) {
+        List<UserFollow> userFollows = userFollowMapper.selectByMap(Map.of("follow_id", uid));
+        List<String> followedUids = userFollows.stream().map(UserFollow::getFollowedUid).collect(Collectors.toList());
+        if(followedUids.isEmpty()){
+            return null;
+        }
+        QueryWrapper<UserInfo> userInfoQueryWrapper = new QueryWrapper<>();
+        userInfoQueryWrapper.in("uid", followedUids);
+        QueryWrapper<UserData> dataQueryWrapper = new QueryWrapper<>();
+        dataQueryWrapper.in("uid", followedUids);
+        List<UserInfo> userInfoList = userInfoMapper.selectList(userInfoQueryWrapper);
+        Map<String, UserData> userDataMap = userDataMapper.selectList(dataQueryWrapper).stream().collect(Collectors.toMap(UserData::getUid, userData -> userData));
+        List<UserInfoVO> userInfoVOS = new ArrayList<>();
+        for (UserInfo userInfo:userInfoList){
+            UserInfoVO userInfoVO = new UserInfoVO();
+            BeanUtils.copyProperties(userInfo, userInfoVO);
+            BeanUtils.copyProperties(userDataMap.get(userInfo.getUid()), userInfoVO);
+            userInfoVOS.add(userInfoVO);
+        }
+        return userInfoVOS;
+    }
+
+    @Override
+    public boolean isFollowed(String uid1, String uid2) {
+        return userFollowMapper.exist("follow_uid", uid1, "followed_uid", uid2);
     }
 
     private String loginByPsw(String email, String password){
