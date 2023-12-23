@@ -8,6 +8,7 @@ import com.tml.pojo.DO.ModelLikeDO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -53,4 +54,7 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
 
     @Select("select * from rvc_model_model_file where model_id = #{modelId}")
     ModelFileDO queryModelFile(String modelId);
+
+    @Update("update rvc_model set update_time = #{updateTime} where id =  #{modelId}")
+    void updateModel(String updateTime,String modelId);
 }

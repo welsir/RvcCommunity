@@ -2,6 +2,7 @@ package com.tml.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import com.tml.pojo.DO.ModelFileDO;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,7 @@ public interface ModelService {
 
     Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid);
 
-    ArrayList<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file, String uid);
+    List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file, String uid);
 
     ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid);
 
@@ -57,4 +58,6 @@ public interface ModelService {
     Boolean userCollectionModel(String status,String modelId,String uid);
 
     List<LabelVO> getLabelList(String limit,String page);
+
+    ModelFileDO getModelFies(String modelId);
 }

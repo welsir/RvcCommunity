@@ -136,7 +136,7 @@ public class ModelServiceImpl implements ModelService {
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
-            Callable<List<String>> labelTask = () -> labelMapper.selectListById(modelId);
+            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
             String type = ConcurrentUtil.futureGet(typeFuture);
@@ -144,8 +144,8 @@ public class ModelServiceImpl implements ModelService {
             String isLike = ConcurrentUtil.futureGet(likeFuture);
             Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
             String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
-            List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+            Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+            List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
 
             UserInfoVO dto = null;
             if(uid!=null){
@@ -153,7 +153,7 @@ public class ModelServiceImpl implements ModelService {
                 dto = userInfo.getData();
                 AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
             }
-            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type, isLike,isCollection);
+            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type,isLike,isCollection);
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
         }catch (RuntimeException e){
@@ -224,6 +224,7 @@ public class ModelServiceImpl implements ModelService {
         if(!FileUtil.isImageFile(modelUpdateFormVO.getFile().getOriginalFilename())){
             throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
         }
+        mapper.updateModel(DateUtil.formatDate(),modelUpdateFormVO.getId());
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
         try {
             com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder()
@@ -264,25 +265,23 @@ public class ModelServiceImpl implements ModelService {
 
     //todo:优化方向，要么聚合调用次数要么文件服务去优化上传时间或者并发上传
     @Override
-    public ArrayList<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
+    public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
-        ArrayList<ReceiveUploadFileDTO> forms = new ArrayList<>();
-        for (MultipartFile multipartFile : file) {
-            try {
-                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder()
-                        .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
-                        .bucket(ModelConstant.DEFAULT_BUCKET)
-                        .path(ModelConstant.DEFAULT_MODEL_PATH)
-                        .file(multipartFile)
-                        .build());
-                forms.add(res.getData());
-            } catch (NoSuchAlgorithmException | IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            String[] path = new String[]{ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH};
+            String[] md5 = new String[]{FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())};
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModelList(file, path, md5, ModelConstant.DEFAULT_BUCKET);
+            return res.getData();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }catch (RuntimeException e){
+            logger.error(e);
+            throw new BaseException(e.toString());
         }
-        return forms;
     }
 
     @Override
@@ -291,7 +290,7 @@ public class ModelServiceImpl implements ModelService {
             try {
                 UploadModelForm form = UploadModelForm.builder()
                         .file(file)
-                        .path(ModelConstant.DEFAULT_MODEL_PATH)
+                        .path(ModelConstant.DEFAULT_IMAGE_PATH)
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                         .build();
@@ -548,6 +547,12 @@ public class ModelServiceImpl implements ModelService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ModelFileDO getModelFies(String modelId) {
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        return mapper.queryModelFile(modelId);
+    }
+
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
         limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
         Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
@@ -599,7 +604,7 @@ public class ModelServiceImpl implements ModelService {
 
     private ModelVO convertToModelVO(ModelDO model, String myUid, UserInfoVO userInfoVO) {
         ModelVO modelVO;
-        Callable<List<String>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
+        Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
         Callable<String> typeTask = () -> typeMapper.selectById(model.getTypeId()).getType();
         Callable<String> likeTask = () -> mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1";
         Callable<String> collectionTask = () -> mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1";
@@ -607,7 +612,7 @@ public class ModelServiceImpl implements ModelService {
         Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
         Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
         Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-        Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+        Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
 
         AbstractAssert.isBlank(ConcurrentUtil.futureGet(typeFuture),ResultCodeEnum.GET_TYPE_ERROR);
         AbstractAssert.isNull(ConcurrentUtil.futureGet(likeFuture),ResultCodeEnum.SYSTEM_ERROR);
@@ -616,7 +621,7 @@ public class ModelServiceImpl implements ModelService {
         String type = ConcurrentUtil.futureGet(typeFuture);
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-        List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+        List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
 
         if(userInfoVO==null){
             Result<UserInfoVO> userInfo = userServiceClient.one(myUid);

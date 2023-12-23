@@ -122,6 +122,26 @@ public class ModelListener implements ListenerInterface{
         }
     }
 
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(),
+                    exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
+                    key = "res.audio"
+            )
+    )
+    public void receiveAudio(Message message){
+        String messageBody = new String(message.getBody());
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            DetectionStatusDTO statusDTO = mapper.readValue(messageBody, DetectionStatusDTO.class);
+            auditProcessor(statusDTO);
+        } catch (JsonProcessingException e) {
+            logger.error(e);
+            throw new BaseException(e.toString());
+        }
+    }
+
+
     public void auditProcessor(DetectionStatusDTO statusDTO){
         logger.info(String.valueOf(statusDTO));
         String service = statusDTO.getName().split("-")[0];

@@ -264,4 +264,11 @@ public class ModelController {
         return Result.success(modelService.getLabelList(limit,page));
     }
 
+    @WhiteApi
+    @GetMapping("/model/modelFile")
+    public Result<?> queryModelFiles(@RequestHeader(value = "uid")String uid,
+                                     @RequestParam(value = "modelId")String modelId){
+        return Result.success(modelService.getModelFies(modelId));
+    }
+
 }

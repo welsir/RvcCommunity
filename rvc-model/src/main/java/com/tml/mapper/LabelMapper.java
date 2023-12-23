@@ -19,10 +19,10 @@ import java.util.List;
  */
 public interface LabelMapper extends BaseMapper<LabelDO> {
 
-    @Select("SELECT l.label FROM rvc_model_label l " +
+    @Select("SELECT l.id,l.label FROM rvc_model_label l " +
             "JOIN rvc_model_model_label mml ON l.id = mml.label_id " +
             "WHERE mml.model_id = #{modelId}")
-    List<String> selectListById(String modelId);
+    List<LabelVO> selectListById(String modelId);
 
     @Insert("<script>\n" +
             "    INSERT INTO rvc_model_model_label (model_id, label_id)\n" +
