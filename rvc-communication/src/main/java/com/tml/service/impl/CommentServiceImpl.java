@@ -61,42 +61,107 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             throw new SystemException(NEED_LOGIN);
         }
 
-
-        // 如果该评论为二级评论，查看其父评论是否存在
-        String parentId = commentDto.getRootCommentId();
-        if (!parentId.isBlank())
-        {
-            getById(parentId);
+        Post post = postMapper.selectById(commentDto.getPostId());
+        if (Objects.isNull(post)){
+            throw new RuntimeException("帖子不存在");
         }
 
-        // TODO: 2023/12/21 此处的ifelse想办法优化
-        String replyId = commentDto.getToCommentId();
-        if (!replyId.isBlank()){
-            // 如果回复评论id不为空，则不允许为一级评论（如果通过这步，说明该评论为二级评论）
-            if (parentId.isBlank())
-            {
-                throw new SystemException(QUERY_ERROR);
+        //判断该评论是一级还是二级
+        //一级只有 postid 就行了  其他都为空
+        //二级评论 判断是否为回复评论
+        //若不为回复评论  toCommentId 可以为空
+        //否则都不能为空
+        String toCommentId = commentDto.getToCommentId();
+        if (!toCommentId.isBlank()){
+            //回复评论要求参数都不能为空
+            if (commentDto.getRootCommentId().isBlank()||commentDto.getToUserId().isBlank()||commentDto.getToCommentId().isBlank()){
+                throw new RuntimeException("回复评论要求参数都不能为空");
             }
-
-            // 如果回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
-            // 如果回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
+            // 回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
+           // 回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
+            //回复评论存在  它的uid  应该等于我的同uid
             LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,replyId)
+            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
                     .eq(Comment::getDetectionStatus,1);
             Comment replayComment = getOne(commentLambdaQueryWrapper);
-//               Comment replayComment = commentRepository.findByReplayUserId(replyId);
-            if (replayComment != null && (!replayComment.getRootCommentId().equals(parentId) || replayComment.getRootCommentId().isBlank()))
-            {
-                throw new SystemException(QUERY_ERROR);
+            if (Objects.isNull(replayComment)){
+                throw new RuntimeException("不符合规定。");
             }
-        }else {
-            commentDto.setToCommentId("0");
-            commentDto.setRootCommentId("0");
+            if ((replayComment != null && (!replayComment.getRootCommentId().equals(commentDto.getRootCommentId()) )|| replayComment.getRootCommentId().equals("0"))||!commentDto.getToUserId().equals(replayComment.getUserId()))
+            {
+                throw new RuntimeException("不符合规定。");
+//                throw new SystemException(QUERY_ERROR);
+            }
+
+        }else{
+            //非回复评论
+            System.out.println(commentDto.getRootCommentId().isBlank());
+            System.out.println( !commentDto.getToUserId().isBlank());
+            System.out.println(!commentDto.getRootCommentId().isBlank());
+            System.out.println(commentDto.getToUserId().isBlank());
+            if ((commentDto.getRootCommentId().isBlank() && !commentDto.getToUserId().isBlank()) && (!commentDto.getRootCommentId().isBlank() && commentDto.getToUserId().isBlank())){
+                throw new RuntimeException("参数校验出错");
+            }
+            //否则为二级评论  判断uid和to uid是否相同
+            if (!commentDto.getToCommentId().isBlank()){
+                LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
+                        .eq(Comment::getDetectionStatus,1);
+                Comment replayComment = getOne(commentLambdaQueryWrapper);
+                if (Objects.isNull(replayComment)){
+                    throw new RuntimeException("不符合规定。");
+                }
+               if (! replayComment.getUserId().equals(commentDto.getToUserId())){
+                   throw new RuntimeException("参数校验出错");
+               }
+            }
         }
 
 
-        // 获取当前时间
-        // TODO: 2023/12/21 此处需要优化 太长了
+//        // 如果该评论为二级评论，查看其父评论是否存在
+//        String parentId = commentDto.getRootCommentId();
+//        if (!parentId.isBlank())
+//        {
+//            Comment comment = commentMapper.selectById(parentId);
+//            if (Objects.isNull(comment)){
+//                throw new RuntimeException("夫评论不存在");
+//            }
+//        }
+//
+//        // TODO: 2023/12/21 此处的ifelse想办法优化
+//        String replyId = commentDto.getToCommentId();
+//        if (!replyId.isBlank()){
+//            // 如果回复评论id不为空，则不允许为一级评论（如果通过这步，说明该评论为二级评论）
+//            if (parentId.isBlank())
+//            {
+//                throw new SystemException(QUERY_ERROR);
+//            }
+//
+//            // 如果回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
+//            // 如果回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
+//            //如果回复评论存在  它的uid  应该等于我的同uid
+//            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+//            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,replyId)
+//                    .eq(Comment::getDetectionStatus,1);
+//            Comment replayComment = getOne(commentLambdaQueryWrapper);
+////               Comment replayComment = commentRepository.findByReplayUserId(replyId);
+//            System.out.println(replayComment.getRootCommentId().equals(parentId));
+//            System.out.println((replayComment != null && (!replayComment.getRootCommentId().equals(parentId) )));
+//            System.out.println(replayComment.getRootCommentId().equals("0"));
+//            System.out.println(!commentDto.getToUserId().equals(replayComment.getUserId()));
+//            if ((replayComment != null && (!replayComment.getRootCommentId().equals(parentId) )|| replayComment.getRootCommentId().equals("0"))||!commentDto.getToUserId().equals(replayComment.getUserId()))
+//            {
+//                throw new SystemException(QUERY_ERROR);
+//            }
+//        }else {
+//            commentDto.setToCommentId("0");
+//            commentDto.setRootCommentId("0");
+//            commentDto.setToUserId("0");
+//        }
+//
+//
+//        // 获取当前时间
+//        // TODO: 2023/12/21 此处需要优化 太长了
         LocalDateTime currentTime = LocalDateTime.now();
         String uuid = Uuid.getUuid();
         Comment commentDo = Comment.builder()
