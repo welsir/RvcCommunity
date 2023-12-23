@@ -1,7 +1,7 @@
-package com.tml.strategy.impl;
+package com.tml.designpattern.strategy.impl;
 
 import com.tml.pojo.vo.PostVo;
-import com.tml.strategy.SortStrategy;
+import com.tml.designpattern.strategy.SortStrategy;
 
 import java.util.Comparator;
 import java.util.List;

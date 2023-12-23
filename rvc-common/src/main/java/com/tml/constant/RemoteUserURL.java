@@ -10,4 +10,6 @@ public class RemoteUserURL {
     public static final String USER_LIST = "/user/list";
 
     public static final String USER_EXIST = "/user/exist";
+
+    public static final String IS_FOLLOWDE = "/user/isFollowed";
 }

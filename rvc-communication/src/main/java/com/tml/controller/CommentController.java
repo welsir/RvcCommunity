@@ -1,22 +1,21 @@
 package com.tml.controller;
 
 
-import com.tml.annotation.ContentDetection;
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.ContentDetection;
+import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.enums.ContentDetectionEnum;
 import com.tml.pojo.dto.CoinDto;
 import com.tml.pojo.dto.CommentDto;
 import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.vo.CommentVo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
-import java.util.List;
+
 import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 
 /**
@@ -33,14 +32,21 @@ public class CommentController {
 
     private final CommentService commentService;
 
-
     @GetMapping("/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     @LaxTokenApi
-    public Result list(@Valid PageInfo<String> params){
-        return Result.success(commentService.list(params));
+    public Result list(@Valid PageInfo<String> params,
+                       @RequestHeader(required = false) String uid){
+        return Result.success(commentService.list(params,uid));
     }
 
+    @GetMapping("/childrenList")
+    @SystemLog(businessName = "获取某个帖子的子评论列表")
+    @LaxTokenApi
+    public Result childrenList(@Valid PageInfo<String> params,
+                               @RequestHeader(required = false) String uid){
+        return Result.success(commentService.childrenList(params,uid));
+    }
 
     @PostMapping("/add")
     @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
@@ -51,7 +57,6 @@ public class CommentController {
         return Result.success(commentService.comment(commentDto,uid));
     }
 
-
     @PutMapping("/favorite")
     @SystemLog(businessName = "点赞评论  [T]")
     @WhiteApi
@@ -60,6 +65,4 @@ public class CommentController {
         commentService.favorite(coinDto,uid);
         return Result.success();
     }
-
-
 }
