@@ -41,6 +41,8 @@ public class CommentVo {
 
     private UserInfoVO replayUser;
 
-    private List<CommentVo> childrenComment;
+    private boolean like;
+
+//    private List<CommentVo> childrenComment;
 }
 

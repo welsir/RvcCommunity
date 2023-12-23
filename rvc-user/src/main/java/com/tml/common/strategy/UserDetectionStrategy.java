@@ -1,10 +1,9 @@
 package com.tml.common.strategy;
 
-import com.tml.config.DetectionConfig;
 import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.DetectionStatusDto;
-
-import static com.tml.config.DetectionConfig.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Date 2023/12/20

@@ -26,4 +26,7 @@ public interface UserServiceClient {
 
     @GetMapping(value = RemoteUserURL.USER_EXIST)
     Result<Boolean> exist(@RequestParam String uid);
+
+    @GetMapping(value = RemoteUserURL.IS_FOLLOWDE)
+    Result<Boolean> isFollowed(@RequestParam String uid1, @RequestParam String uid2);
 }

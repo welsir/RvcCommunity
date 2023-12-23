@@ -2,10 +2,10 @@ package com.tml.mq.handler;
 
 import com.tml.mq.ReceiveHandler;
 import com.tml.pojo.dto.DetectionStatusDto;
-import com.tml.strategy.DetectionProcessStrategy;
-import com.tml.strategy.impl.CommentProcessStrategy;
-import com.tml.strategy.impl.CoverProcessStrategy;
-import com.tml.strategy.impl.PostProcessStrategy;
+import com.tml.designpattern.strategy.DetectionProcessStrategy;
+import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
+import com.tml.designpattern.strategy.impl.CoverProcessStrategy;
+import com.tml.designpattern.strategy.impl.PostProcessStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
