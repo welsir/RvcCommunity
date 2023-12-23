@@ -101,9 +101,9 @@ public class UserServiceImpl implements UserService {
         userInfo.setUpdatedAt(LocalDateTime.now());
         userInfo.setUsername(RandomStringUtil.generateRandomString());
         userInfo.setNickname(userInfo.getUsername());
-        userData.setUid(userInfo.getUid());
         try {
             userInfoMapper.insert(userInfo);
+            userData.setUid(userInfo.getUid());
             userDataMapper.insert(userData);
         } catch (Exception e){
             throw new RvcSQLException(e.getMessage());
