@@ -117,6 +117,16 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             }
         }
 
+        if (commentDto.getToCommentId().isBlank()){
+            commentDto.setToCommentId("0");
+        }
+        if (commentDto.getToUserId().isBlank()){
+            commentDto.setToUserId("0");
+        }
+        if (commentDto.getRootCommentId().isBlank()){
+            commentDto.setRootCommentId("0");
+        }
+
 
 //        // 如果该评论为二级评论，查看其父评论是否存在
 //        String parentId = commentDto.getRootCommentId();
