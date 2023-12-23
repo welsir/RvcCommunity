@@ -375,5 +375,6 @@ public class UserServiceImpl implements UserService {
         UserInfo userInfo = userInfoMapper.selectOne(queryWrapper);
 
         return TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername());
+
     }
 }
