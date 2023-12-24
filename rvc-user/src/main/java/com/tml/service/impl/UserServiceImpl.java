@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tml.config.DetectionConfig.*;
+import static com.tml.config.UserConfig.DEFAULT_AVATAR;
 import static com.tml.pojo.enums.EmailEnums.*;
 
 /**
@@ -100,6 +101,7 @@ public class UserServiceImpl implements UserService {
         userInfo.setUpdatedAt(LocalDateTime.now());
         userInfo.setUsername(RandomStringUtil.generateRandomString());
         userInfo.setNickname(userInfo.getUsername());
+        userInfo.setAvatar(DEFAULT_AVATAR);
         try {
             userInfoMapper.insert(userInfo);
             userData.setUid(userInfo.getUid());
