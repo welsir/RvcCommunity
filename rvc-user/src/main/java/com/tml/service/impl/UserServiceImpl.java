@@ -112,6 +112,7 @@ public class UserServiceImpl implements UserService {
         return Map.of("token", TokenUtil.getToken(userInfo.getUid(), userInfo.getUsername()));
     }
 
+
     @Override
     public Map<String, String> preCode() {
         return codeUtil.image();
