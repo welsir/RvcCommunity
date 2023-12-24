@@ -144,7 +144,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
                 boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
                 boolean like = likePostMapper.selectCount(likePostQueryWrapper) > 0;
-                postVo.setLike(like);
+
+                //获取封面
+
+            Cover cover = coverMapper.selectById(records.get(i).getCoverId());
+            postVo.setCover(cover.getCoverUrl());
+
+
+            postVo.setLike(like);
                 postVo.setCollect(collect);
 
             }
