@@ -31,7 +31,6 @@ public class UserInfoDTO {
     @NotBlank
     private String nickname;
 
-    @NotBlank
     private String sex;
 
     private String description;
