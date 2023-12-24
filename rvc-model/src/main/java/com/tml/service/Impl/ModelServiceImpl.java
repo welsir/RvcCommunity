@@ -30,6 +30,7 @@ import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cloud.openfeign.FeignClientProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,10 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -314,7 +312,6 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public ReceiveUploadFileDTO uploadAudio(MultipartFile file, String uid) {
-
         if(FileUtil.checkAudioFileIsAvailable(file)){
             try {
                 UploadModelForm form = UploadModelForm.builder()
@@ -599,7 +596,9 @@ public class ModelServiceImpl implements ModelService {
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
         io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
-        builder.uid(commentUid)
+        builder
+                .id(commentDO.getId().toString())
+                .uid(commentUid)
                 .parentId(commentDO.getParentId())
                 .commentTime(commentDO.getCreateTime())
                 .content(commentDO.getContent())
