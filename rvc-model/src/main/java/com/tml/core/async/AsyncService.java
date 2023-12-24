@@ -19,6 +19,7 @@ import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -132,4 +133,19 @@ public class AsyncService {
         }
     }
 
+    @Scheduled(fixedRate = 3000)
+    public void clearMap() {
+        if (modelViews.size() == 0) {
+            return;
+        }
+        modelViews.forEach(
+                (key,val)->{
+                    UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+                    wrapper.eq("id",key);
+                    wrapper.setSql("view_num = view_num"+val);
+                    mapper.update(null,wrapper);
+                }
+        );
+        modelViews.clear();
+    }
 }

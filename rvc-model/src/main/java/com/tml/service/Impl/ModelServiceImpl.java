@@ -516,9 +516,11 @@ public class ModelServiceImpl implements ModelService {
                     .build();
             return mapper.insertModelUserLikes(
                     build
-            )==1;
+            )==1 &&
+                    mapper.update(null, new UpdateWrapper<ModelDO>().setSql("likes_num = likes_num+1"))==1;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
-            return mapper.delModelLikes(uid,modelId)==1;
+            return mapper.delModelLikes(uid,modelId)==1 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("likes_num = likes_num - 1"))==1;
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -533,9 +535,11 @@ public class ModelServiceImpl implements ModelService {
                     .uid(uid)
                     .build();
             return mapper.insertModelUserCollection(
-                    build)==1;
+                    build)==1 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num +1"))==1;
         }else if(ModelConstant.UN_FLAG.equals(status)){
-            return mapper.delModelCollection(uid,modelId)==1;
+            return mapper.delModelCollection(uid,modelId)==1 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"))==1;
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
