@@ -79,7 +79,7 @@ public class CodeUtil {
     public boolean preVerify(String uuid, String code){
         String c = stringRedisTemplate.opsForValue().get(CodeCofig.IMAGE_BASE + uuid);
         if(c != null && c.equals(code)){
-            stringRedisTemplate.delete(uuid);
+            stringRedisTemplate.delete(CodeCofig.IMAGE_BASE + uuid);
             return true;
         }
         return false;

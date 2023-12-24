@@ -193,6 +193,7 @@ public class UserServiceImpl implements UserService {
         switch (userInfoDTO.getSex()){
             case "男":
             case "女":
+            case "未知":
                 if(user.getSex() == null || !user.getSex().equals(userInfoDTO.getSex())){
                     user.setSex(userInfoDTO.getSex());
                     flag = true;
@@ -200,8 +201,7 @@ public class UserServiceImpl implements UserService {
                 break;
             default: throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
         }
-
-        if(user.getBirthday() == null || user.getBirthday() == userInfoDTO.getBirthday()){
+        if(userInfoDTO.getBirthday() != null && (user.getBirthday() == null || user.getBirthday() == userInfoDTO.getBirthday())){
             user.setBirthday(userInfoDTO.getBirthday());
             flag = true;
         }
