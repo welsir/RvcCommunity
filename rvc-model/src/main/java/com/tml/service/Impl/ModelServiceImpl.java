@@ -556,9 +556,20 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public ModelFileDO getModelFies(String modelId) {
+    public List<ModelFileVO> getModelFies(String modelId) {
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
-        return mapper.queryModelFile(modelId);
+        ModelFileDO modelFileDO = mapper.queryModelFile(modelId);
+        com.tml.pojo.Result<String> index = fileServiceClient.downloadModel(DownloadModelForm.builder().fileId(modelFileDO.getIndexFileId()).build());
+        ModelFileVO modelFileVO1 = new ModelFileVO();
+        modelFileVO1.setId(modelFileDO.getModelId());
+        modelFileVO1.setFileName(".index");
+        modelFileVO1.setUrl(index.getData());
+        com.tml.pojo.Result<String> pth = fileServiceClient.downloadModel(DownloadModelForm.builder().fileId(modelFileDO.getPthFileId()).build());
+        ModelFileVO modelFileVO2 = new ModelFileVO();
+        modelFileVO2.setId(modelFileDO.getModelId());
+        modelFileVO2.setFileName(".pth");
+        modelFileVO2.setUrl(pth.getData());
+        return List.of(modelFileVO1,modelFileVO2);
     }
 
     @Override

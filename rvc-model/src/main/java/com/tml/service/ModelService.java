@@ -60,7 +60,7 @@ public interface ModelService {
 
     List<LabelVO> getLabelList(String limit,String page);
 
-    ModelFileDO getModelFies(String modelId);
+    List<ModelFileVO> getModelFies(String modelId);
 
     List<TypeDO> queryTypeList();
 
