@@ -27,6 +27,7 @@ public enum ResultEnums implements Serializable {
     FAIL_GET_IMAGE_CODE("531", "获取图片验证码失败"),
     CANT_FOLLOW_YOURSELF("532", "不能关注你自己"),
     SEX_VALUE_ERROR("533", "用户性别错误"),
+    FILE_SIZE_LIMIT("534", "头像大小不能超过5MB"),
     UID_NOT_EIXST("620", "uid不存在"),
     USER_NOT_EXIST("621", "用户不存在");
 

@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tml.config.DetectionConfig.*;
+import static com.tml.config.FileConfig.MAX_FILE_SIZE;
 import static com.tml.config.UserConfig.DEFAULT_AVATAR;
 import static com.tml.pojo.enums.EmailEnums.*;
 
@@ -292,6 +293,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void avatar(MultipartFile file, String uid, String username){
+        if(file.getSize() > MAX_FILE_SIZE){
+            throw new ServerException(ResultEnums.FILE_SIZE_LIMIT);
+        }
         try {
             UploadModelForm form = UploadModelForm.builder()
                     .bucket(FileConfig.USER_BUCKET)
