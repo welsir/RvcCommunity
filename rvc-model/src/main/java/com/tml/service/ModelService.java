@@ -3,6 +3,7 @@ package com.tml.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.tml.pojo.DO.ModelFileDO;
+import com.tml.pojo.DO.TypeDO;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,4 +61,7 @@ public interface ModelService {
     List<LabelVO> getLabelList(String limit,String page);
 
     ModelFileDO getModelFies(String modelId);
+
+    List<TypeDO> queryTypeList();
+
 }

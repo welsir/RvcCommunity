@@ -57,4 +57,5 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
 
     @Update("update rvc_model set update_time = #{updateTime} where id =  #{modelId}")
     void updateModel(String updateTime,String modelId);
+
 }

@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
@@ -86,7 +87,8 @@ public class ModelController {
      * @param uid
      * @return: Result<?>
      **/
-    @WhiteApi
+    @InternalApi
+//    @WhiteApi
     @PostMapping("/addModel")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
                                     @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
@@ -113,7 +115,8 @@ public class ModelController {
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
     }
-    @WhiteApi
+    @InternalApi
+//    @WhiteApi
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
             MultipartFile[] file,
@@ -128,7 +131,8 @@ public class ModelController {
         return Result.success(modelService.uploadImage(file,uid));
     }
 
-    @WhiteApi
+    @InternalApi
+//    @WhiteApi
     @PostMapping("/upload/audio")
     public Result<?> uploadAudio(
             MultipartFile file,
@@ -269,6 +273,12 @@ public class ModelController {
     public Result<?> queryModelFiles(@RequestHeader(value = "uid")String uid,
                                      @RequestParam(value = "modelId")String modelId){
         return Result.success(modelService.getModelFies(modelId));
+    }
+
+    @LaxTokenApi
+    @GetMapping("/model/type")
+    public Result<?> queryType(){
+        return Result.success(modelService.queryTypeList());
     }
 
 }

@@ -557,6 +557,11 @@ public class ModelServiceImpl implements ModelService {
         return mapper.queryModelFile(modelId);
     }
 
+    @Override
+    public List<TypeDO> queryTypeList() {
+        return typeMapper.selectList(null);
+    }
+
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
         limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
         Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
@@ -669,4 +674,5 @@ public class ModelServiceImpl implements ModelService {
             throw new BaseException(e.toString());
         }
     }
+
 }
