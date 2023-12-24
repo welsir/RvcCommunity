@@ -268,9 +268,9 @@ public class ModelController {
         return Result.success(modelService.getLabelList(limit,page));
     }
 
-    @WhiteApi
+    @LaxTokenApi
     @GetMapping("/model/modelFile")
-    public Result<?> queryModelFiles(@RequestHeader(value = "uid")String uid,
+    public Result<?> queryModelFiles(@RequestHeader(value = "uid",required = false)String uid,
                                      @RequestParam(value = "modelId")String modelId){
         return Result.success(modelService.getModelFies(modelId));
     }
