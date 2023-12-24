@@ -57,7 +57,7 @@ public class CodeUtil {
     public boolean emailVerify(String email, EmailEnums enums, String code){
         String c = stringRedisTemplate.opsForValue().get(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
         if(c != null && c.equals(code)){
-            stringRedisTemplate.delete(enums.getCodeHeader() + email);
+            stringRedisTemplate.delete(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
             return true;
         }
         return false;
