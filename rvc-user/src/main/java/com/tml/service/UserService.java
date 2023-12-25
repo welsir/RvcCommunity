@@ -1,10 +1,10 @@
 package com.tml.service;
 
-import com.tml.pojo.dto.LoginDTO;
-import com.tml.pojo.dto.RegisterDTO;
-import com.tml.pojo.dto.UpdatePasswordDTO;
-import com.tml.pojo.dto.UserInfoDTO;
-import com.tml.pojo.vo.UserInfoVO;
+import com.tml.domain.dto.LoginDTO;
+import com.tml.domain.dto.RegisterDTO;
+import com.tml.domain.dto.UpdatePasswordDTO;
+import com.tml.domain.dto.UserInfoDTO;
+import com.tml.domain.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,19 +1,16 @@
 package com.tml.core.async;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
-import com.tml.pojo.DO.LabelDO;
-import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.DTO.AsyncDetectionForm;
-import com.tml.pojo.DTO.DetectionTaskDTO;
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.DO.LabelDO;
+import com.tml.domain.DO.ModelDO;
+import com.tml.domain.DTO.AsyncDetectionForm;
+import com.tml.domain.DTO.DetectionTaskDTO;
+import com.tml.domain.ResultCodeEnum;
 import com.tml.utils.DateUtil;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 

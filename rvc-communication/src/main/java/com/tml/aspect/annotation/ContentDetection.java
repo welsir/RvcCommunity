@@ -1,6 +1,6 @@
 package com.tml.aspect.annotation;
 
-import com.tml.enums.ContentDetectionEnum;
+import com.tml.constant.enums.ContentDetectionEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

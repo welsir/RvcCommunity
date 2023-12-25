@@ -1,6 +1,6 @@
 package com.tml.exception;
 
-import com.tml.pojo.enums.ResultEnums;
+import com.tml.domain.enums.ResultEnums;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

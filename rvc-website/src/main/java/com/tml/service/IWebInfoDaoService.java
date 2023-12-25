@@ -1,6 +1,6 @@
 package com.tml.service;
 
-import com.tml.pojo.WebInfoDO;
+import com.tml.domain.WebInfoDO;
 
 public interface IWebInfoDaoService {
 

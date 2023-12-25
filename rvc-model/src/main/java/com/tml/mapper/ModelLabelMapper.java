@@ -1,7 +1,7 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.pojo.DO.ModelLabelDO;
+import com.tml.domain.DO.ModelLabelDO;
 
 /**
  * @Description

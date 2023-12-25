@@ -4,10 +4,10 @@ import com.tml.aspect.annotation.ContentDetection;
 import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.enums.ContentDetectionEnum;
+import com.tml.constant.enums.ContentDetectionEnum;
 
 import com.tml.feign.RvcCommunicationServiceFeignClient;
-import com.tml.pojo.dto.*;
+import com.tml.domain.dto.*;
 import com.tml.service.PostService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;

@@ -26,7 +26,8 @@ spring:
         cluster-name: BJ
         ip: ${SERVER_ADDR:ENC(Im0338XUjGgPi8/noOyN48Ine8N+5IQptwjuGJRD1Lk=)}
   rabbitmq:
-    host: ${MQ_ADDR:ENC(oJOoWcwxDz1yPbEsfKYhXNSBiyh6hKYrkeBAt6bXWNU=)} # rabbitMQ的ip地址
+    host: 1.94.28.8
+#    ${MQ_ADDR:ENC(oJOoWcwxDz1yPbEsfKYhXNSBiyh6hKYrkeBAt6bXWNU=)} # rabbitMQ的ip地址
     port: ${MQ_PORT:ENC(7A9EOZIGloPHE+ofbF3eGne7n+NKqghG)} # 端口
     username: ${MQ_USERNAME:ENC(msEZZscluZTBTTAyc7ECn1cKzvzSX5fA)}
     password: ${MQ_PWD:ENC(YbfbsvqhMk5HzoBoXsjKOwzKLEJW64uEtn2Lwcuzdfdb6l2H9+V6og==)}

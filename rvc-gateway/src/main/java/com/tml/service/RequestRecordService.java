@@ -1,7 +1,7 @@
 package com.tml.service;
 
 import com.tml.mapper.RequestRecordMapper;
-import com.tml.pojo.DO.RequestRecordDO;
+import com.tml.domain.DO.RequestRecordDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

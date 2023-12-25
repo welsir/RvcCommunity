@@ -10,7 +10,7 @@
     <delete id="deleteLikeComment">
         DELETE FROM rvc_communication_comment_likes ${ew.customSqlSegment}
     </delete>
-    <select id="existsRecord" resultType="boolean">
-        SELECT EXISTS(SELECT 1 FROM rvc_communication_comment WHERE ${key} = '${value}')
-    </select>
+<!--    <select id="existsRecord" resultType="boolean">-->
+<!--        SELECT EXISTS(SELECT 1 FROM rvc_communication_comment WHERE ${key} = '${value}')-->
+<!--    </select>-->
 </mapper>

@@ -3,9 +3,9 @@ package com.tml.mapperTest;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.mapper.CommentMapper;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.entity.Comment;
-import com.tml.pojo.entity.LikeComment;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.entity.Comment;
+import com.tml.domain.entity.LikeComment;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +24,11 @@ public class comment {
     @Autowired
     private CommentMapper commentMapper;
 
-
-    @Test
-    public void exist(){
-        System.out.println(commentMapper.existsRecord("post_comment_id","1737545008459939841"));
-    }
+//
+//    @Test
+//    public void exist(){
+//        System.out.println(commentMapper.existsRecord("post_comment_id","1737545008459939841"));
+//    }
 
 
     @Test

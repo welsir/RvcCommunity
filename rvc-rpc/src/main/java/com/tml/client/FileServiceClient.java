@@ -1,11 +1,11 @@
 package com.tml.client;
 
-import com.tml.pojo.Result;
+import com.tml.domain.Result;
 import com.tml.config.FeignConfig;
 import com.tml.constant.RemoteModuleURL;
-import com.tml.pojo.DTO.ReceiveUploadFileDTO;
-import com.tml.pojo.VO.DownloadModelForm;
-import com.tml.pojo.VO.UploadModelForm;
+import com.tml.domain.DTO.ReceiveUploadFileDTO;
+import com.tml.domain.VO.DownloadModelForm;
+import com.tml.domain.VO.UploadModelForm;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;

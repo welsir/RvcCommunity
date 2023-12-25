@@ -1,6 +1,6 @@
 package com.tml.core.factory.mqFactory;
 
-import com.tml.pojo.DTO.DetectionTaskDTO;
+import com.tml.domain.DTO.DetectionTaskDTO;
 
 /**
  * @Description

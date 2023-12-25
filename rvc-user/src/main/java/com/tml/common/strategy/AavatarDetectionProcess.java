@@ -1,7 +1,7 @@
 package com.tml.common.strategy;
 
-import com.tml.pojo.DO.UserInfo;
-import com.tml.pojo.dto.DetectionStatusDto;
+import com.tml.domain.DO.UserInfo;
+import com.tml.domain.dto.DetectionStatusDto;
 
 import java.time.LocalDateTime;
 

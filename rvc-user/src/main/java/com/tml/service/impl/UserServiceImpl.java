@@ -2,30 +2,27 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
-import com.tml.common.UserContext;
 import com.tml.common.rabbitmq.RabbitMQListener;
 import com.tml.config.FileConfig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
-import com.tml.pojo.DO.*;
-import com.tml.pojo.DTO.ReceiveUploadFileDTO;
-import com.tml.pojo.Result;
-import com.tml.pojo.VO.UploadModelForm;
-import com.tml.pojo.dto.*;
-import com.tml.pojo.enums.ResultEnums;
-import com.tml.pojo.vo.UserInfoVO;
+import com.tml.domain.DO.*;
+import com.tml.domain.DTO.ReceiveUploadFileDTO;
+import com.tml.domain.Result;
+import com.tml.domain.VO.UploadModelForm;
+import com.tml.domain.dto.*;
+import com.tml.domain.enums.ResultEnums;
+import com.tml.domain.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
-import io.github.util.time.TimeUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +31,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tml.config.DetectionConfig.*;
-import static com.tml.pojo.enums.EmailEnums.*;
+import static com.tml.domain.enums.EmailEnums.*;
 
 /**
  * @Date 2023/12/10

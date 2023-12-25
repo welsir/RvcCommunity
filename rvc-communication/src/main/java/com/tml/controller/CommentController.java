@@ -5,10 +5,10 @@ import com.tml.aspect.annotation.ContentDetection;
 import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.enums.ContentDetectionEnum;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.CommentDto;
-import com.tml.pojo.dto.PageInfo;
+import com.tml.constant.enums.ContentDetectionEnum;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CommentDto;
+import com.tml.domain.dto.PageInfo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +50,7 @@ public class CommentController {
 
     @PostMapping("/add")
     @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
-    @WhiteApi
+//    @WhiteApi
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody @Valid CommentDto commentDto,
                       @RequestHeader String uid){

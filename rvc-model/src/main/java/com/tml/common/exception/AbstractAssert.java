@@ -1,10 +1,8 @@
 package com.tml.common.exception;
 
 import com.alibaba.cloud.commons.lang.StringUtils;
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.ResultCodeEnum;
 import org.springframework.lang.Nullable;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @Description

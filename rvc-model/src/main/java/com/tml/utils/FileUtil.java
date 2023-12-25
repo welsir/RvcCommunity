@@ -2,7 +2,7 @@ package com.tml.utils;
 
 import com.tml.common.exception.BaseException;
 import com.tml.config.SystemConfig;
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.ResultCodeEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,11 +1,11 @@
 package com.tml.service;
 
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.CoverDto;
-import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.dto.PostDto;
-import com.tml.pojo.vo.PostSimpleVo;
-import com.tml.pojo.vo.PostVo;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CoverDto;
+import com.tml.domain.dto.PageInfo;
+import com.tml.domain.dto.PostDto;
+import com.tml.domain.vo.PostSimpleVo;
+import com.tml.domain.vo.PostVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

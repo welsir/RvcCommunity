@@ -1,10 +1,7 @@
 package com.tml.common.strategy;
 
-import com.tml.config.DetectionConfig;
-import com.tml.pojo.DO.UserInfo;
-import com.tml.pojo.dto.DetectionStatusDto;
-
-import static com.tml.config.DetectionConfig.*;
+import com.tml.domain.DO.UserInfo;
+import com.tml.domain.dto.DetectionStatusDto;
 
 /**
  * @Date 2023/12/20

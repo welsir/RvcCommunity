@@ -1,13 +1,12 @@
 package com.tml.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.CommentDto;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CommentDto;
 
-import com.tml.pojo.dto.PageInfo;
-import com.tml.pojo.entity.Comment;
-import com.tml.pojo.vo.CommentVo;
+import com.tml.domain.dto.PageInfo;
+import com.tml.domain.entity.Comment;
+import com.tml.domain.vo.CommentVo;
 
 import java.util.List;
 

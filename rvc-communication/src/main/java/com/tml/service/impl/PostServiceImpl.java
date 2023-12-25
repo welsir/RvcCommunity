@@ -10,16 +10,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
-import com.tml.exception.SystemException;
-import com.tml.interceptor.UserLoginInterceptor;
+import com.tml.handler.exception.SystemException;
 import com.tml.mapper.*;
-import com.tml.pojo.DTO.ReceiveUploadFileDTO;
-import com.tml.pojo.VO.UploadModelForm;
-import com.tml.pojo.VO.UserInfoVO;
-import com.tml.pojo.dto.*;
-import com.tml.pojo.entity.*;
-import com.tml.pojo.vo.PostSimpleVo;
-import com.tml.pojo.vo.PostVo;
+import com.tml.domain.DTO.ReceiveUploadFileDTO;
+import com.tml.domain.VO.UploadModelForm;
+import com.tml.domain.VO.UserInfoVO;
+import com.tml.domain.dto.*;
+import com.tml.domain.entity.*;
+import com.tml.domain.vo.PostSimpleVo;
+import com.tml.domain.vo.PostVo;
 import com.tml.service.PostService;
 import com.tml.designpattern.strategy.SortStrategy;
 import com.tml.designpattern.strategy.impl.LikeSortStrategy;
@@ -46,7 +45,7 @@ import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
 import static com.tml.constant.DetectionConstants.UN_DETECTION;
-import static com.tml.enums.AppHttpCodeEnum.*;
+import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
 /**
  * @NAME: PostServiceImpl
@@ -149,7 +148,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
             Cover cover = coverMapper.selectById(records.get(i).getCoverId());
             postVo.setCover(cover.getCoverUrl());
-
 
             postVo.setLike(like);
                 postVo.setCollect(collect);
@@ -500,14 +498,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         }
 
 
-        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-        String uuid = loginInfoDTO.getId();
 // TODO: 2023/12/21 代码优化
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
         Page<LikePost> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(LikePost::getUid, uuid);
+        likePostLambdaQueryWrapper.eq(LikePost::getUid, uid);
         Page<LikePost> likePostPage = likePostMapper.selectPage(page, likePostLambdaQueryWrapper);
         List<LikePost> records = likePostPage.getRecords();
         if (records.size() == 0){
@@ -679,7 +675,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .md5(MD5Util.getMD5(uploadBytes.toString()))
                 .path("rvc/image3")
                 .build();
-        com.tml.pojo.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
+        com.tml.domain.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
         try {
             receiveUploadFileDTOResult = fileServiceClient.uploadModel(build);
         } catch (Exception e) {

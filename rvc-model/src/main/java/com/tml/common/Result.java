@@ -1,14 +1,14 @@
 package com.tml.common;
 
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.ResultCodeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-import static com.tml.pojo.ResultCodeEnum.SUCCESS;
-import static com.tml.pojo.ResultCodeEnum.SYSTEM_ERROR;
+import static com.tml.domain.ResultCodeEnum.SUCCESS;
+import static com.tml.domain.ResultCodeEnum.SYSTEM_ERROR;
 
 /**
  * @Description

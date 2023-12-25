@@ -16,15 +16,13 @@ import com.tml.core.async.AsyncService;
 
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.*;
-import com.tml.pojo.DO.*;
+import com.tml.domain.DO.*;
 
-import com.tml.pojo.DTO.*;
-import com.tml.pojo.ResultCodeEnum;
-import com.tml.pojo.VO.*;
-import com.tml.pojo.VO.DownloadModelForm;
-import com.tml.pojo.VO.UploadModelForm;
-import com.tml.pojo.VO.UserCollectionModelVO;
-import com.tml.pojo.VO.UserLikesModelVO;
+import com.tml.domain.DTO.*;
+import com.tml.domain.ResultCodeEnum;
+import com.tml.domain.VO.*;
+import com.tml.domain.VO.DownloadModelForm;
+import com.tml.domain.VO.UploadModelForm;
 import com.tml.service.ModelService;
 import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
@@ -34,7 +32,6 @@ import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +44,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -205,7 +201,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public String downloadModel(String modelId,String uid) {
-        com.tml.pojo.Result<String> result = fileServiceClient.downloadModel(
+        com.tml.domain.Result<String> result = fileServiceClient.downloadModel(
                 DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
         );
         return result.getData();
@@ -255,7 +251,7 @@ public class ModelServiceImpl implements ModelService {
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
                         .build();
-                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                com.tml.domain.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
                 fileForms.add(res.getData());
             }
             return fileForms;
@@ -275,7 +271,7 @@ public class ModelServiceImpl implements ModelService {
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                         .build();
-                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                com.tml.domain.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
                 return res.getData();
             } catch (NoSuchAlgorithmException | IOException e) {
                 logger.error("%s:"+e.getStackTrace()[0],e);

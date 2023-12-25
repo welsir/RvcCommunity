@@ -1,9 +1,9 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.pojo.DO.ModelCollectionDO;
-import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.DO.ModelLikeDO;
+import com.tml.domain.DO.ModelCollectionDO;
+import com.tml.domain.DO.ModelDO;
+import com.tml.domain.DO.ModelLikeDO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;

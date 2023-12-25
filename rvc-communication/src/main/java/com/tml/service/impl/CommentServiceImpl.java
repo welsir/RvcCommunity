@@ -1,38 +1,46 @@
 package com.tml.service.impl;
 
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.lang.TypeReference;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.UserServiceClient;
-import com.tml.exception.SystemException;
+import com.tml.designpattern.chain.ext.CommentExistApproveChain;
+import com.tml.designpattern.chain.ext.LastStepApproveChain;
+import com.tml.designpattern.chain.ext.PostExistApproveChain;
+import com.tml.designpattern.chain.ext.UserExistApproveChain;
+import com.tml.handler.exception.SystemException;
 import com.tml.mapper.CommentMapper;
 
 import com.tml.mapper.LikeCommentMapper;
 import com.tml.mapper.PostMapper;
-import com.tml.pojo.VO.UserInfoVO;
-import com.tml.pojo.dto.*;
-import com.tml.pojo.entity.Comment;
-import com.tml.pojo.entity.LikeComment;
-import com.tml.pojo.entity.Post;
-import com.tml.pojo.vo.CommentVo;
+import com.tml.domain.VO.UserInfoVO;
+import com.tml.domain.dto.*;
+import com.tml.domain.entity.Comment;
+import com.tml.domain.entity.LikeComment;
+import com.tml.domain.entity.Post;
+import com.tml.domain.vo.CommentVo;
 import com.tml.service.CommentService;
 import com.tml.utils.BeanCopyUtils;
 import com.tml.utils.Uuid;
-import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.tml.constant.DetectionConstants.*;
-import static com.tml.enums.AppHttpCodeEnum.*;
+import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
 
 /**
@@ -43,292 +51,133 @@ import static com.tml.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
-public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> implements CommentService {
+public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     private final CommentMapper commentMapper;
     private final LikeCommentMapper likeCommentMapper;
     private final UserServiceClient userServiceClient;
-    private final PostMapper postMapper;
+
+
+//责任链
+    private final UserExistApproveChain userExistApproveChain;
+    private final PostExistApproveChain postExistApproveChain;
+    private final LastStepApproveChain lastStepApproveChain;
+    private final CommentExistApproveChain commentExistApproveChain;
 
 
     @Override
     public String comment(CommentDto commentDto,String uid) {
+//数据校验  用户存在 -》 帖子存在
+        userExistApproveChain.setNext(uid,postExistApproveChain);
+        postExistApproveChain.setNext(commentDto.getPostId(),lastStepApproveChain);
+        userExistApproveChain.approve();
+        commentCheck(commentDto);
 
-
-        // TODO: 2023/12/21 此处的判断放到责任链中
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-        Post post = postMapper.selectById(commentDto.getPostId());
-        if (Objects.isNull(post)){
-            throw new RuntimeException("帖子不存在");
-        }
-
-        //判断该评论是一级还是二级
-        //一级只有 postid 就行了  其他都为空
-        //二级评论 判断是否为回复评论
-        //若不为回复评论  toCommentId 可以为空
-        //否则都不能为空
-        String toCommentId = commentDto.getToCommentId();
-        if (!toCommentId.isBlank()){
-            //回复评论要求参数都不能为空
-            if (commentDto.getRootCommentId().isBlank()||commentDto.getToUserId().isBlank()||commentDto.getToCommentId().isBlank()){
-                throw new RuntimeException("回复评论要求参数都不能为空");
-            }
-            // 回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
-           // 回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
-            //回复评论存在  它的uid  应该等于我的同uid
-            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
-                    .eq(Comment::getDetectionStatus,1);
-            Comment replayComment = getOne(commentLambdaQueryWrapper);
-            if (Objects.isNull(replayComment)){
-                throw new RuntimeException("不符合规定。");
-            }
-            if ((replayComment != null && (!replayComment.getRootCommentId().equals(commentDto.getRootCommentId()) )|| replayComment.getRootCommentId().equals("0"))||!commentDto.getToUserId().equals(replayComment.getUserId()))
-            {
-                throw new RuntimeException("不符合规定。");
-//                throw new SystemException(QUERY_ERROR);
-            }
-
-        }else{
-            //非回复评论
-            System.out.println(commentDto.getRootCommentId().isBlank());
-            System.out.println( !commentDto.getToUserId().isBlank());
-            System.out.println(!commentDto.getRootCommentId().isBlank());
-            System.out.println(commentDto.getToUserId().isBlank());
-            if ((commentDto.getRootCommentId().isBlank() && !commentDto.getToUserId().isBlank()) && (!commentDto.getRootCommentId().isBlank() && commentDto.getToUserId().isBlank())){
-                throw new RuntimeException("参数校验出错");
-            }
-            //否则为二级评论  判断uid和to uid是否相同
-            if (!commentDto.getToCommentId().isBlank()){
-                LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
-                        .eq(Comment::getDetectionStatus,1);
-                Comment replayComment = getOne(commentLambdaQueryWrapper);
-                if (Objects.isNull(replayComment)){
-                    throw new RuntimeException("不符合规定。");
-                }
-               if (! replayComment.getUserId().equals(commentDto.getToUserId())){
-                   throw new RuntimeException("参数校验出错");
-               }
-            }
-        }
-
-        if (commentDto.getToCommentId().isBlank()){
-            commentDto.setToCommentId("0");
-        }
-        if (commentDto.getToUserId().isBlank()){
-            commentDto.setToUserId("0");
-        }
-        if (commentDto.getRootCommentId().isBlank()){
-            commentDto.setRootCommentId("0");
-        }
-
-
-//        // 如果该评论为二级评论，查看其父评论是否存在
-//        String parentId = commentDto.getRootCommentId();
-//        if (!parentId.isBlank())
-//        {
-//            Comment comment = commentMapper.selectById(parentId);
-//            if (Objects.isNull(comment)){
-//                throw new RuntimeException("夫评论不存在");
-//            }
-//        }
-//
-//        // TODO: 2023/12/21 此处的ifelse想办法优化
-//        String replyId = commentDto.getToCommentId();
-//        if (!replyId.isBlank()){
-//            // 如果回复评论id不为空，则不允许为一级评论（如果通过这步，说明该评论为二级评论）
-//            if (parentId.isBlank())
-//            {
-//                throw new SystemException(QUERY_ERROR);
-//            }
-//
-//            // 如果回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
-//            // 如果回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
-//            //如果回复评论存在  它的uid  应该等于我的同uid
-//            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,replyId)
-//                    .eq(Comment::getDetectionStatus,1);
-//            Comment replayComment = getOne(commentLambdaQueryWrapper);
-////               Comment replayComment = commentRepository.findByReplayUserId(replyId);
-//            System.out.println(replayComment.getRootCommentId().equals(parentId));
-//            System.out.println((replayComment != null && (!replayComment.getRootCommentId().equals(parentId) )));
-//            System.out.println(replayComment.getRootCommentId().equals("0"));
-//            System.out.println(!commentDto.getToUserId().equals(replayComment.getUserId()));
-//            if ((replayComment != null && (!replayComment.getRootCommentId().equals(parentId) )|| replayComment.getRootCommentId().equals("0"))||!commentDto.getToUserId().equals(replayComment.getUserId()))
-//            {
-//                throw new SystemException(QUERY_ERROR);
-//            }
-//        }else {
-//            commentDto.setToCommentId("0");
-//            commentDto.setRootCommentId("0");
-//            commentDto.setToUserId("0");
-//        }
-//
-//
-//        // 获取当前时间
-//        // TODO: 2023/12/21 此处需要优化 太长了
-        LocalDateTime currentTime = LocalDateTime.now();
-        String uuid = Uuid.getUuid();
-        Comment commentDo = Comment.builder()
-                .postCommentId(uuid)
-                .content(commentDto.getContent())
-                .detectionStatus(UN_DETECTION)
-                .userId(uid)
-                .postId(commentDto.getPostId())
-                .rootCommentId(commentDto.getRootCommentId())
-                .toUserId(commentDto.getToUserId())
-                .commentLikeCount(0L)
-                .updateAt(currentTime)
-                .createAt(currentTime)
-                .build();
-        save(commentDo);
-
-        return uuid;
+        String commentId = Uuid.getUuid();
+        Comment comment = Convert.convert(new TypeReference<Comment>(){}, commentDto);
+        comment.setPostCommentId(commentId);
+        comment.setUserId(uid);
+        save(comment);
+        return commentId;
     }
-
-
-
 
     @Override
     public List<CommentVo> list(PageInfo<String> params,String uid) {
-        /// TODO: 2023/12/21 逻辑需要优化 
-
         String postId = params.getData();
-        LambdaUpdateWrapper<Post> postQueryWrapper = new LambdaUpdateWrapper<>();
-        postQueryWrapper.eq(Post::getPostId, postId)
-                .eq(Post::getHasDelete,0)
-                .eq(Post::getDetectionStatus,1);
-        if (postMapper.selectCount(postQueryWrapper) == 0){
-            //post不存在
-            throw new SystemException(POST_ERROR);
-        }
-
-
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
-//先获取根评论   再获取所有根评论的子评论
+//数据校验   帖子存在
+        postExistApproveChain.setNext(postId,lastStepApproveChain);
+        postExistApproveChain.approve();
+//分页获取数据
         Page<Comment> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Comment::getPostId, postId)
+//                审核成功
                 .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
-                .eq(Comment::getRootCommentId,"0");
-        Page<Comment> list = this.page(page,queryWrapper);
+//                根评论
+                .eq(Comment::getRootCommentId,"-1");
+        List<Comment> rootComment  = this.page(page,queryWrapper).getRecords();
 
-        //所有的父评论   夫评论只有用户id  没有回复人的id
-        List<Comment> records = list.getRecords();
-
-        List<String> collect = records.stream()
+        //获取所有的用户id root评论只有创建的用户id
+        List<String> userIds = rootComment.stream()
                 .map(record -> record.getUserId())
                 .collect(Collectors.toList());
 
-        Map<String, UserInfoVO> data = null;
-        try {
-            data = userServiceClient.list(collect).getData();
-        } catch (Exception e) {
-            throw new RuntimeException("用户服务调用异常");
-        }
+        Map<String, UserInfoVO> data = getUsersInfo(userIds);
 
-        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(rootComment, CommentVo.class);
 
-
+//将评论和用户信息进行封装
         for (int i = 0; i < commentVos.size(); i++) {
             CommentVo commentVo = commentVos.get(i);
             commentVo.setLike(false);
+            //如果用户登录 封装数据
             if (!Strings.isBlank(uid)){
                 LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
                 likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid, uid)
                         .eq(LikeComment::getCommentId, commentVo.getPostCommentId());
+                //封装用户是否点赞评论
                 LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
                 if (!Objects.isNull(likeComment)){
                     commentVo.setLike(true);
                 }
             }
-
-
-            commentVo.setUser(data.get(records.get(i).getUserId()));
-
+            commentVo.setUser(data.get(rootComment.get(i).getUserId()));
         }
 
-//        List<String> collect = records.stream()
-//                .map(comment -> comment.getPostCommentId())
-//                .collect(Collectors.toList());
-//
-//        QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-//        commentQueryWrapper.in("root_comment_id", collect);
-//
-//        //所有的子评论
-//        List<Comment> comments = commentMapper.selectList(commentQueryWrapper);
-//
-//
-//        List<String> sonUserIds = comments.stream()
-//                .flatMap(son -> Stream.of(son.getUserId(), son.getToUserId()))
-//                .collect(Collectors.toList());
-//
-//        Result<Map<String, UserInfoVO>> sonUser = userServiceClient.list(sonUserIds);
-//
-//
-//        Map<String, Comment> commentMap = comments.stream()
-//                .collect(Collectors.toMap(Comment::getRootCommentId, c -> c));
-//
-//
-//        ArrayList<CommentVo> commentVos = new ArrayList<>();
-//        for (int i = 0; i < records.size(); i++) {
-//            CommentVo commentVo = BeanCopyUtils.copyBean(records.get(i), CommentVo.class);
-//            commentVo.setUser(sonUser.getData().get(records.get(i).getUserId()));
-//        }
+        return commentVos;
+    }
 
-//        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+    @Override
+    public List<CommentVo> childrenList(PageInfo<String> params,String uid) {
+        String rootCommentId = params.getData();
+        Integer pageNum = params.getPage();
+        Integer pageSize = params.getLimit();
 
-//        //        获取每一个评论的子评论  (3条)
-//        for (int i = 0; i < commentVos.size(); i++) {
-//            CommentVo commentVo = commentVos.get(i);
-//
-//            String userId = records.get(i).getUserId();
-//            UserInfoVO data = userServiceClient.one(userId).getData();
-//            commentVo.setUser(data);
-//
-//
-//            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            commentLambdaQueryWrapper.eq(Comment::getRootCommentId,commentVo.getPostCommentId())
-//                    .eq(Comment::getRootCommentId,commentVo.getPostCommentId())
-//                    .eq(Comment::getDetectionStatus, DETECTION_SUCCESS);
-//            List<Comment> comments = commentMapper.selectList(commentLambdaQueryWrapper);
-//            List<CommentVo> childrenCommentVos = BeanCopyUtils.copyBeanList(comments, CommentVo.class);
-//            for (int j = 0; j < childrenCommentVos.size(); j++) {
-//                CommentVo childrenCommentVo = childrenCommentVos.get(i);
-//                String userId1 = comments.get(j).getUserId();
-//                childrenCommentVo.setUser(userServiceClient.one(userId1).getData());
-//                String userId2 = comments.get(j).getToUserId();
-//                childrenCommentVo.setReplayUser(userServiceClient.one(userId2).getData());
-//            }
-//            commentVo.setChildrenComment(childrenCommentVos);
-//        }
+//分页
+        Page<Comment> page = new Page<>(pageNum,pageSize);
+        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Comment::getRootCommentId, rootCommentId)
+                .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
+                .eq(Comment::getRootCommentId,rootCommentId);
+        List<Comment> records = this.page(page,queryWrapper).getRecords();
 
+
+//获取所有的用户id（回复的和被回复的）
+        List<String> sonUserIds = records.stream()
+                .flatMap(son -> Stream.of(son.getUserId(), son.getToUserId()))
+                .collect(Collectors.toList());
+//        调用用户服务获取数据
+        Map<String, UserInfoVO> data = getUsersInfo(sonUserIds);
+
+        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
+        for (int i = 0; i < commentVos.size(); i++) {
+            CommentVo commentVo = commentVos.get(i);
+            commentVo.setLike(false);
+            if (!Strings.isBlank(uid)){
+                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid,uid)
+                        .eq(LikeComment::getCommentId,commentVo.getPostCommentId());
+                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+                if (!Objects.isNull(likeComment)){
+                    commentVo.setLike(true);
+                }
+            }
+            commentVo.setUser(data.get(records.get(i).getUserId()));
+            commentVo.setReplayUser(data.get(records.get(i).getToUserId()));
+        }
         return commentVos;
     }
 
     @Override
     @Transactional
     public void favorite(CoinDto coinDto,String uid) {
-        // TODO: 2023/12/21 责任链 
+        //数据校验  用户存在 -》 评论存在
+        userExistApproveChain.setNext(uid,commentExistApproveChain);
+        commentExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);
+        userExistApproveChain.approve();
 
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-//        Comment comment = commentMapper.selectById(coinDto.getId());
-//        if (Objects.isNull(comment)){
-//            throw new SystemException(COMMENT_ERROR);
-//        }
-        if (!commentMapper.existsRecord("post_comment_id",coinDto.getId())){
-            throw new SystemException(COMMENT_ERROR);
-        }
 
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
@@ -361,8 +210,8 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
             if (commentMapper.deleteLikeComment(likecommentQueryWrapper) == 0){
                 throw new SystemException(FAVORITE_ERROR);
             }
-            
-            
+
+
             QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
             commentQueryWrapper.eq("post_comment_id", coinDto.getId());
             commentMapper.disFavorite(commentQueryWrapper);
@@ -376,53 +225,65 @@ public class CommentServiceImpl  extends ServiceImpl<CommentMapper, Comment> imp
         }
     }
 
-    @Override
-    public List<CommentVo> childrenList(PageInfo<String> params,String uid) {
-        String rootCommentId = params.getData();
-        /**
-         *         父评论通过审核
-         */
 
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-
-        Page<Comment> page = new Page<>(pageNum,pageSize);
-        LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Comment::getRootCommentId, rootCommentId)
-                .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
-                .eq(Comment::getRootCommentId,rootCommentId);
-        Page<Comment> list = this.page(page,queryWrapper);
-
-        //所有的父评论   夫评论只有用户id  没有回复人的id
-        List<Comment> records = list.getRecords();
-
-        List<String> sonUserIds = records.stream()
-                .flatMap(son -> Stream.of(son.getUserId(), son.getToUserId()))
-                .collect(Collectors.toList());
-
+    public Map<String, UserInfoVO> getUsersInfo(List<String> userIds){
+        //调用用户服务获取评论创建人的信息
         Map<String, UserInfoVO> data = null;
         try {
-            data = userServiceClient.list(sonUserIds).getData();
+            data = userServiceClient.list(userIds).getData();
         } catch (Exception e) {
             throw new RuntimeException("用户服务调用异常");
         }
+        return data;
+    }
 
-        List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
-        for (int i = 0; i < commentVos.size(); i++) {
-            CommentVo commentVo = commentVos.get(i);
-            commentVo.setLike(false);
-            if (!Strings.isBlank(uid)){
-                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid,uid)
-                        .eq(LikeComment::getCommentId,commentVo.getPostCommentId());
-                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
-                if (!Objects.isNull(likeComment)){
-                    commentVo.setLike(true);
+    public void commentCheck(CommentDto commentDto){
+        /**
+         * 判断该评论是一级还是二级
+         * 一级只有 postid 就行了  其他都为空
+         * 二级评论 判断是否为回复评论
+         * 若不为回复评论  toCommentId 可以为空
+         * 否则都不能为空
+         */
+        String toCommentId = commentDto.getToCommentId();
+        if (!Strings.isBlank(toCommentId)){
+            //回复评论要求参数都不能为空
+            if (commentDto.getRootCommentId().isBlank()||commentDto.getToUserId().isBlank()||commentDto.getToCommentId().isBlank()){
+                throw new RuntimeException("回复评论要求参数都不能为空。");
+            }
+            // 回复评论存在，该评论与它不在同一一级评论下，则不符合规定。
+            // 回复评论存在，它是一级评论的话，则不符合规定。 一级评论不能回复其他评论，其他评论也不能回复一级评论
+            //回复评论存在  它的uid  应该等于我的同uid
+            LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
+                    .eq(Comment::getDetectionStatus,1);
+            Comment replayComment = getOne(commentLambdaQueryWrapper);
+            if (Objects.isNull(replayComment)){
+                throw new RuntimeException("评论与回复评论不在同一一级评论下。");
+            }
+            if ((replayComment != null && (!replayComment.getRootCommentId().equals(commentDto.getRootCommentId()) )|| replayComment.getRootCommentId().equals("0"))||!commentDto.getToUserId().equals(replayComment.getUserId()))
+            {
+                throw new RuntimeException("参数校验出错。");
+            }
+
+        }else{
+            //非回复评论
+            if ((Strings.isBlank(commentDto.getRootCommentId()) && !Strings.isBlank(commentDto.getToUserId())) && (!Strings.isBlank(commentDto.getRootCommentId())&& commentDto.getToUserId().isBlank())){
+                throw new RuntimeException("参数校验出错。");
+            }
+            //否则为二级评论  判断uid和to uid是否相同
+            if (!Strings.isBlank(commentDto.getToCommentId())){
+                LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
+                        .eq(Comment::getDetectionStatus,1);
+                Comment replayComment = getOne(commentLambdaQueryWrapper);
+                if (Objects.isNull(replayComment)){
+                    throw new RuntimeException("参数校验出错。");
+                }
+                if (! replayComment.getUserId().equals(commentDto.getToUserId())){
+                    throw new RuntimeException("参数校验出错。");
                 }
             }
-            commentVo.setUser(data.get(records.get(i).getUserId()));
-            commentVo.setReplayUser(data.get(records.get(i).getToUserId()));
         }
-        return commentVos;
     }
 }

@@ -1,6 +1,6 @@
 package com.tml.service;
 
-import com.tml.pojo.TeamDO;
+import com.tml.domain.TeamDO;
 
 import java.util.List;
 

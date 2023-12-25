@@ -2,25 +2,17 @@ package com.tml.common.exception;
 
 import com.tml.common.Result;
 import com.tml.common.log.AbstractLogger;
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.ResultCodeEnum;
 import io.github.exception.handler.AbstractExceptionHandler;
 import io.github.exception.handler.AssistantExceptionHandlerCondition;
 import io.github.exception.handler.annotation.AssistantControllerAdvice;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import java.util.stream.Collectors;
 
 /**
  * @Description

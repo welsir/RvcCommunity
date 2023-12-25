@@ -1,8 +1,8 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.pojo.DO.CommentDO;
-import com.tml.pojo.DO.UserCommentDO;
+import com.tml.domain.DO.CommentDO;
+import com.tml.domain.DO.UserCommentDO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;

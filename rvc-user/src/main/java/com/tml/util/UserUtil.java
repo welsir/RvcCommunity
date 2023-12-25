@@ -1,12 +1,10 @@
 package com.tml.util;
 
-import com.tml.pojo.DO.AuthUser;
+import com.tml.domain.DO.AuthUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * @Date 2023/12/17

@@ -1,6 +1,6 @@
 package com.tml.common.exception;
 
-import com.tml.pojo.ResultCodeEnum;
+import com.tml.domain.ResultCodeEnum;
 
 /**
  * @Description
