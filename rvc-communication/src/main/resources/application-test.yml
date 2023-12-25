@@ -1,8 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://1.94.28.8:3306/rvc?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2b8
-#    ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
+    url: ${MYSQL_ADDR:ENC(IG+MCcXYlC/7ZXAcMW0//4p+a3+0eaFptuvtY5Ot5KMjwuAIhxcBE4CGnOBWq1/mI6WZoKTBcmAR2a9LbyMXjCRkQgvCK85dKwhuPtT6pa+BEsQNh2LKHW5UDZRQqD9N55yjpeSUocLHYmLfywZbgDhdO3DAJrOC)}
     username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
     password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
   redis:

@@ -20,7 +20,6 @@ import com.tml.mapper.CommentMapper;
 
 import com.tml.mapper.LikeCommentMapper;
 import com.tml.pojo.VO.UserInfoVO;
-import com.tml.pojo.dto.*;
 import com.tml.domain.entity.Comment;
 import com.tml.domain.entity.LikeComment;
 import com.tml.domain.vo.CommentVo;
