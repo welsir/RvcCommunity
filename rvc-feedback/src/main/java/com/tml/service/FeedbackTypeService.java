@@ -1,6 +1,6 @@
 package com.tml.service;
 
-import com.tml.domain.FeedbackTypeDO;
+import com.tml.pojo.FeedbackTypeDO;
 
 import java.util.List;
 

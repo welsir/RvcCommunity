@@ -2,7 +2,7 @@ package com.tml.core.rabbitmq;
 
 import com.alibaba.fastjson.JSON;
 import com.tml.core.factory.mqFactory.BaseMqProductorInterface;
-import com.tml.domain.DTO.DetectionTaskDTO;
+import com.tml.pojo.DTO.DetectionTaskDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import javax.annotation.Resource;

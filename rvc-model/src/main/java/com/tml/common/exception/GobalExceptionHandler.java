@@ -2,7 +2,7 @@ package com.tml.common.exception;
 
 import com.tml.common.Result;
 import com.tml.common.log.AbstractLogger;
-import com.tml.domain.ResultCodeEnum;
+import com.tml.pojo.ResultCodeEnum;
 import io.github.exception.handler.AbstractExceptionHandler;
 import io.github.exception.handler.AssistantExceptionHandlerCondition;
 import io.github.exception.handler.annotation.AssistantControllerAdvice;

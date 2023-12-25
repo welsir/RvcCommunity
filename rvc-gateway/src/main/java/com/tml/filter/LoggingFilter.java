@@ -1,6 +1,6 @@
 package com.tml.filter;
 
-import com.tml.domain.DO.RequestRecordDO;
+import com.tml.pojo.DO.RequestRecordDO;
 import com.tml.service.RequestRecordService;
 import io.github.common.logger.CommonLogger;
 import io.github.id.snowflake.SnowflakeGenerator;

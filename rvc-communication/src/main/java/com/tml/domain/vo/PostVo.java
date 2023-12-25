@@ -1,6 +1,6 @@
 package com.tml.domain.vo;
 
-import com.tml.domain.VO.UserInfoVO;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.domain.entity.PostType;
 import lombok.AllArgsConstructor;
 import lombok.Data;

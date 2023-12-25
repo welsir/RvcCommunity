@@ -1,8 +1,8 @@
 package com.tml.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.tml.domain.NoticeDO;
-import com.tml.domain.VO.NoticeVO;
+import com.tml.pojo.NoticeDO;
+import com.tml.pojo.VO.NoticeVO;
 
 public interface INoticeDaoService {
 

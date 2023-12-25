@@ -1,7 +1,7 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.domain.DO.ModelLikeDO;
+import com.tml.pojo.DO.ModelLikeDO;
 
 /**
  * @Description

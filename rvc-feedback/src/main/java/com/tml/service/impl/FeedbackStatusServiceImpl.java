@@ -3,7 +3,7 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.constant.RedisKeyPool;
 import com.tml.mapper.FeedbackStatusMapper;
-import com.tml.domain.FeedbackStatusDO;
+import com.tml.pojo.FeedbackStatusDO;
 import com.tml.service.FeedbackStatusService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;

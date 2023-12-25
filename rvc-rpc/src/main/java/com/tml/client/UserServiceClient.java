@@ -1,7 +1,7 @@
 package com.tml.client;
 
 import com.tml.constant.RemoteUserURL;
-import com.tml.domain.VO.UserInfoVO;
+import com.tml.pojo.VO.UserInfoVO;
 import io.github.common.web.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;

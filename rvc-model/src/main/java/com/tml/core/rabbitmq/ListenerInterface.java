@@ -1,6 +1,6 @@
 package com.tml.core.rabbitmq;
 
-import com.tml.domain.DTO.DetectionTaskDTO;
+import com.tml.pojo.DTO.DetectionTaskDTO;
 import org.springframework.amqp.core.Message;
 
 /**

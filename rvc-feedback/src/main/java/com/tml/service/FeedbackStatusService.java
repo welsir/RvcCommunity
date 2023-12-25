@@ -1,6 +1,6 @@
 package com.tml.service;
 
-import com.tml.domain.FeedbackStatusDO;
+import com.tml.pojo.FeedbackStatusDO;
 
 import java.util.List;
 

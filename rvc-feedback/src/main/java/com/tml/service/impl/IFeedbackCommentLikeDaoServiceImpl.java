@@ -3,7 +3,7 @@ package com.tml.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.exception.RvcSQLException;
 import com.tml.mapper.FeedbackCommentLikeMapper;
-import com.tml.domain.FeedbackCommentLike;
+import com.tml.pojo.FeedbackCommentLike;
 import com.tml.service.IFeedbackCommentLikeDaoService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

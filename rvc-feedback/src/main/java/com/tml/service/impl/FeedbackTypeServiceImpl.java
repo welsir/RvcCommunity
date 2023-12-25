@@ -1,7 +1,7 @@
 package com.tml.service.impl;
 
 import com.tml.constant.RedisKeyPool;
-import com.tml.domain.FeedbackTypeDO;
+import com.tml.pojo.FeedbackTypeDO;
 import com.tml.service.FeedbackTypeService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;

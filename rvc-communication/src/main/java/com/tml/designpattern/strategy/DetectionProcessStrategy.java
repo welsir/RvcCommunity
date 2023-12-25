@@ -1,6 +1,6 @@
 package com.tml.designpattern.strategy;
 
-import com.tml.domain.dto.DetectionStatusDto;
+import com.tml.pojo.pojo.DetectionStatusDto;
 
 public interface DetectionProcessStrategy {
     void process(DetectionStatusDto detectionStatusDto);

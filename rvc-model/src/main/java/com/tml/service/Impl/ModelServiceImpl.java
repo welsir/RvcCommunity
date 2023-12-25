@@ -16,13 +16,13 @@ import com.tml.core.async.AsyncService;
 
 import com.tml.core.rabbitmq.ModelListener;
 import com.tml.mapper.*;
-import com.tml.domain.DO.*;
+import com.tml.pojo.DO.*;
 
-import com.tml.domain.DTO.*;
-import com.tml.domain.ResultCodeEnum;
-import com.tml.domain.VO.*;
-import com.tml.domain.VO.DownloadModelForm;
-import com.tml.domain.VO.UploadModelForm;
+import com.tml.pojo.DTO.*;
+import com.tml.pojo.ResultCodeEnum;
+import com.tml.pojo.VO.*;
+import com.tml.pojo.VO.DownloadModelForm;
+import com.tml.pojo.VO.UploadModelForm;
 import com.tml.service.ModelService;
 import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
@@ -201,7 +201,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public String downloadModel(String modelId,String uid) {
-        com.tml.domain.Result<String> result = fileServiceClient.downloadModel(
+        com.tml.pojo.Result<String> result = fileServiceClient.downloadModel(
                 DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
         );
         return result.getData();
@@ -251,7 +251,7 @@ public class ModelServiceImpl implements ModelService {
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
                         .build();
-                com.tml.domain.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
                 fileForms.add(res.getData());
             }
             return fileForms;
@@ -271,7 +271,7 @@ public class ModelServiceImpl implements ModelService {
                         .bucket(ModelConstant.DEFAULT_BUCKET)
                         .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                         .build();
-                com.tml.domain.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
                 return res.getData();
             } catch (NoSuchAlgorithmException | IOException e) {
                 logger.error("%s:"+e.getStackTrace()[0],e);

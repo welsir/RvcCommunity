@@ -2,7 +2,6 @@ package com.tml.service.impl;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -13,28 +12,26 @@ import com.tml.designpattern.chain.ext.CommentExistApproveChain;
 import com.tml.designpattern.chain.ext.LastStepApproveChain;
 import com.tml.designpattern.chain.ext.PostExistApproveChain;
 import com.tml.designpattern.chain.ext.UserExistApproveChain;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CommentDto;
+import com.tml.domain.dto.PageInfo;
 import com.tml.handler.exception.SystemException;
 import com.tml.mapper.CommentMapper;
 
 import com.tml.mapper.LikeCommentMapper;
-import com.tml.mapper.PostMapper;
-import com.tml.domain.VO.UserInfoVO;
-import com.tml.domain.dto.*;
+import com.tml.pojo.VO.UserInfoVO;
+import com.tml.pojo.dto.*;
 import com.tml.domain.entity.Comment;
 import com.tml.domain.entity.LikeComment;
-import com.tml.domain.entity.Post;
 import com.tml.domain.vo.CommentVo;
 import com.tml.service.CommentService;
 import com.tml.utils.BeanCopyUtils;
 import com.tml.utils.Uuid;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,7 +63,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
 
     @Override
-    public String comment(CommentDto commentDto,String uid) {
+    public String comment(CommentDto commentDto, String uid) {
 //数据校验  用户存在 -》 帖子存在
         userExistApproveChain.setNext(uid,postExistApproveChain);
         postExistApproveChain.setNext(commentDto.getPostId(),lastStepApproveChain);
@@ -82,7 +79,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public List<CommentVo> list(PageInfo<String> params,String uid) {
+    public List<CommentVo> list(PageInfo<String> params, String uid) {
         String postId = params.getData();
         Integer pageNum = params.getPage();
         Integer pageSize = params.getLimit();
@@ -172,7 +169,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     @Transactional
-    public void favorite(CoinDto coinDto,String uid) {
+    public void favorite(CoinDto coinDto, String uid) {
         //数据校验  用户存在 -》 评论存在
         userExistApproveChain.setNext(uid,commentExistApproveChain);
         commentExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);

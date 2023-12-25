@@ -1,7 +1,7 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.domain.DO.LabelDO;
+import com.tml.pojo.DO.LabelDO;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 

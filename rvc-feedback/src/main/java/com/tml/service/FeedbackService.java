@@ -1,9 +1,9 @@
 package com.tml.service;
 
 import com.tml.exception.RvcSQLException;
-import com.tml.domain.FeedbackDO;
-import com.tml.domain.form.FeedbackForm;
-import com.tml.domain.vo.FeedbackVO;
+import com.tml.pojo.FeedbackDO;
+import com.tml.pojo.form.FeedbackForm;
+import com.tml.pojo.vo.FeedbackVO;
 import io.github.common.PageVO;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeRegisterException;

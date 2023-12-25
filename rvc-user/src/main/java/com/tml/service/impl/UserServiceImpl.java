@@ -8,13 +8,13 @@ import com.tml.exception.ServerException;
 import com.tml.mapper.UserDataMapper;
 import com.tml.mapper.UserFollowMapper;
 import com.tml.mapper.UserInfoMapper;
-import com.tml.domain.DO.*;
-import com.tml.domain.DTO.ReceiveUploadFileDTO;
-import com.tml.domain.Result;
-import com.tml.domain.VO.UploadModelForm;
-import com.tml.domain.dto.*;
-import com.tml.domain.enums.ResultEnums;
-import com.tml.domain.vo.UserInfoVO;
+import com.tml.pojo.DO.*;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
+import com.tml.pojo.Result;
+import com.tml.pojo.VO.UploadModelForm;
+import com.tml.pojo.dto.*;
+import com.tml.pojo.enums.ResultEnums;
+import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
 import org.springframework.beans.BeanUtils;
@@ -31,7 +31,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tml.config.DetectionConfig.*;
-import static com.tml.domain.enums.EmailEnums.*;
+import static com.tml.pojo.enums.EmailEnums.*;
 
 /**
  * @Date 2023/12/10

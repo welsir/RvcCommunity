@@ -2,8 +2,8 @@ package com.tml.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tml.exception.RvcSQLException;
-import com.tml.domain.FeedbackDO;
-import com.tml.domain.vo.FeedbackVO;
+import com.tml.pojo.FeedbackDO;
+import com.tml.pojo.vo.FeedbackVO;
 
 public interface IFeedbackDaoService {
 

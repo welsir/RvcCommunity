@@ -1,6 +1,6 @@
 package com.tml.service;
 
-import com.tml.domain.WebToolDO;
+import com.tml.pojo.WebToolDO;
 
 import java.util.List;
 

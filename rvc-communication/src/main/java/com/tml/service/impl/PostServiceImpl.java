@@ -10,13 +10,17 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CoverDto;
+import com.tml.domain.dto.PageInfo;
+import com.tml.domain.dto.PostDto;
+import com.tml.domain.entity.*;
 import com.tml.handler.exception.SystemException;
 import com.tml.mapper.*;
-import com.tml.domain.DTO.ReceiveUploadFileDTO;
-import com.tml.domain.VO.UploadModelForm;
-import com.tml.domain.VO.UserInfoVO;
-import com.tml.domain.dto.*;
-import com.tml.domain.entity.*;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
+import com.tml.pojo.VO.UploadModelForm;
+import com.tml.pojo.VO.UserInfoVO;
+import com.tml.pojo.dto.*;
 import com.tml.domain.vo.PostSimpleVo;
 import com.tml.domain.vo.PostVo;
 import com.tml.service.PostService;
@@ -77,7 +81,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 
     @Override
-    public List<PostVo> list(PageInfo<String> params,String tagId,String uid) {
+    public List<PostVo> list(PageInfo<String> params, String tagId, String uid) {
 // TODO: 2023/12/21 责任链
         if (!Strings.isBlank(uid)){
             Object data = userServiceClient.exist(uid).getData();
@@ -265,7 +269,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     @Transactional
-    public void favorite(CoinDto coinDto,String uid) {
+    public void favorite(CoinDto coinDto, String uid) {
 
 
 
@@ -398,7 +402,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     @Transactional
-    public String add(PostDto postDto,String uid) {
+    public String add(PostDto postDto, String uid) {
         // TODO: 2023/12/21 责任链
 
         Object data = userServiceClient.exist(uid).getData();
@@ -675,7 +679,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .md5(MD5Util.getMD5(uploadBytes.toString()))
                 .path("rvc/image3")
                 .build();
-        com.tml.domain.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
+        com.tml.pojo.Result<ReceiveUploadFileDTO> receiveUploadFileDTOResult = null;
         try {
             receiveUploadFileDTOResult = fileServiceClient.uploadModel(build);
         } catch (Exception e) {

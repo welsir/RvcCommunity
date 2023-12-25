@@ -7,7 +7,7 @@ import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
 import com.tml.designpattern.strategy.impl.CoverProcessStrategy;
 import com.tml.designpattern.strategy.impl.PostProcessStrategy;
-import com.tml.domain.dto.DetectionStatusDto;
+import com.tml.pojo.pojo.DetectionStatusDto;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;

@@ -1,8 +1,8 @@
 package com.tml.common;
 
 import com.tml.exception.ServerException;
-import com.tml.domain.DO.AuthUser;
-import com.tml.domain.enums.ResultEnums;
+import com.tml.pojo.DO.AuthUser;
+import com.tml.pojo.enums.ResultEnums;
 
 /**
  * @Date 2023/12/12

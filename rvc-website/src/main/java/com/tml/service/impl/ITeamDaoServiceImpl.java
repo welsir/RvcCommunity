@@ -2,7 +2,7 @@ package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.mapper.TeamMapper;
-import com.tml.domain.TeamDO;
+import com.tml.pojo.TeamDO;
 import com.tml.service.ITeamDaoService;
 import org.springframework.stereotype.Service;
 

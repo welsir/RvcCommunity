@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
-import com.tml.domain.VO.*;
+import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

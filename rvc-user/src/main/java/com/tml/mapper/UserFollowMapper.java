@@ -1,7 +1,7 @@
 package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.domain.DO.UserFollow;
+import com.tml.pojo.DO.UserFollow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
