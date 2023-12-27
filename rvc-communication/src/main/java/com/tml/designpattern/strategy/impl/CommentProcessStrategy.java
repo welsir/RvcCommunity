@@ -1,8 +1,8 @@
 package com.tml.designpattern.strategy.impl;
 
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
-import com.tml.mapper.CommentMapper;
-import com.tml.pojo.pojo.DetectionStatusDto;
+import com.tml.mapper.comment.CommentMapper;
+import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.domain.entity.Comment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

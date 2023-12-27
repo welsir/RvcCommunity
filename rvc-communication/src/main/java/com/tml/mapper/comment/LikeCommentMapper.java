@@ -1,4 +1,4 @@
-package com.tml.mapper;
+package com.tml.mapper.comment;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tml.domain.entity.LikeComment;

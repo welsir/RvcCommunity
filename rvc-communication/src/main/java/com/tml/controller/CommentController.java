@@ -49,7 +49,7 @@ public class CommentController {
     }
 
     @PostMapping("/add")
-    @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
+//    @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
 //    @WhiteApi
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody @Valid CommentDto commentDto,

@@ -1,7 +1,7 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tml.mapper.PostTypeMapper;
+import com.tml.mapper.post.PostTypeMapper;
 import com.tml.domain.entity.PostType;
 import com.tml.service.PostTypeService;
 import com.tml.utils.RedisCache;

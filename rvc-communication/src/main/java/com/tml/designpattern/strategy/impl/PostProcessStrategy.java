@@ -1,7 +1,7 @@
 package com.tml.designpattern.strategy.impl;
 
-import com.tml.mapper.PostMapper;
-import com.tml.pojo.pojo.DetectionStatusDto;
+import com.tml.mapper.post.PostMapper;
+import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.domain.entity.Post;
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import lombok.RequiredArgsConstructor;

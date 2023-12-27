@@ -5,6 +5,7 @@ import cn.hutool.core.lang.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.UserServiceClient;
@@ -15,10 +16,13 @@ import com.tml.designpattern.chain.ext.UserExistApproveChain;
 import com.tml.domain.dto.CoinDto;
 import com.tml.domain.dto.CommentDto;
 import com.tml.domain.dto.PageInfo;
+import com.tml.domain.entity.LikePost;
+import com.tml.domain.entity.Post;
 import com.tml.handler.exception.SystemException;
-import com.tml.mapper.CommentMapper;
 
-import com.tml.mapper.LikeCommentMapper;
+
+import com.tml.mapper.comment.CommentMapper;
+import com.tml.mapper.comment.LikeCommentMapper;
 import com.tml.pojo.VO.UserInfoVO;
 import com.tml.domain.entity.Comment;
 import com.tml.domain.entity.LikeComment;
@@ -47,11 +51,15 @@ import static com.tml.constant.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
+//ServiceImpl<CommentMapper, Comment>,
+public class CommentServiceImpl implements CommentService {
 
-    private final CommentMapper commentMapper;
+//    private final CommentMapper commentMapper;
     private final LikeCommentMapper likeCommentMapper;
+    private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
+
+//    private final MyBaseServiceImpl myBaseService;
 
 
 //责任链
@@ -72,8 +80,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         String commentId = Uuid.getUuid();
         Comment comment = Convert.convert(new TypeReference<Comment>(){}, commentDto);
         comment.setPostCommentId(commentId);
+        //关闭审核
+//            .detectionStatus(DETECTION_SUCCESS)
+        comment.setDetectionStatus(DETECTION_SUCCESS);
         comment.setUserId(uid);
-        save(comment);
+        commentMapper.insert(comment);
         return commentId;
     }
 
@@ -93,7 +104,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
 //                根评论
                 .eq(Comment::getRootCommentId,"-1");
-        List<Comment> rootComment  = this.page(page,queryWrapper).getRecords();
+        List<Comment> rootComment  = commentMapper.selectPage(page,queryWrapper).getRecords();
 
         //获取所有的用户id root评论只有创建的用户id
         List<String> userIds = rootComment.stream()
@@ -137,7 +148,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         queryWrapper.eq(Comment::getRootCommentId, rootCommentId)
                 .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
                 .eq(Comment::getRootCommentId,rootCommentId);
-        List<Comment> records = this.page(page,queryWrapper).getRecords();
+        List<Comment> records = commentMapper.selectPage(page,queryWrapper).getRecords();
 
 
 //获取所有的用户id（回复的和被回复的）
@@ -166,6 +177,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return commentVos;
     }
 
+
     @Override
     @Transactional
     public void favorite(CoinDto coinDto, String uid) {
@@ -174,53 +186,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         commentExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);
         userExistApproveChain.approve();
 
-
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
-        if (coinDto.judgeType()){
-//            String uuid = ;
-            LikeComment likeComment = new LikeComment(Uuid.getUuid(),  coinDto.getId(),uid);
+        if (coinDto.getType().equals("1")){
+            String uuid = Uuid.getUuid();
+            LikeComment likePost = new LikeComment(uuid,  coinDto.getId(),uid);
             try {
-                likeCommentMapper.insert(likeComment);
+                likeCommentMapper.insert(likePost);
             } catch (Exception e) {
                 throw new SystemException(FAVORITE_ERROR);
             }
 //            LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
-//                    .eq(Comment::getPostCommentId, coinDto.getId());
-            QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-            commentQueryWrapper.eq("post_comment_id", coinDto.getId());
-            commentMapper.addFavorite(commentQueryWrapper);
-//                    .setSql("comment_like_count = comment_like_count + 1");
+//                    .eq(Comment::getPostCommentId, coinDto.getId())
+//                    .setSql("like_num = like_num + 1");
 //            commentMapper.update(null,updateWrapper);
-        } else {
-//            LambdaQueryWrapper<LikeComment> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            likePostLambdaQueryWrapper.eq(LikeComment::getUid,uid)
-//                    .eq(LikeComment::getCommentId,coinDto.getId());
-//
-//            if (likeCommentMapper.delete(likePostLambdaQueryWrapper) == 0){
-//                throw new SystemException(FAVORITE_ERROR);
-//            }
-            QueryWrapper<LikeComment> likecommentQueryWrapper = new QueryWrapper<>();
-            likecommentQueryWrapper.eq("uid", uid)
-                    .eq("comment_id",coinDto.getId());
-            if (commentMapper.deleteLikeComment(likecommentQueryWrapper) == 0){
-                throw new SystemException(FAVORITE_ERROR);
+        } else if (coinDto.getType().equals("0")) {
+            LambdaQueryWrapper<LikeComment> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            likePostLambdaQueryWrapper.eq(LikeComment::getUid,uid)
+                    .eq(LikeComment::getCommentId,coinDto.getId());
+            int delete = likeCommentMapper.delete(likePostLambdaQueryWrapper);
+            if (delete == 0){
+                throw new SystemException(SYSTEM_ERROR);
             }
-
-
-            QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
-            commentQueryWrapper.eq("post_comment_id", coinDto.getId());
-            commentMapper.disFavorite(commentQueryWrapper);
 //            LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
 //                    .eq(Comment::getPostCommentId, coinDto.getId())
-//                    .setSql("comment_like_count = comment_like_count - 1");
+//                    .setSql("like_num = like_num - 1");
 //            commentMapper.update(null,updateWrapper);
-
-
-            return;
+        }else {
+            throw new SystemException(TYPE_ERROR);
         }
     }
-
 
     public Map<String, UserInfoVO> getUsersInfo(List<String> userIds){
         //调用用户服务获取评论创建人的信息
@@ -253,7 +248,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
             commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
                     .eq(Comment::getDetectionStatus,1);
-            Comment replayComment = getOne(commentLambdaQueryWrapper);
+            Comment replayComment = commentMapper.selectOne(commentLambdaQueryWrapper);
             if (Objects.isNull(replayComment)){
                 throw new RuntimeException("评论与回复评论不在同一一级评论下。");
             }
@@ -272,7 +267,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
                         .eq(Comment::getDetectionStatus,1);
-                Comment replayComment = getOne(commentLambdaQueryWrapper);
+
+                Comment replayComment =   commentMapper.selectOne(commentLambdaQueryWrapper);
                 if (Objects.isNull(replayComment)){
                     throw new RuntimeException("参数校验出错。");
                 }

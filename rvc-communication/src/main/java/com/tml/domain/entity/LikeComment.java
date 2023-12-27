@@ -23,5 +23,4 @@ public class LikeComment {
     private String likeId;
     private String commentId;
     private String uid;
-
 }

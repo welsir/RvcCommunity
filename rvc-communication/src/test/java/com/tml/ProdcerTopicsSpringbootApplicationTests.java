@@ -1,9 +1,9 @@
 package com.tml;
 
 import com.alibaba.fastjson.JSON;
-import com.tml.mapper.CommentMapper;
-import com.tml.mapper.CoverMapper;
-import com.tml.mapper.PostMapper;
+import com.tml.mapper.comment.CommentMapper;
+import com.tml.mapper.post.CoverMapper;
+import com.tml.mapper.post.PostMapper;
 import com.tml.domain.dto.DetectionTaskDto;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;

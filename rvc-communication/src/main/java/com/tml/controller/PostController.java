@@ -80,7 +80,7 @@ public class PostController {
 
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
-    @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
+//    @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
     @WhiteApi
     public Result add(@RequestBody @Valid PostDto postDto,
                       @RequestHeader String uid){
@@ -141,7 +141,7 @@ public class PostController {
     @PostMapping("/coverUrl")
     @SystemLog(businessName = "用户上传头像  url上传")
     @LaxTokenApi
-    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
+//    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }

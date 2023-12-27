@@ -1,7 +1,7 @@
 package com.tml.handler.mq;
 
 import com.tml.mq.ReceiveHandler;
-import com.tml.pojo.pojo.DetectionStatusDto;
+import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
 import com.tml.designpattern.strategy.impl.CoverProcessStrategy;

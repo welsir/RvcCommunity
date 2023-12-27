@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.tml.mapper.CommentMapper">
+<mapper namespace="com.tml.mapper.comment.CommentMapper">
     <update id="addFavorite">
         UPDATE rvc_communication_comment set comment_like_count = comment_like_count + 1 ${ew.customSqlSegment}
     </update>
@@ -10,7 +10,7 @@
     <delete id="deleteLikeComment">
         DELETE FROM rvc_communication_comment_likes ${ew.customSqlSegment}
     </delete>
-<!--    <select id="existsRecord" resultType="boolean">-->
-<!--        SELECT EXISTS(SELECT 1 FROM rvc_communication_comment WHERE ${key} = '${value}')-->
-<!--    </select>-->
+    <select id="existsRecord" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM rvc_communication_comment WHERE ${key} = '${value}')
+    </select>
 </mapper>

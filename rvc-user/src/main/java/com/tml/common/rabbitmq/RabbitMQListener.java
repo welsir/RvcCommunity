@@ -9,7 +9,7 @@ import com.tml.config.DetectionConfig;
 import com.tml.mapper.UserInfoMapper;
 import com.tml.mq.ReceiveHandler;
 import com.tml.pojo.DO.UserInfo;
-import com.tml.pojo.pojo.DetectionStatusDto;
+import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.pojo.dto.DetectionTaskDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;

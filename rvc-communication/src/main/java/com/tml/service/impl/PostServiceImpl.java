@@ -16,7 +16,7 @@ import com.tml.domain.dto.PageInfo;
 import com.tml.domain.dto.PostDto;
 import com.tml.domain.entity.*;
 import com.tml.handler.exception.SystemException;
-import com.tml.mapper.*;
+import com.tml.mapper.post.*;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.UploadModelForm;
 import com.tml.pojo.VO.UserInfoVO;
@@ -418,6 +418,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
+        //关闭审核
+//            .detectionStatus(DETECTION_SUCCESS)
+        post.setDetectionStatus(DETECTION_SUCCESS);
         post.setUid(uid);
 
         //判断tagid是否存在
@@ -548,6 +551,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public List<PostSimpleVo> userCollect(PageInfo<String> params,String uid) {
 // TODO: 2023/12/21 以下三个接口提取公共部分 代码优化
+
+        //帖子是否存在 （被删除 审核通过）
 
         Object data = userServiceClient.exist(uid).getData();
         if (Objects.isNull(data)){
@@ -696,7 +701,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
                 .createAt(LocalDate.now())
-                .detectionStatus(UN_DETECTION)
+                .detectionStatus(DETECTION_SUCCESS)
+                //关闭审核
+//                .detectionStatus(UN_DETECTION)
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);

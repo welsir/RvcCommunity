@@ -2,7 +2,7 @@
 package com.tml.mapperTest;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.tml.mapper.CommentMapper;
+import com.tml.mapper.comment.CommentMapper;
 import com.tml.domain.dto.CoinDto;
 import com.tml.domain.entity.Comment;
 import com.tml.domain.entity.LikeComment;
