@@ -39,7 +39,7 @@ public class RedisTest {
 
     @Test
     public void Encryptor(){
-        System.out.println(new Date());
+        System.out.println(stringEncryptor.encrypt("jdbc:mysql://1.94.28.8:3306/rvc?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2b8"));
     }
 
 
