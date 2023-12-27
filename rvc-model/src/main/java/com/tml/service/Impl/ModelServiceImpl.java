@@ -40,10 +40,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -139,7 +136,7 @@ public class ModelServiceImpl implements ModelService {
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
-            Callable<List<String>> labelTask = () -> labelMapper.selectListById(modelId);
+            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
             String type = ConcurrentUtil.futureGet(typeFuture);
@@ -147,8 +144,8 @@ public class ModelServiceImpl implements ModelService {
             String isLike = ConcurrentUtil.futureGet(likeFuture);
             Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
             String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
-            List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+            Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+            List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
 
             UserInfoVO dto = null;
             if(uid!=null){
@@ -156,7 +153,7 @@ public class ModelServiceImpl implements ModelService {
                 dto = userInfo.getData();
                 AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
             }
-            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type, isLike,isCollection);
+            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type,isLike,isCollection);
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
         }catch (RuntimeException e){
@@ -169,6 +166,9 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
         AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
+        if(model.getFileId().length!=2){
+            throw new BaseException(ResultCodeEnum.SYSTEM_ERROR);
+        }
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
         try {
@@ -192,6 +192,10 @@ public class ModelServiceImpl implements ModelService {
         modelUserDO.setUid(uid);
         try {
             modelUserMapper.insert(modelUserDO);
+            String index = model.getFileId()[0];
+            String pth = model.getFileId()[1];
+            String audio = model.getAudioId();
+            mapper.insertModelFileRelative(modelDO.getId().toString(),index,pth,audio);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.INSERT_MODEL_USER_RELATIVE_FAIL);
@@ -200,70 +204,110 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public String downloadModel(String modelId,String uid) {
-        com.tml.pojo.Result<String> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+    public List<String> downloadModel(String modelId, String uid) {
+        ModelFileDO modelFileDO = mapper.queryModelFile(modelId);
+        AbstractAssert.isNull(modelFileDO,ResultCodeEnum.MODEL_NOT_EXITS);
+        com.tml.pojo.Result<String> pthUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getPthFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
         );
-        return result.getData();
+        com.tml.pojo.Result<String> indexUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getIndexFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+        );
+        com.tml.pojo.Result<String> audioUrl = fileServiceClient.downloadModel(
+                DownloadModelForm.builder().fileId(modelFileDO.getAudioFileId()).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build()
+        );
+        return List.of(pthUrl.getData(), indexUrl.getData(), audioUrl.getData());
     }
-
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
+        if(!FileUtil.isImageFile(modelUpdateFormVO.getFile().getOriginalFilename())){
+            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
+        }
+        mapper.updateModel(DateUtil.formatDate(),modelUpdateFormVO.getId());
         String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
-        List<DetectionTaskDTO> dtos = Arrays.asList(
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getPicture(), name)
-        );
-        List<String> types = Arrays.asList(
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.IMAGE_TYPE
-        );
-        List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
-                .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
-                .collect(Collectors.toList());
-        HashMap<String, String> map = new HashMap<>();
-        map.put("description",modelUpdateFormVO.getDescription());
-        map.put("name",modelUpdateFormVO.getName());
-        map.put("note",modelUpdateFormVO.getNote());
-        map.put("picture",modelUpdateFormVO.getPicture());
-        listener.setMap(modelUpdateFormVO.getId(),map);
-        asyncService.listenerMq(forms);
-        return true;
+        try {
+            com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(UploadModelForm.builder()
+                    .file(modelUpdateFormVO.getFile())
+                    .md5(FileUtil.getMD5Checksum(modelUpdateFormVO.getFile().getInputStream()))
+                    .path(ModelConstant.DEFAULT_MODEL_PATH)
+                    .bucket(ModelConstant.DEFAULT_MODEL_PATH)
+                    .build());
+            List<DetectionTaskDTO> dtos = Arrays.asList(
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name+"-description"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name+"-name"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name+"-note"),
+                    DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(),res.getData().getUrl(), name+"-picture")
+            );
+            List<String> types = Arrays.asList(
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.TEXT_TYPE,
+                    ModelConstant.IMAGE_TYPE
+            );
+            List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
+                    .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
+                    .collect(Collectors.toList());
+            HashMap<String, String> map = new HashMap<>();
+            map.put("description",modelUpdateFormVO.getDescription());
+            map.put("name",modelUpdateFormVO.getName());
+            map.put("note",modelUpdateFormVO.getNote());
+            map.put("picture",res.getData().getUrl());
+            listener.setMap(modelUpdateFormVO.getId(),map);
+            asyncService.listenerMq(forms);
+            return true;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
     public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
         if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         try {
-            ArrayList<ReceiveUploadFileDTO> fileForms = new ArrayList<>();
-            for (MultipartFile multipartFile : file) {
-                UploadModelForm form = UploadModelForm.builder()
-                        .file(multipartFile)
-                        .path(ModelConstant.DEFAULT_MODEL_PATH)
-                        .bucket(ModelConstant.DEFAULT_BUCKET)
-                        .md5(FileUtil.getMD5Checksum(multipartFile.getInputStream()))
-                        .build();
-                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
-                fileForms.add(res.getData());
-            }
-            return fileForms;
-        } catch (NoSuchAlgorithmException | IOException e) {
-            logger.error("%s:"+e.getStackTrace()[0],e);
+            String[] path = new String[]{ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH};
+            String[] md5 = new String[]{FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())};
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModelList(file, path, md5, ModelConstant.DEFAULT_BUCKET);
+            return res.getData();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }catch (RuntimeException e){
+            logger.error(e);
             throw new BaseException(e.toString());
         }
     }
 
     @Override
     public ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid) {
-        if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
+        if(FileUtil.checkImageFileIsAvailable(file)){
+            try {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(file)
+                        .path(ModelConstant.DEFAULT_IMAGE_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(file.getInputStream()))
+                        .build();
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                return res.getData();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                logger.error("%s:"+e.getStackTrace()[0],e);
+                throw new BaseException(e.toString());
+            }
+        }else{
+            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
+        }
+    }
+
+    @Override
+    public ReceiveUploadFileDTO uploadAudio(MultipartFile file, String uid) {
+
+        if(FileUtil.checkAudioFileIsAvailable(file)){
             try {
                 UploadModelForm form = UploadModelForm.builder()
                         .file(file)
@@ -278,7 +322,7 @@ public class ModelServiceImpl implements ModelService {
                 throw new BaseException(e.toString());
             }
         }else{
-            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
+            throw new BaseException(ResultCodeEnum.UPLOAD_AUDIO_FAIL);
         }
     }
 
@@ -355,6 +399,7 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Boolean delSingleModel(String modelId,String uid) {
         AbstractAssert.isNull(modelUserMapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        AbstractAssert.isNull(modelUserMapper.queryModelUserRelative(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
@@ -403,7 +448,7 @@ public class ModelServiceImpl implements ModelService {
             DetectionTaskDTO dto = DetectionTaskDTO.builder()
                     .id(commentDO.getId().toString())
                     .content(commentFormVO.getContent())
-                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO").build();
+                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO-content").build();
             AsyncDetectionForm form = new AsyncDetectionForm();
             form.setTaskDTO(dto);
             form.setType(ModelConstant.TEXT_TYPE);
@@ -441,7 +486,7 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isTrue(firsComments==null||firsComments.isEmpty(),ResultCodeEnum.COMMENT_NOT_EXITS);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",firsComments);
-        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",""));
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
         return getFirstComment(wrapper,page,limit,uid);
     }
 
@@ -475,7 +520,6 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
@@ -492,8 +536,20 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
-    public List<LabelVO> getLabelList() {
-        return null;
+    public List<LabelVO> getLabelList(String limit,String page) {
+        limit = limit== null? systemConfig.getPageSize():limit;
+        QueryWrapper<LabelDO> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("hot");
+        Page<LabelDO> label = labelMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), wrapper);
+        return label.getRecords().stream()
+                .map(labelDO -> new LabelVO(labelDO.getId().toString(), labelDO.getLabel()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ModelFileDO getModelFies(String modelId) {
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        return mapper.queryModelFile(modelId);
     }
 
     private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
@@ -547,7 +603,7 @@ public class ModelServiceImpl implements ModelService {
 
     private ModelVO convertToModelVO(ModelDO model, String myUid, UserInfoVO userInfoVO) {
         ModelVO modelVO;
-        Callable<List<String>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
+        Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
         Callable<String> typeTask = () -> typeMapper.selectById(model.getTypeId()).getType();
         Callable<String> likeTask = () -> mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1";
         Callable<String> collectionTask = () -> mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1";
@@ -555,7 +611,7 @@ public class ModelServiceImpl implements ModelService {
         Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
         Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
         Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-        Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+        Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
 
         AbstractAssert.isBlank(ConcurrentUtil.futureGet(typeFuture),ResultCodeEnum.GET_TYPE_ERROR);
         AbstractAssert.isNull(ConcurrentUtil.futureGet(likeFuture),ResultCodeEnum.SYSTEM_ERROR);
@@ -564,7 +620,7 @@ public class ModelServiceImpl implements ModelService {
         String type = ConcurrentUtil.futureGet(typeFuture);
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-        List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+        List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
 
         if(userInfoVO==null){
             Result<UserInfoVO> userInfo = userServiceClient.one(myUid);
@@ -595,12 +651,15 @@ public class ModelServiceImpl implements ModelService {
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
-        Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
-        Map<String, UserInfoVO> userInfo = result.getData();
-        List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
-                .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
+        try {
+            Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
+            Map<String, UserInfoVO> userInfo = result.getData();
+            List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
+                    .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                    .collect(Collectors.toList());
+            return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
+        }catch (RuntimeException e){
+            throw new BaseException(e.toString());
+        }
     }
-
 }

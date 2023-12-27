@@ -111,6 +111,26 @@ public class ModelListener implements ListenerInterface{
         }
     }
 
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(),
+                    exchange = @Exchange(name = "res.topic",type = ExchangeTypes.FANOUT),
+                    key = "res.audio"
+            )
+    )
+    public void receiveAudio(Message message){
+        String messageBody = new String(message.getBody());
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            DetectionStatusDTO statusDTO = mapper.readValue(messageBody, DetectionStatusDTO.class);
+            auditProcessor(statusDTO);
+        } catch (JsonProcessingException e) {
+            logger.error(e);
+            throw new BaseException(e.toString());
+        }
+    }
+
+
     public void auditProcessor(DetectionStatusDTO statusDTO){
         logger.info(String.valueOf(statusDTO));
         String service = statusDTO.getName().split("-")[0];
@@ -122,7 +142,11 @@ public class ModelListener implements ListenerInterface{
         }
         String lock = statusDTO.getId();
         String table = statusDTO.getName().split("-")[1];
-        String filed = statusDTO.getName().split("-")[2];
+        String filed = "";
+        try {
+            filed = statusDTO.getName().split("-")[2];
+        }catch (RuntimeException e){
+        }
         synchronized (lockMap.get(lock)){
             try {
                 if(auditCountMap.get(lock)==-1){
@@ -185,6 +209,7 @@ public class ModelListener implements ListenerInterface{
                                 }
                             }
                         }
+
                     }
                     logger.info("[%s]审核成功,更新数据库",statusDTO.getId());
                     wrapper.setSql("has_show="+ DetectionStatusEnum.DETECTION_SUCCESS.getStatus());

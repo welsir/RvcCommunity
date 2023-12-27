@@ -23,4 +23,7 @@ public interface ModelUserMapper extends BaseMapper<ModelUserDO> {
             "</foreach>" +
             "</script>")
     List<String> queryUidByModelIds(List<Long> modelIds);
+
+    @Select("select * from rvc_model_model_user where uid = #{uid}")
+    Object queryModelUserRelative(String uid);
 }

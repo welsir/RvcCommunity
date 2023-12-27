@@ -30,7 +30,7 @@ public class GobalExceptionHandler extends AbstractExceptionHandler {
     @ExceptionHandler(BaseException.class)
     public Result handleException(HttpServletRequest request,
                                   Exception ex) {
-        logger.error("Handle Exception Request Url:{},Exception:{}", request.getRequestURL(), ex);
+        logger.error("Handle Exception Request Url:%s,Exception:%s", request.getRequestURL(), ex);
         Result result;
         //系统异常
         if (ex instanceof BaseException) {

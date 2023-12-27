@@ -28,21 +28,22 @@ public class FileUtil {
 
     private static String imageSize= "";
     private static String modelSize = "";
+    private static String audioSize = "";
     private static String[] imageTypes;
     private static String[] modelTypes;
+    private static String[] audioTypes;
     @PostConstruct
     public void init(){
         imageSize = systemConfig.getImageSize();
-        modelSize = systemConfig.getModelFileSize();
+        modelSize = systemConfig.getModelSize();
         imageTypes = systemConfig.getImageType();
         modelTypes = systemConfig.getModelType();
+        audioTypes = systemConfig.getAudioType();
+        audioSize = systemConfig.getAudioSize();
     }
 
     public static boolean isImageFile(String filename) {
-        // 获取文件的扩展名
         String extension = getExtension(filename).toLowerCase();
-
-        // 检查扩展名是否在图片扩展名集合中
         return Arrays.asList(imageTypes).contains(extension);
     }
 
@@ -77,34 +78,35 @@ public class FileUtil {
         return (double) file.getSize() / 1024;
     }
 
-    public static boolean imageSizeIsAvailable(MultipartFile file){
-        double fileSizeInKB = getFileSizeInKB(file);
-        double realImageSize = Double.parseDouble(imageSize);
-        return fileSizeInKB>realImageSize;
+    public static boolean checkImageFileIsAvailable(MultipartFile file){
+        return isImageFile(file.getOriginalFilename()) && !calculateFileSize(file,imageSize);
     }
 
     public static boolean checkModelFileIsAvailable(MultipartFile[] file){
-        if(file.length>2){
+        if(file.length!=2){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
-        }
-        if(file.length==1){
-            return !calculateModelFileSize(file[0]) && ".pth".equals(getExtension(Objects.requireNonNull(file[0].getOriginalFilename())));
         }
         String firstFileExtension = file[0].getOriginalFilename();
         String secondFileExtension = file[1].getOriginalFilename();
-        boolean firstFileAvailable = isModelFile(firstFileExtension)&& !calculateModelFileSize(file[0]);
-        boolean secondFileAvailable = isModelFile(secondFileExtension) && !calculateModelFileSize(file[0]);
-        return firstFileAvailable&& secondFileAvailable && getExtension(firstFileExtension)!=getExtension(secondFileExtension);
+        String extension1 = getExtension(firstFileExtension);
+        String extension2 = getExtension(secondFileExtension);
+        return "pth".equalsIgnoreCase(extension1) && "index".equalsIgnoreCase(extension2) && !calculateFileSize(file[0],modelSize)||
+                "index".equalsIgnoreCase(extension1) && "pth".equalsIgnoreCase(extension2) && !calculateFileSize(file[0],modelSize);
     }
 
-    private static boolean calculateModelFileSize(MultipartFile file){
+    private static boolean calculateFileSize(MultipartFile file,String fileSize){
         double fileSizeInKB = getFileSizeInKB(file);
-        double defaultModelFileSize = Double.parseDouble(modelSize);
+        double defaultModelFileSize = Double.parseDouble(fileSize);
         return fileSizeInKB>defaultModelFileSize;
     }
 
-    public static boolean isModelFile(String filename){
-        String extension = getExtension(filename).toLowerCase();
-        return Arrays.asList(modelTypes).contains(extension);
+    public static boolean checkAudioFileIsAvailable(MultipartFile file){
+        return isAudioFile(file.getOriginalFilename())&&!calculateFileSize(file,audioSize);
     }
+
+    public static boolean isAudioFile(String filename){
+        String fileType = getExtension(filename);
+        return Arrays.asList(audioTypes).contains(fileType);
+    }
+
 }

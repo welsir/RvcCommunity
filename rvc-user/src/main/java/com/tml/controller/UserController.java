@@ -4,6 +4,7 @@ import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.UserContext;
 import com.tml.common.annotation.ListNotEmpty;
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -58,7 +59,7 @@ public class UserController {
     @PostMapping("/register")
     public Result register(@RequestBody
                                @Valid
-                               RegisterDTO registerDTO){
+                               RegisterDTO registerDTO) throws RvcSQLException {
         return Result.success(userService.register(registerDTO));
     }
 
@@ -104,6 +105,7 @@ public class UserController {
     public Result one(@RequestParam String uid){
         return Result.success(userService.one(uid));
     }
+
     /**
      * @param uidList List<String>
      * @return {@link Result}
@@ -143,7 +145,7 @@ public class UserController {
                              @Length(min = 19, max = 19, message = "uid长度为19")
                              String followUid,
                          @RequestHeader String uid,
-                         @RequestHeader String username){
+                         @RequestHeader String username) throws RvcSQLException {
         UserContext.setCurruntUser(uid, username);
         userService.follow(followUid, uid, username);
         return Result.success();
@@ -163,8 +165,15 @@ public class UserController {
     @GetMapping("/getUserInfo")
     @WhiteApi
     public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
-        UserContext.setCurruntUser(uid, username);
         return Result.success(userService.getUserInfo(uid, username));
+    }
+
+    @GetMapping("/getUserInfoById")
+    public Result getUserInfoById(@RequestParam
+                                      @Valid
+                                      @NotBlank
+                                      String uid){
+        return Result.success(userService.getUserInfoById(uid));
     }
 
     @PostMapping("/avatar")
@@ -181,5 +190,17 @@ public class UserController {
     @InternalApi
     public Result exist(@RequestParam String uid){
         return Result.success(userService.exist(uid));
+    }
+
+    @GetMapping("/getMyFollowUser")
+    @WhiteApi
+    public Result getMyFollowUser(@RequestHeader String uid, @RequestHeader String username){
+        return Result.success(userService.getMyFollowUser(uid, username));
+    }
+
+    @GetMapping("/isFollowed")
+    @InternalApi
+    public Result isFollowed(@RequestParam String uid1, @RequestParam String uid2){
+        return Result.success(userService.isFollowed(uid1, uid2));
     }
 }

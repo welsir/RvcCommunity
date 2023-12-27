@@ -55,7 +55,7 @@ public class IFeedbackDaoServiceImpl extends AssistantMJPServiceImpl<FeedbackMap
                 queryParamGroup.getQueryParams(QueryType.FEEDBACK_LIST,"t"),
                 new LinkedHashMap<>(Map.of("has_show",1)),
                 List.of(typeJoin,statusJoin),
-                orders, FeedbackVO.class,true);
+                orders, FeedbackVO.class,false);
     }
 
     @Override

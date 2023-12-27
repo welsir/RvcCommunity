@@ -40,3 +40,7 @@ EncYMLTest.*
 /rvc-chatroom/rvc-chatroom.iml
 /rvc-admin/rvc-admin.iml
 /rvc-rpc/rvc-rpc.iml
+/rvc-user/src/main/resources/application-xc.yml
+/rvc-gateway/src/main/resources/bootstrap-xc.yml
+/rvc-model/src/main/resources/application-xc.yml
+/rvc-user/src/test/java/com/tml/FeignTest.java

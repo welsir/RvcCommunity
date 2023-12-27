@@ -34,6 +34,12 @@ public class GlobalExceptionHandler {
         return Result.error(e.getCode(), e.getMessage());
     }
 
+    @ExceptionHandler(RvcSQLException.class)
+    public Result handleException(RvcSQLException e){
+        logger.error("数据插入出错：" + e.getMessage());
+        return Result.error("500", e.getMessage());
+    }
+
     /*
     * HSR 303 校验 异常拦截器
     * * */

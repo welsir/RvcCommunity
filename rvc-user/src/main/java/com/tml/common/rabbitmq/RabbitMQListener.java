@@ -11,6 +11,8 @@ import com.tml.mq.ReceiveHandler;
 import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.pojo.dto.DetectionTaskDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -35,6 +37,8 @@ public class RabbitMQListener extends ReceiveHandler {
     @Resource
     private UserInfoMapper userInfoMapper;
 
+    private static final Logger logger = LoggerFactory.getLogger(UserDetectionStrategy.class);
+
     public RabbitMQListener() {
         STEATEGY.put(DetectionConfig.USER_AVATAR, new AavatarDetectionProcess());
         STEATEGY.put(DetectionConfig.USER_NICKNAME, new NicknameDetectionProcess());
@@ -47,6 +51,7 @@ public class RabbitMQListener extends ReceiveHandler {
         if(userDetectionStrategy == null){
             return;
         }
+        logger.info("审核结果：" + detectionStatusDto.getId() + " " + detectionStatusDto.getLabels());
         String name = detectionStatusDto.getName();
         String id = detectionStatusDto.getId();
         String content = stringRedisTemplate.opsForValue().get(BASE + name + id);

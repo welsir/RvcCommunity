@@ -17,6 +17,7 @@ public class LabelDO {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     private String label;
+    private int hot;
     private String createTime;
     private String hasShow;
 }
