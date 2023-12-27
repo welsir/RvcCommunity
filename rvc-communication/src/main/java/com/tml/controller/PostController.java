@@ -102,6 +102,7 @@ public class PostController {
     public Result userFavorite(@Valid PageInfo<String> params,
                                @RequestHeader String uid){
         return Result.success(postService.userFavorite(params,uid));
+
     }
 
     @GetMapping("/user/collect")
