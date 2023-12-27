@@ -193,6 +193,7 @@ public class CommentServiceImpl implements CommentService {
             LikeComment likePost = new LikeComment(uuid,  coinDto.getId(),uid);
             try {
                 likeCommentMapper.insert(likePost);
+
             } catch (Exception e) {
                 throw new SystemException(FAVORITE_ERROR);
             }
