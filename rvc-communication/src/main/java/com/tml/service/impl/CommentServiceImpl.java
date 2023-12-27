@@ -196,10 +196,6 @@ public class CommentServiceImpl implements CommentService {
             } catch (Exception e) {
                 throw new SystemException(FAVORITE_ERROR);
             }
-//            LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
-//                    .eq(Comment::getPostCommentId, coinDto.getId())
-//                    .setSql("like_num = like_num + 1");
-//            commentMapper.update(null,updateWrapper);
         } else if (coinDto.getType().equals("0")) {
             LambdaQueryWrapper<LikeComment> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
             likePostLambdaQueryWrapper.eq(LikeComment::getUid,uid)
@@ -208,10 +204,6 @@ public class CommentServiceImpl implements CommentService {
             if (delete == 0){
                 throw new SystemException(SYSTEM_ERROR);
             }
-//            LambdaUpdateWrapper<Comment> updateWrapper = Wrappers.<Comment>lambdaUpdate()
-//                    .eq(Comment::getPostCommentId, coinDto.getId())
-//                    .setSql("like_num = like_num - 1");
-//            commentMapper.update(null,updateWrapper);
         }else {
             throw new SystemException(TYPE_ERROR);
         }
