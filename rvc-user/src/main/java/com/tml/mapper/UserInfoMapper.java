@@ -18,4 +18,7 @@ public interface UserInfoMapper extends BaseMapper<UserInfo> {
 
     @Select("SELECT * FROM rvc_user_info WHERE uid = ${uid}")
     UserInfo selectByUid(@Param("uid") String uid);
+
+    @Select("SELECT * FROM rvc_user_info where ${clunme} = '${value}'")
+    UserInfo selectByClumneAndValue(@Param("clunme") String clunme, @Param("value") String value);
 }

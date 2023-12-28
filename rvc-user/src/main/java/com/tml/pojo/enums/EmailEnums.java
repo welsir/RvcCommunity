@@ -19,7 +19,8 @@ public enum EmailEnums {
     /**
      * 修改密码验证码
      */
-    PASSWORD(2, "修改密码验证码", "PASSWORD:");
+    PASSWORD(2, "修改密码验证码", "PASSWORD:"),
+    FORGOT_PASSWORD(2, "忘记密码验证码", "FORGOT_PASSWORD:");
     private final int code;  //验证码编号
     private final String msg;
     private final String codeHeader; //redis前置信息

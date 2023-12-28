@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tml.config.DetectionConfig.*;
@@ -103,6 +102,7 @@ public class UserServiceImpl implements UserService {
         userInfo.setUsername(RandomStringUtil.generateRandomString());
         userInfo.setNickname(userInfo.getUsername());
         userInfo.setAvatar(DEFAULT_AVATAR);
+        userInfo.setSex("男");
         try {
             userInfoMapper.insert(userInfo);
             userData.setUid(userInfo.getUid());
@@ -133,6 +133,9 @@ public class UserServiceImpl implements UserService {
             case 2:
                 codeUtil.sendCode(email, PASSWORD);
                 break;
+            case 3:
+                codeUtil.sendCode(email, FORGOT_PASSWORD);
+                break;
             default:
                 throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
         }
@@ -140,15 +143,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoVO one(String uid) {
-        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("uid", uid);
-        UserInfoVO userInfoVO = new UserInfoVO();
-        UserInfo user = userInfoMapper.selectOne(queryWrapper);
+        UserInfo user = userInfoMapper.selectByUid(uid);
         if(user == null){
             throw new ServerException(ResultEnums.UID_NOT_EIXST);
         }
-        BeanUtils.copyProperties(user, userInfoVO);
-        return userInfoVO;
+        return UserInfo.toVO(user);
     }
 
     @Override
@@ -165,7 +164,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(UserInfoDTO userInfoDTO, String uid, String username) {
+    public void update(UserInfoDTO userInfoDTO, String uid) {
         UserInfo user = userInfoMapper.selectByUid(uid);
         boolean flag = false;
 
@@ -190,20 +189,18 @@ public class UserServiceImpl implements UserService {
             user.setDescription("审核中");
             flag = true;
         }
-        if(userInfoDTO.getSex() != null){
-            switch (userInfoDTO.getSex()) {
-                case "男":
-                case "女":
-                    if (user.getSex() == null || !user.getSex().equals(userInfoDTO.getSex())) {
-                        user.setSex(userInfoDTO.getSex());
-                        flag = true;
-                    }
-                    break;
-                default:
-                    throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
-            }
+        switch (userInfoDTO.getSex()) {
+            case "男":
+            case "女":
+                if (!user.getSex().equals(userInfoDTO.getSex())) {
+                    user.setSex(userInfoDTO.getSex());
+                    flag = true;
+                }
+                break;
+            default:
+               throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
         }
-        if(userInfoDTO.getBirthday() != null && (user.getBirthday() == null || user.getBirthday() == userInfoDTO.getBirthday())){
+        if(userInfoDTO.getBirthday() != null && user.getBirthday() != userInfoDTO.getBirthday()){
             user.setBirthday(userInfoDTO.getBirthday());
             flag = true;
         }
@@ -216,8 +213,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = RvcSQLException.class)
-    public void follow(String followUid, String uid, String username) throws RvcSQLException {
-        if(Objects.equals(followUid, uid)){
+    public void follow(String followUid, String uid) throws RvcSQLException {
+        if(uid.equals(followUid)){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
         if(!userInfoMapper.exist("uid", followUid)){
@@ -228,12 +225,12 @@ public class UserServiceImpl implements UserService {
                 .eq("follow_uid", uid)
                 .eq("followed_uid", followUid);
         if(userFollowMapper.selectCount(followWrapper) > 0){
+            userFollowMapper.delete(followWrapper);
+            UserData userData = userDataMapper.selectByUid(uid);
+            userData.setFollowNum(userData.getFollowNum() - 1);
+            UserData followUserData = userDataMapper.selectByUid(followUid);
+            followUserData.setFansNum(followUserData.getFansNum() - 1);
             try {
-                userFollowMapper.delete(followWrapper);
-                UserData userData = userDataMapper.selectByUid(uid);
-                userData.setFollowNum(userData.getFollowNum() - 1);
-                UserData followUserData = userDataMapper.selectByUid(followUid);
-                followUserData.setFansNum(followUserData.getFansNum() - 1);
                 userDataMapper.updateById(userData);
                 userDataMapper.updateById(followUserData);
             } catch (Exception e){
@@ -258,26 +255,33 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid, String username) {
+    public void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid) {
         if(!codeUtil.emailVerify(updatePasswordDTO.getEmail(), PASSWORD, updatePasswordDTO.getEmailCode())){
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
-
-        QueryWrapper<UserInfo> userWrapper = new QueryWrapper<>();
-        userWrapper.eq("email", updatePasswordDTO.getEmail());
-        UserInfo userInfo = userInfoMapper.selectOne(userWrapper);
-        userInfo.setPassword(updatePasswordDTO.getPassword());
+        UserInfo userInfo = userInfoMapper.selectByClumneAndValue("email", updatePasswordDTO.getEmail());
+        userInfo.setPassword(DigestUtils.md5Hex(updatePasswordDTO.getPassword()));
         userInfoMapper.updateById(userInfo);
     }
 
     @Override
-    public UserInfoVO getUserInfo(String uid, String username) {
-        UserInfo userInfo = userInfoMapper.selectByUid(uid);
-        UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(userInfo, userInfoVO);
-        UserData userData = userDataMapper.selectByUid(uid);
-        BeanUtils.copyProperties(userData, userInfoVO);
-        return userInfoVO;
+    public void forgotPassword(ForgotPassword forgotPassword) {
+        if(!codeUtil.emailVerify(forgotPassword.getEmail(), FORGOT_PASSWORD, forgotPassword.getEmailCode())){
+            throw new ServerException(ResultEnums.VER_CODE_ERROR);
+        }
+        UserInfo userInfo = userInfoMapper.selectByClumneAndValue("email", forgotPassword.getEmail());
+        userInfo.setPassword(DigestUtils.md5Hex(forgotPassword.getPassword()));
+        userInfoMapper.updateById(userInfo);
+    }
+
+    @Override
+    public UserInfoVO getUserInfo(String uid) {
+        return UserData.toVO(
+                UserInfo.toVO(
+                        userInfoMapper.selectByUid(uid)
+                ),
+                userDataMapper.selectByUid(uid)
+        );
     }
 
     @Override
@@ -285,16 +289,16 @@ public class UserServiceImpl implements UserService {
         if(!userInfoMapper.exist("uid", uid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
-        UserInfo userInfo = userInfoMapper.selectById(uid);
-        UserInfoVO userInfoVO = new UserInfoVO();
-        BeanUtils.copyProperties(userInfo, userInfoVO);
-        UserData userData = userDataMapper.selectByUid(uid);
-        BeanUtils.copyProperties(userData, userInfoVO);
-        return userInfoVO;
+        return UserData.toVO(
+                UserInfo.toVO(
+                        userInfoMapper.selectByUid(uid)
+                ),
+                userDataMapper.selectByUid(uid)
+        );
     }
 
     @Override
-    public void avatar(MultipartFile file, String uid, String username){
+    public void avatar(MultipartFile file, String uid){
         if(file.getSize() > MAX_FILE_SIZE){
             throw new ServerException(ResultEnums.FILE_SIZE_LIMIT);
         }
@@ -331,7 +335,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserInfoVO> getMyFollowUser(String uid, String username) {
+    public List<UserInfoVO> getMyFollowUser(String uid) {
         List<UserFollow> userFollows = userFollowMapper.selectByMap(Map.of("follow_id", uid));
         List<String> followedUids = userFollows.stream().map(UserFollow::getFollowedUid).collect(Collectors.toList());
         if(followedUids.isEmpty()){
