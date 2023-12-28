@@ -6,7 +6,7 @@ spring:
       max-request-size: 20MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_URL:ENC(Q/mUDDQ+0TwZ+60p9l6jr/F2nN/93jltB6EvwDqxGR5r91clGxM6slm0dskGePCLbdSFU+3NYgN1A3sJVjTNvd7r2XJs8V6coHAg0F9fe42NS087BTdFgrZjYRW09b2vlMFxo7KBJUwv2qZO8Kfa5VvulLkoBP28jdJsNkHbCDw=)}
+    url: ${MYSQL_URL:ENC(6gZtxyrnfvCzVWFBQKyC7O1wNxAcdEUeEonsyZS7ogFNvbwaGHyIb7fk/Mpcm4mOg8IAO1+mhg92XZ69exiTHQjW6OViWmy4NnolEh7enBL2Kc+T5gY0akiCrIW8iKZPREwK/J6eac4BIMWHi5AkDqGxDkP5RH8/ZR4On0VXeac=)}
     username: ${MYSQL_USERNAME:ENC(h4sx/sPEXk8MsDhsWNc1pwGRrxucMNqz)}
     password: ${MYSQL_PASSWORD:ENC(pnc0ZWw3h49DWEJtygRU79rEw3ZBsvl0NYRTW9CuIPKQDydSRTHRYw==)}
   redis:
