@@ -7,20 +7,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.FileServiceClient;
 import com.tml.client.UserServiceClient;
+import com.tml.designpattern.chain.ext.*;
 import com.tml.domain.dto.CoinDto;
 import com.tml.domain.dto.CoverDto;
 import com.tml.domain.dto.PageInfo;
 import com.tml.domain.dto.PostDto;
 import com.tml.domain.entity.*;
 import com.tml.handler.exception.SystemException;
+import com.tml.mapper.common.CommonMapper;
 import com.tml.mapper.post.*;
 import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.VO.UploadModelForm;
 import com.tml.pojo.VO.UserInfoVO;
-import com.tml.domain.vo.PostSimpleVo;
+
 import com.tml.domain.vo.PostVo;
 import com.tml.service.PostService;
 import com.tml.designpattern.strategy.SortStrategy;
@@ -47,7 +48,6 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
-import static com.tml.constant.DetectionConstants.UN_DETECTION;
 import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
 /**
@@ -58,7 +58,7 @@ import static com.tml.constant.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
+public class PostServiceImpl implements PostService {
 
     private final CollectPostMapper collectPostMapper;
     private final LikePostMapper likePostMapper;
@@ -71,6 +71,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private final FileServiceClient fileServiceClient;
     private final UserServiceClient userServiceClient;
 
+    //责任链
+    private final UserExistApproveChain userExistApproveChain;
+    private final PostExistApproveChain postExistApproveChain;
+    private final LastStepApproveChain lastStepApproveChain;
+    private final TagExistApproveChain tagExistApproveChain;
+    private final CoverExistApproveChain coverExistApproveChain;
+
     private final Map<String, SortStrategy> strategyMap = new HashMap<>();
     {
         strategyMap.put("1", new TimeSortStrategy());
@@ -78,213 +85,95 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         strategyMap.put("3", new ViewSortStrategy());
     }
 
-
     @Override
-    public List<PostVo> list(PageInfo<String> params, String tagId, String uid) {
-// TODO: 2023/12/21 责任链
+    public List<PostVo> list(String uid,Integer pageNum,Integer pageSize,String order,String tagId){
         if (!Strings.isBlank(uid)){
-            Object data = userServiceClient.exist(uid).getData();
-            if (Objects.isNull(data)){
-                throw new SystemException(NEED_LOGIN);
-            }
+            userExistApproveChain.setNext(uid,lastStepApproveChain);
+            userExistApproveChain.approve();
         }
-
-// TODO: 2023/12/21 代码优化
         //分页
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-        Page<Post> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS)  // 审核通过
-                .eq(Post::getHasDelete,0);       //没有被删除
-        //tagId 不为空  更具tagId 查询
-        if (!Strings.isBlank(tagId)){
-            queryWrapper.eq(Post::getTagId,tagId);
-        }
-        Page<Post> list = this.page(page,queryWrapper);
+                .eq(Post::getHasDelete,0)//没有被删除
+                .eq(!Strings.isBlank(tagId),Post::getTagId,tagId);//tagId 不为空  更具tagId 查询
+        Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),queryWrapper);
         //获取的分页结果
         List<Post> records = list.getRecords();
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(records, PostVo.class);
-
         //        //获取作者
         List<String> userIds = records.stream()
                 .map(post -> post.getUid())
                 .collect(Collectors.toList());
         Result<Map<String, UserInfoVO>> res = rvcUserServiceFeignClient.list(userIds);
-
         Map<String, UserInfoVO> data = res.getData();
-
-
-
         //获取tag
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
         String jsonString = JSON.toJSONString(cacheList);
         List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
         Map<String, PostType> postTypeCollect = postTypes.stream()
                 .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
-
-
         //遍历postvo
-            //插入作者
-            //插入tag
-            //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
-
+        //插入作者
+        //插入tag
+        //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
         for (int i=0;i<postVos.size();i++){
             PostVo postVo = postVos.get(i);
             //插入作者
             postVo.setAuthor(data.get(records.get(i).getUid()));
             //插入tag
             postVo.setPostType(postTypeCollect.get(records.get(i).getTagId()));
-            //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
-        if (!Strings.isBlank(uid)){
-                LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-                collectPostQueryWrapper.eq(CollectPost::getUid, uid)
-                        .eq(CollectPost::getPostId,postVo.getPostId());
-                LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-                likePostQueryWrapper.eq(LikePost::getUid, uid)
-                        .eq(LikePost::getPostId,postVo.getPostId());
-
-                boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) > 0;
-                boolean like = likePostMapper.selectCount(likePostQueryWrapper) > 0;
-
-                //获取封面
-
+            //获取封面
             Cover cover = coverMapper.selectById(records.get(i).getCoverId());
             postVo.setCover(cover.getCoverUrl());
-
-            postVo.setLike(like);
-                postVo.setCollect(collect);
-
+            //如果uuid 不为空 去关系表进行查询 是否点赞和收藏
+            if (!Strings.isBlank(uid)){
+                postVo.setLike(hasFavorite(uid,postVo.getPostId()));
+                postVo.setCollect(hasCollect(uid,postVo.getPostId()));
             }
         }
-
         //         排序
-        SortStrategy sortStrategy = strategyMap.get(params.getData());
+        SortStrategy sortStrategy = strategyMap.get(order);
         sortStrategy.sort(postVos);
-
-
         return postVos;
 
     }
 
     @Override
     public PostVo details(String postId,String uid) {
-// TODO: 2023/12/21 责任链
-
         if (!Strings.isBlank(uid)){
-            Object data = userServiceClient.exist(uid).getData();
-            if (Objects.isNull(data)){
-                throw new SystemException(NEED_LOGIN);
-            }
+            userExistApproveChain.setNext(uid,lastStepApproveChain);
+            userExistApproveChain.approve();
         }
-
         LambdaQueryWrapper<Post> postLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        postLambdaQueryWrapper.eq(Post::getHasDelete,0)
-                .eq(Post::getPostId,postId)
-                .eq(Post::getDetectionStatus,1);
-        Post post = this.getOne(postLambdaQueryWrapper);
-
-        //条件  是否删除  是否违规
-
-
+        postLambdaQueryWrapper.eq(Post::getPostId,postId)
+                .eq(Post::getHasDelete,0)  //没有删除
+                .eq(Post::getDetectionStatus,1);    //审核通过
+        Post post = postMapper.selectOne(postLambdaQueryWrapper);
         if (Objects.isNull(post)){
             throw new SystemException(POST_ERROR);
         }
         PostVo postVo = BeanCopyUtils.copyBean(post, PostVo.class);
-
-        // TODO: 2023/12/21 sql优化
-
         //获取作者和tag 还有cover
-        Object data = rvcUserServiceFeignClient.one(post.getUid()).getData();
-        UserInfoVO userInfoVO = JSON.parseObject(JSON.toJSONString(data), UserInfoVO.class);
-        postVo.setAuthor(userInfoVO);
-
-        PostType postType = postTypeMapper.selectById(post.getTagId());
-        postVo.setPostType(postType);
-
-        Cover cover = coverMapper.selectById(post.getCoverId());
-        postVo.setCover(cover.getCoverUrl());
-
-
+        postVo.setAuthor(getUserInfo(post.getUid()));
+        postVo.setPostType(postTypeMapper.selectById(post.getTagId()));
+        postVo.setCover(coverMapper.selectById(post.getCoverId()).getCoverUrl());
 //        如果用户未登录直接返回vo对象
         if (Objects.isNull(uid)){
             return postVo;
         }
-
 //        异步 帖子浏览次数+1（1分钟内浏览 浏览次数不加1 并且更新上次浏览时间）
         this.executor.execute(() -> watchPost(uid,postId));
-
-        // TODO: 2023/12/21 sql优化
-        //去关系表查看用户是否点赞  收藏
-        LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
-        collectPostQueryWrapper.eq(CollectPost::getUid,uid)
-                .eq(CollectPost::getPostId,postId);
-        LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
-        likePostQueryWrapper.eq(LikePost::getUid,uid)
-                .eq(LikePost::getPostId,postId);
-        boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
-        boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
-
-//        封装vo对象并返回
-        postVo.setLike(like);
-        postVo.setCollect(collect);
-
+        postVo.setLike( hasFavorite(uid,postId));
+        postVo.setCollect(hasCollect(uid,postId));
         return postVo;
     }
-
-//    @Override
-//    public String cover(String coverUrl) {
-//        /**
-//         * 需要改
-//         * 不走前端上传文件
-//         */
-//
-//        LoginInfoDTO loginInfoDTO = UserLoginInterceptor.loginUser.get();
-//        String uuid = loginInfoDTO.getId();
-//
-////        数据库添加记录
-//        String coverId = Uuid.getUuid();
-//        Cover cover = Cover.builder()
-//                .coverId(coverId)
-//                .detectionStatus(UN_DETECTION)
-//                .coverUrl(coverUrl)
-//                .uid(uuid)
-//                .build();
-//        coverMapper.insert(cover);
-//
-//
-//        //       提交审核任务
-//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-//                .id(coverId)
-//                .content(coverUrl)
-//                .name("post_cover")
-//                .build();
-//
-//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-//        producerHandler.submit(textDetectionTaskDto,"image");
-//
-//        return coverId;
-//    }
 
     @Override
     @Transactional
     public void favorite(CoinDto coinDto, String uid) {
-
-
-
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-
-
-
-        //帖子是否存在
-        Post post = postMapper.selectById(coinDto.getId());
-        if (Objects.isNull(post)){
-            throw new SystemException(POST_ERROR);
-        }
+        userExistApproveChain.setNext(uid,postExistApproveChain);
+        postExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);
+        userExistApproveChain.approve();
 
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
@@ -303,11 +192,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         } else if (coinDto.getType().equals("0")) {
             LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
             likePostLambdaQueryWrapper.eq(LikePost::getUid,uid)
-                            .eq(LikePost::getPostId,coinDto.getId());
+                    .eq(LikePost::getPostId,coinDto.getId());
             int delete = likePostMapper.delete(likePostLambdaQueryWrapper);
-              if (delete == 0){
-                  throw new SystemException(SYSTEM_ERROR);
-              }
+            if (delete == 0){
+                throw new SystemException(SYSTEM_ERROR);
+            }
             LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
                     .eq(Post::getPostId, coinDto.getId())
                     .setSql("like_num = like_num - 1");
@@ -320,19 +209,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     @Transactional
     public void collection(CoinDto coinDto,String uid) {
-
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-
-
-        //帖子是否存在
-        Post post = postMapper.selectById(coinDto.getId());
-        if (Objects.isNull(post)){
-            throw new SystemException(POST_ERROR);
-        }
+        userExistApproveChain.setNext(uid,postExistApproveChain);
+        postExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);
+        userExistApproveChain.approve();
         //1、收藏    添加关系表中的记录       post表 colletc_num +1
         //0、取消收藏    删除关系表中的记录       post表 colletc_num -1
         if (coinDto.getType().equals("1")){
@@ -366,317 +245,220 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public void delete(String postId,String uid) {
-        // TODO: 2023/12/21 责任链
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
+        userExistApproveChain.setNext(uid,postExistApproveChain);
+        postExistApproveChain.setNext(postId,lastStepApproveChain);
+        userExistApproveChain.approve();
+        LambdaQueryWrapper<Post> eq = new LambdaQueryWrapper<Post>().eq(Post::getPostId, postId)
+                .eq(Post::getUid, uid);
+        if (postMapper.selectCount(eq)<1){
+            throw new RuntimeException("无权限操作");
         }
-
-
-
-        //帖子是否存在
-        Post DBpost = postMapper.selectById(postId);
-        if (Objects.isNull(DBpost)){
-            throw new SystemException(POST_ERROR);
-        }
-
-
-        Post post1 = postMapper.selectById(postId);
-//帖子不属于该用户
-        if (!post1.getUid().equals(uid)){
-            throw new SystemException(PERMISSIONS_ERROR);
-        }
-
-        Post post = Post.builder()
+        postMapper.updateById(Post.builder()
                 .postId(postId)
                 .hasDelete(1)
-                .build();
-
-        try {
-            postMapper.updateById(post);
-        } catch (Exception e) {
-            throw new SystemException(POST_ERROR);
-        }
+                .build());
     }
 
     @Override
     @Transactional
     public String add(PostDto postDto, String uid) {
-        // TODO: 2023/12/21 责任链
+        userExistApproveChain.setNext(uid,tagExistApproveChain);
+        tagExistApproveChain.setNext(postDto.getTagId(),coverExistApproveChain);
+        coverExistApproveChain.setNext(postDto.getCoverId(),lastStepApproveChain);
+        userExistApproveChain.approve();
 
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-        String uuid = null;
-        if (Strings.isBlank(postDto.getPostId())){
-            uuid = Uuid.getUuid();
-        }else {
-            uuid = postDto.getPostId();
-        }
-
+        String uuid = Strings.isBlank(postDto.getPostId())?Uuid.getUuid():postDto.getPostId();
         Post post = BeanCopyUtils.copyBean(postDto, Post.class);
         post.setPostId(uuid);
-        //关闭审核
-//            .detectionStatus(DETECTION_SUCCESS)
+        //关闭审核  将审核状态修改为审核成功
         post.setDetectionStatus(DETECTION_SUCCESS);
         post.setUid(uid);
-
-        //判断tagid是否存在
-        PostType postType = postTypeMapper.selectById(post.getTagId());
-        if (Objects.isNull(postType)){
-            throw new SystemException(TAG_ERROR);
+        //如果能从数据库找到这个帖子的你的就修改   不能找到就创建
+        if (postMapper.selectCount(new LambdaQueryWrapper<Post>().eq(Post::getUid,uid).eq(Post::getPostId,postDto.getPostId()))<1){
+            postMapper.insert(post);
+        }else {
+            postMapper.updateById(post);
         }
-
-        //判断cover是否存在 并且审核通过    ？？？并且是这个用户的
-        Cover dbCover = coverMapper.selectById(post.getCoverId());
-        if (Objects.isNull(dbCover)){
-            throw new SystemException(COVER_ERROR);
-        }
-        if (dbCover.getDetectionStatus() == 2){
-            throw new SystemException(DETECTION_ERROR);
-        }
-
-        //判断 post 是不是你的
-
-
-        saveOrUpdate(post);
-
-        //更新cover表映射
-        Cover cover = Cover.builder()
+        coverMapper.updateById(Cover.builder()
                 .postId(uuid)
                 .coverId(postDto.getCoverId())
-                .build();
-
-        int i = coverMapper.updateById(cover);
-
-
+                .build());
         return uuid;
-
-//        //提交审核
-//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-//                .id(uuid)
-//                .content(post.getContent())
-//                .name("post.text")
-//                .build();
-//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-//        producerHandler.submit(textDetectionTaskDto,"text");
     }
 
-//    @Override
-//    public void update(PostDto postDto) {
-
-//        String uuid = Uuid.getUuid();
-//        Post post = BeanCopyUtils.copyBean(postDto, Post.class);
-//        post.setPostId(uuid);
-//        save(post);
-//
-//        //更新cover表映射
-//        Cover cover = Cover.builder()
-//                .postId(uuid)
-//                .coverId(post.getCoverId())
-//                .build();
-//
-//        coverMapper.updateById(cover);
-//
-//
-//
-//        //对内容进行审核
-//        //        审核
-//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-//                .id(uuid)
-//                .content(post.getContent())
-//                .name("post.text")
-//                .build();
-//
-//        ProducerHandler producerHandler = BeanUtils.getBean(ProducerHandler.class);
-//        producerHandler.submit(textDetectionTaskDto,"text");
-//    }
-
     @Override
-    public List<PostSimpleVo> userFavorite(PageInfo<String> params,String uid) {
-
-        // TODO: 2023/12/21 责任链
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-
-// TODO: 2023/12/21 代码优化
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-        Page<LikePost> page = new Page<>(pageNum,pageSize);
+    public List<PostVo> userFavorite(String uid,Integer pageNum,Integer pageSize,String order) {
+        //  责任链
+        userExistApproveChain.setNext(uid,lastStepApproveChain);
+        userExistApproveChain.approve();
+        //获取用户信息
+        UserInfoVO data = getUserInfo(uid);
+        //获取用户喜欢的postid
         LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(LikePost::getUid, uid);
-        Page<LikePost> likePostPage = likePostMapper.selectPage(page, likePostLambdaQueryWrapper);
+        Page<LikePost> likePostPage = likePostMapper.selectPage(new Page<>(pageNum,pageSize), likePostLambdaQueryWrapper);
         List<LikePost> records = likePostPage.getRecords();
         if (records.size() == 0){
             throw new SystemException(NOT_FAVORITE_ERROR);
         }
-
-
         List<String> collect = likePostPage.getRecords().stream()
                 .map(likePost -> likePost.getPostId())
                 .collect(Collectors.toList());
-
+//更具id获取post
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("post_id",collect);
+        queryWrapper.in("post_id",collect)
+                .eq("detection_status",1)
+                .eq("has_delete",0);
         List<Post> posts = postMapper.selectList(queryWrapper);
-
-        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
-
-        //获取tag
+//封装信息
+        List<PostVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+        //获取tag  封装为map
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
         String jsonString = JSON.toJSONString(cacheList);
         List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
         Map<String, PostType> postTypeCollect = postTypes.stream()
                 .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
-
-        //对帖子内容进行限制（200字以内）
         for (int i=0;i<postSimpleVos.size();i++){
-            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            Post post = posts.get(i);
+            PostVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
+            //对帖子内容进行限制（200字以内）
             if (content.length()>200){
                 postSimpleVo.setContent(content.substring(0, 200));
             }
-
+            //封面
+            postSimpleVo.setCover(coverMapper.selectById( post.getCoverId()).getCoverUrl());
+            //post类型
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+            //作者
+            postSimpleVo.setAuthor(data);
+            postSimpleVo.setLike(hasFavorite(uid,post.getPostId()));
+            postSimpleVo.setCollect(hasCollect(uid,post.getPostId()));
         }
-
         return postSimpleVos;
     }
 
     @Override
-    public List<PostSimpleVo> userCollect(PageInfo<String> params,String uid) {
-// TODO: 2023/12/21 以下三个接口提取公共部分 代码优化
-
-        //帖子是否存在 （被删除 审核通过）
-
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-        Page<CollectPost> page = new Page<>(pageNum,pageSize);
+    public List<PostVo> userCollect(String uid,Integer pageNum,Integer pageSize,String order){
+        //  责任链
+        userExistApproveChain.setNext(uid,lastStepApproveChain);
+        userExistApproveChain.approve();
+        //获取用户信息
+        UserInfoVO data = getUserInfo(uid);
+        //获取用户收藏的postid
         LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(CollectPost::getUid, uid);
-        Page<CollectPost> likePostPage = collectPostMapper.selectPage(page, likePostLambdaQueryWrapper);
-
-
+        Page<CollectPost> likePostPage = collectPostMapper.selectPage(new Page<>(pageNum,pageSize), likePostLambdaQueryWrapper);
         List<CollectPost> records = likePostPage.getRecords();
         if (records.size() == 0){
-            throw new SystemException(NOT_COLLECT_ERROR);
+            throw new SystemException(NOT_FAVORITE_ERROR);
         }
-
         List<String> collect = likePostPage.getRecords().stream()
                 .map(likePost -> likePost.getPostId())
                 .collect(Collectors.toList());
-
+//更具id获取post
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("post_id",collect);
+        queryWrapper.in("post_id",collect)
+                .eq("detection_status",1)
+                .eq("has_delete",0);
         List<Post> posts = postMapper.selectList(queryWrapper);
-
-
-
-        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
-
-        //获取tag
+//封装信息
+        List<PostVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+        //获取tag  封装为map
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
         String jsonString = JSON.toJSONString(cacheList);
         List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
         Map<String, PostType> postTypeCollect = postTypes.stream()
                 .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
-
-        //对帖子内容进行限制（200字以内）
         for (int i=0;i<postSimpleVos.size();i++){
-            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            Post post = posts.get(i);
+            PostVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
+            //对帖子内容进行限制（200字以内）
             if (content.length()>200){
                 postSimpleVo.setContent(content.substring(0, 200));
             }
+            //封面
+            postSimpleVo.setCover(coverMapper.selectById( post.getCoverId()).getCoverUrl());
+            //post类型
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+            //作者
+            postSimpleVo.setAuthor(data);
+            postSimpleVo.setLike(hasFavorite(uid,post.getPostId()));
+            postSimpleVo.setCollect(hasCollect(uid,post.getPostId()));
         }
-
         return postSimpleVos;
     }
 
     @Override
-    public List<PostSimpleVo> userCreate(PageInfo<String> params,String uid) {
-
-        Object data = userServiceClient.exist(uid).getData();
-        if (Objects.isNull(data)){
-            throw new SystemException(NEED_LOGIN);
-        }
-
-
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-        Page<Post> page = new Page<>(pageNum,pageSize);
+    public List<PostVo> userCreate(String uid,Integer pageNum,Integer pageSize,String order) {
+        //  责任链
+        userExistApproveChain.setNext(uid,lastStepApproveChain);
+        userExistApproveChain.approve();
+        //获取用户信息
+        UserInfoVO data = getUserInfo(uid);
+        //获取用户创建的postid
         LambdaQueryWrapper<Post> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        likePostLambdaQueryWrapper.eq(Post::getUid, uid);
-        Page<Post> likePostPage = postMapper.selectPage(page, likePostLambdaQueryWrapper);
-        List<Post> records = likePostPage.getRecords();
-        if (records.size() == 0){
-            throw new SystemException(NOT_CREATE_ERROR);
+        likePostLambdaQueryWrapper.eq(Post::getUid, uid)
+                .eq(Post::getDetectionStatus,1)
+                .eq(Post::getHasDelete,0);
+        Page<Post> likePostPage = postMapper.selectPage(new Page<>(pageNum,pageSize), likePostLambdaQueryWrapper);
+        List<Post> posts = likePostPage.getRecords();
+        if (posts.size() == 0){
+            throw new SystemException(NOT_FAVORITE_ERROR);
         }
-
-
-        List<String> collect = likePostPage.getRecords().stream()
-                .map(likePost -> likePost.getPostId())
-                .collect(Collectors.toList());
-
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("post_id",collect);
-        List<Post> posts = postMapper.selectList(queryWrapper);
-
-        List<PostVo> postVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
-
-        List<PostSimpleVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostSimpleVo.class);
-
-        //获取tag
+//        List<String> collect = likePostPage.getRecords().stream()
+//                .map(likePost -> likePost.getPostId())
+//                .collect(Collectors.toList());
+//更具id获取post
+//        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.in("post_id",collect)
+//                .eq("detection_status",1)
+//                .eq("has_delete",0);
+//        List<Post> posts = postMapper.selectList(queryWrapper);
+//封装信息
+        List<PostVo> postSimpleVos = BeanCopyUtils.copyBeanList(posts, PostVo.class);
+        //获取tag  封装为map
         List<Object> cacheList = redisCache.getCacheList(RVC_COMMUNICATION_POST_TYPE);
         String jsonString = JSON.toJSONString(cacheList);
         List<PostType> postTypes = JSONArray.parseArray(jsonString, PostType.class);
         Map<String, PostType> postTypeCollect = postTypes.stream()
                 .collect(Collectors.toMap(postType -> postType.getId(), postType -> postType));
-
-        //对帖子内容进行限制（200字以内）
         for (int i=0;i<postSimpleVos.size();i++){
-            PostSimpleVo postSimpleVo = postSimpleVos.get(i);
+            Post post = posts.get(i);
+            PostVo postSimpleVo = postSimpleVos.get(i);
             String content = postSimpleVo.getContent();
+            //对帖子内容进行限制（200字以内）
             if (content.length()>200){
                 postSimpleVo.setContent(content.substring(0, 200));
             }
+            //封面
+            postSimpleVo.setCover(coverMapper.selectById( post.getCoverId()).getCoverUrl());
+            //post类型
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
+            //作者
+            postSimpleVo.setAuthor(data);
+            postSimpleVo.setLike(hasFavorite(uid,post.getPostId()));
+            postSimpleVo.setCollect(hasCollect(uid,post.getPostId()));
         }
-
         return postSimpleVos;
     }
 
     @Override
     public String updUserProfile(MultipartFile profile,String uid) throws IOException {
-
         Object res = userServiceClient.exist(uid).getData();
         if (Objects.isNull(res)){
             throw new SystemException(NEED_LOGIN);
         }
-
         //判断后缀名
         String fileSuffix = profile.getOriginalFilename().substring(profile.getOriginalFilename().lastIndexOf("."));
-
         if (!Arrays.stream(IMG_TYPE_LIST).anyMatch(
                 type -> fileSuffix.equals(type))
         ){
             throw new SystemException(TYPE_ERROR);
         }
 
-
         byte[] uploadBytes = profile.getBytes();
-
         UploadModelForm build = UploadModelForm.builder()
                 .bucket("rvc1")
                 .file(profile)
@@ -701,9 +483,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
                 .createAt(LocalDate.now())
-                .detectionStatus(DETECTION_SUCCESS)
-                //关闭审核
-//                .detectionStatus(UN_DETECTION)
+                .detectionStatus(DETECTION_SUCCESS)   //关闭审核 审核状态改为成功
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);
@@ -728,9 +508,34 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
 //    不为空更新redis失效时间
         redisCache.setCacheObject(RVC_COMMUNICATION_POST_WATCH + ":" + userId,1,1, TimeUnit.HOURS);
-            /**
-             * 是否需要记录浏览信息
-             */
+        /**
+         * 是否需要记录浏览信息
+         */
+    }
+
+    public UserInfoVO getUserInfo(String userId){
+        //调用用户服务获取评论创建人的信息
+        UserInfoVO data = null;
+        try {
+            data = userServiceClient.one(userId).getData();
+        } catch (Exception e) {
+            throw new RuntimeException("用户服务调用异常");
         }
-//        if (now.compareTo(oneHourBefore))
+        return data;
+    }
+
+    public boolean hasFavorite(String uid,String postId){
+        LambdaQueryWrapper<LikePost> likePostQueryWrapper = new LambdaQueryWrapper<>();
+        likePostQueryWrapper.eq(LikePost::getUid,uid)
+                .eq(LikePost::getPostId,postId);
+        boolean   like =   likePostMapper.selectCount(  likePostQueryWrapper) >0;
+        return like;
+    }
+    public boolean hasCollect(String uid,String postId){
+        LambdaQueryWrapper<CollectPost> collectPostQueryWrapper = new LambdaQueryWrapper<>();
+        collectPostQueryWrapper.eq(CollectPost::getUid,uid)
+                .eq(CollectPost::getPostId,postId);
+        boolean collect = collectPostMapper.selectCount(collectPostQueryWrapper) >0;
+        return collect;
+    }
 }

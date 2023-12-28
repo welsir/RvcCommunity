@@ -14,11 +14,11 @@ import java.util.List;
 public interface CommentService  {
     String comment(CommentDto commentDto,String uid);
 
-    List<CommentVo> list(PageInfo<String> params,String uid);
+    List<CommentVo> list(String uid,String postId,Integer pageNum,Integer pageSize,String oder);
 
     void favorite(CoinDto coinDto,String uid);
 
-    List<CommentVo> childrenList(PageInfo<String> params,String uid);
+    List<CommentVo> childrenList(String uid,String postId,Integer pageNum,Integer pageSize,String oder);
 
 
 }

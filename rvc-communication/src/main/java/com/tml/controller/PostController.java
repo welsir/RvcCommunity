@@ -45,7 +45,7 @@ public class PostController {
     public Result list(@Valid PageInfo<String> params,
                        @RequestParam("tagId") String tagId,
                        @RequestHeader(required = false) String uid){
-    return Result.success(postService.list(params,tagId,uid));
+    return Result.success(postService.list(uid,params.getPage(),params.getLimit(),params.getData(),tagId));
     }
 
     @GetMapping("/details")
@@ -101,7 +101,7 @@ public class PostController {
     @WhiteApi
     public Result userFavorite(@Valid PageInfo<String> params,
                                @RequestHeader String uid){
-        return Result.success(postService.userFavorite(params,uid));
+        return Result.success(postService.userFavorite(uid,params.getPage(),params.getLimit(),"1"));
 
     }
 
@@ -110,7 +110,7 @@ public class PostController {
     @WhiteApi
     public Result userCollect(@Valid PageInfo<String> params,
                               @RequestHeader String uid){
-        return Result.success( postService.userCollect(params,uid));
+        return Result.success( postService.userCollect(uid,params.getPage(),params.getLimit(),"1"));
     }
 
     @GetMapping("/user/create")
@@ -118,7 +118,7 @@ public class PostController {
     @WhiteApi
     public Result userCreate(@Valid PageInfo<String> params,
                              @RequestHeader String uid){
-        return Result.success( postService.userCreate(params,uid));
+        return Result.success( postService.userCreate(uid,params.getPage(),params.getLimit(),"1"));
     }
 
     @PostMapping("/cover")

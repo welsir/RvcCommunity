@@ -3,11 +3,8 @@ package com.tml.service.impl;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.client.UserServiceClient;
 import com.tml.designpattern.chain.ext.CommentExistApproveChain;
 import com.tml.designpattern.chain.ext.LastStepApproveChain;
@@ -16,11 +13,7 @@ import com.tml.designpattern.chain.ext.UserExistApproveChain;
 import com.tml.domain.dto.CoinDto;
 import com.tml.domain.dto.CommentDto;
 import com.tml.domain.dto.PageInfo;
-import com.tml.domain.entity.LikePost;
-import com.tml.domain.entity.Post;
 import com.tml.handler.exception.SystemException;
-
-
 import com.tml.mapper.comment.CommentMapper;
 import com.tml.mapper.comment.LikeCommentMapper;
 import com.tml.pojo.VO.UserInfoVO;
@@ -34,11 +27,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import static com.tml.constant.DetectionConstants.*;
 import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
@@ -51,15 +42,11 @@ import static com.tml.constant.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
-//ServiceImpl<CommentMapper, Comment>,
 public class CommentServiceImpl implements CommentService {
 
-//    private final CommentMapper commentMapper;
     private final LikeCommentMapper likeCommentMapper;
     private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
-
-//    private final MyBaseServiceImpl myBaseService;
 
 
 //责任链
@@ -71,17 +58,15 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public String comment(CommentDto commentDto, String uid) {
+        String commentId = Uuid.getUuid();
 //数据校验  用户存在 -》 帖子存在
         userExistApproveChain.setNext(uid,postExistApproveChain);
         postExistApproveChain.setNext(commentDto.getPostId(),lastStepApproveChain);
         userExistApproveChain.approve();
         commentCheck(commentDto);
-
-        String commentId = Uuid.getUuid();
         Comment comment = Convert.convert(new TypeReference<Comment>(){}, commentDto);
         comment.setPostCommentId(commentId);
-        //关闭审核
-//            .detectionStatus(DETECTION_SUCCESS)
+        //关闭审核(将正在审核中改为审核成功)
         comment.setDetectionStatus(DETECTION_SUCCESS);
         comment.setUserId(uid);
         commentMapper.insert(comment);
@@ -89,59 +74,40 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentVo> list(PageInfo<String> params, String uid) {
-        String postId = params.getData();
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
+    public List<CommentVo> list(String uid,String postId,Integer pageNum,Integer pageSize,String oder){
 //数据校验   帖子存在
         postExistApproveChain.setNext(postId,lastStepApproveChain);
         postExistApproveChain.approve();
 //分页获取数据
-        Page<Comment> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Comment::getPostId, postId)
 //                审核成功
                 .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
 //                根评论
                 .eq(Comment::getRootCommentId,"-1");
-        List<Comment> rootComment  = commentMapper.selectPage(page,queryWrapper).getRecords();
-
+        List<Comment> rootComment  = commentMapper.selectPage(new Page<>(pageNum,pageSize),queryWrapper).getRecords();
         //获取所有的用户id root评论只有创建的用户id
         List<String> userIds = rootComment.stream()
                 .map(record -> record.getUserId())
                 .collect(Collectors.toList());
-
+        //获取用户信息
         Map<String, UserInfoVO> data = getUsersInfo(userIds);
-
+        //将评论和用户信息进行封装
         List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(rootComment, CommentVo.class);
-
-//将评论和用户信息进行封装
         for (int i = 0; i < commentVos.size(); i++) {
             CommentVo commentVo = commentVos.get(i);
             commentVo.setLike(false);
-            //如果用户登录 封装数据
+            //如果用户登录 封装数据  户是否点赞评论
             if (!Strings.isBlank(uid)){
-                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid, uid)
-                        .eq(LikeComment::getCommentId, commentVo.getPostCommentId());
-                //封装用户是否点赞评论
-                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
-                if (!Objects.isNull(likeComment)){
-                    commentVo.setLike(true);
-                }
+                commentVo.setLike(hasFavorite(uid,commentVo));
             }
             commentVo.setUser(data.get(rootComment.get(i).getUserId()));
         }
-
         return commentVos;
     }
 
     @Override
-    public List<CommentVo> childrenList(PageInfo<String> params,String uid) {
-        String rootCommentId = params.getData();
-        Integer pageNum = params.getPage();
-        Integer pageSize = params.getLimit();
-
+    public List<CommentVo> childrenList(String uid,String rootCommentId,Integer pageNum,Integer pageSize,String oder){
 //分页
         Page<Comment> page = new Page<>(pageNum,pageSize);
         LambdaQueryWrapper<Comment> queryWrapper = new LambdaQueryWrapper<>();
@@ -149,34 +115,25 @@ public class CommentServiceImpl implements CommentService {
                 .eq(Comment::getDetectionStatus, DETECTION_SUCCESS)
                 .eq(Comment::getRootCommentId,rootCommentId);
         List<Comment> records = commentMapper.selectPage(page,queryWrapper).getRecords();
-
-
 //获取所有的用户id（回复的和被回复的）
         List<String> sonUserIds = records.stream()
                 .flatMap(son -> Stream.of(son.getUserId(), son.getToUserId()))
                 .collect(Collectors.toList());
 //        调用用户服务获取数据
         Map<String, UserInfoVO> data = getUsersInfo(sonUserIds);
-
+//封装数据
         List<CommentVo> commentVos = BeanCopyUtils.copyBeanList(records, CommentVo.class);
         for (int i = 0; i < commentVos.size(); i++) {
             CommentVo commentVo = commentVos.get(i);
             commentVo.setLike(false);
             if (!Strings.isBlank(uid)){
-                LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-                likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid,uid)
-                        .eq(LikeComment::getCommentId,commentVo.getPostCommentId());
-                LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
-                if (!Objects.isNull(likeComment)){
-                    commentVo.setLike(true);
-                }
+                commentVo.setLike(hasFavorite(uid,commentVo));
             }
             commentVo.setUser(data.get(records.get(i).getUserId()));
             commentVo.setReplayUser(data.get(records.get(i).getToUserId()));
         }
         return commentVos;
     }
-
 
     @Override
     @Transactional
@@ -185,7 +142,6 @@ public class CommentServiceImpl implements CommentService {
         userExistApproveChain.setNext(uid,commentExistApproveChain);
         commentExistApproveChain.setNext(coinDto.getId(),lastStepApproveChain);
         userExistApproveChain.approve();
-
         //1、点赞    添加关系表中的记录       post表 like_num +1
         //0、取消点赞    删除关系表中的记录       post表 like_num -1
         if (coinDto.getType().equals("1")){
@@ -193,7 +149,6 @@ public class CommentServiceImpl implements CommentService {
             LikeComment likePost = new LikeComment(uuid,  coinDto.getId(),uid);
             try {
                 likeCommentMapper.insert(likePost);
-
             } catch (Exception e) {
                 throw new SystemException(FAVORITE_ERROR);
             }
@@ -249,7 +204,6 @@ public class CommentServiceImpl implements CommentService {
             {
                 throw new RuntimeException("参数校验出错。");
             }
-
         }else{
             //非回复评论
             if ((Strings.isBlank(commentDto.getRootCommentId()) && !Strings.isBlank(commentDto.getToUserId())) && (!Strings.isBlank(commentDto.getRootCommentId())&& commentDto.getToUserId().isBlank())){
@@ -260,7 +214,6 @@ public class CommentServiceImpl implements CommentService {
                 LambdaQueryWrapper<Comment> commentLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 commentLambdaQueryWrapper.eq(Comment::getPostCommentId,commentDto.getToCommentId())
                         .eq(Comment::getDetectionStatus,1);
-
                 Comment replayComment =   commentMapper.selectOne(commentLambdaQueryWrapper);
                 if (Objects.isNull(replayComment)){
                     throw new RuntimeException("参数校验出错。");
@@ -270,5 +223,17 @@ public class CommentServiceImpl implements CommentService {
                 }
             }
         }
+    }
+
+    public boolean hasFavorite(String uid,CommentVo commentVo){
+        LambdaUpdateWrapper<LikeComment> likeCommentLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        likeCommentLambdaUpdateWrapper.eq(LikeComment::getUid, uid)
+                .eq(LikeComment::getCommentId, commentVo.getPostCommentId());
+        //封装用户是否点赞评论
+        LikeComment likeComment = likeCommentMapper.selectOne(likeCommentLambdaUpdateWrapper);
+        if (!Objects.isNull(likeComment)){
+            return true;
+        }
+        return false;
     }
 }

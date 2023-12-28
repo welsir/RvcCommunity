@@ -37,7 +37,7 @@ public class CommentController {
     @LaxTokenApi
     public Result list(@Valid PageInfo<String> params,
                        @RequestHeader(required = false) String uid){
-        return Result.success(commentService.list(params,uid));
+        return Result.success(commentService.list(uid, params.getData(),params.getPage(), params.getLimit(),"0"));
     }
 
     @GetMapping("/childrenList")
@@ -45,7 +45,7 @@ public class CommentController {
     @LaxTokenApi
     public Result childrenList(@Valid PageInfo<String> params,
                                @RequestHeader(required = false) String uid){
-        return Result.success(commentService.childrenList(params,uid));
+        return Result.success(commentService.childrenList(uid, params.getData(),params.getPage(), params.getLimit(),"0"));
     }
 
     @PostMapping("/add")

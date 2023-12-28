@@ -4,7 +4,6 @@ import com.tml.domain.dto.CoinDto;
 import com.tml.domain.dto.CoverDto;
 import com.tml.domain.dto.PageInfo;
 import com.tml.domain.dto.PostDto;
-import com.tml.domain.vo.PostSimpleVo;
 import com.tml.domain.vo.PostVo;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface PostService {
-    List<PostVo> list(PageInfo<String> params,String tagId,String uid);
+    List<PostVo> list(String uid,Integer page,Integer limit,String order,String tagId);
 
     PostVo details(String postId,String uid);
 
@@ -29,11 +28,11 @@ public interface PostService {
 
 //    void update(PostDto postDto);
 
-    List<PostSimpleVo> userFavorite(PageInfo<String> params,String uid);
+    List<PostVo> userFavorite(String uid,Integer page,Integer limit,String order);
 
-    List<PostSimpleVo> userCollect(PageInfo<String> params,String uid);
+    List<PostVo> userCollect(String uid,Integer page,Integer limit,String order);
 
-    List<PostSimpleVo> userCreate(PageInfo<String> params,String uid);
+    List<PostVo> userCreate(String uid,Integer page,Integer limit,String order);
 
     String updUserProfile(MultipartFile profile,String uid) throws IOException;
 

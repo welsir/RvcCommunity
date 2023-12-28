@@ -235,6 +235,8 @@ public class RedisCache
      * @param pattern 字符串前缀
      * @return 对象列表
      */
+
+
     public Collection<String> keys(final String pattern)
     {
         return redisTemplate.keys(pattern);
