@@ -291,8 +291,6 @@ public class PostServiceImpl implements PostService {
         //  责任链
         userExistApproveChain.setNext(uid,lastStepApproveChain);
         userExistApproveChain.approve();
-        //获取用户信息
-        UserInfoVO data = getUserInfo(uid);
         //获取用户喜欢的postid
         LambdaQueryWrapper<LikePost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(LikePost::getUid, uid);
@@ -331,6 +329,8 @@ public class PostServiceImpl implements PostService {
             //post类型
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
             //作者
+            //获取用户信息
+            UserInfoVO data = getUserInfo(post.getUid());
             postSimpleVo.setAuthor(data);
             postSimpleVo.setLike(hasFavorite(uid,post.getPostId()));
             postSimpleVo.setCollect(hasCollect(uid,post.getPostId()));
@@ -343,8 +343,7 @@ public class PostServiceImpl implements PostService {
         //  责任链
         userExistApproveChain.setNext(uid,lastStepApproveChain);
         userExistApproveChain.approve();
-        //获取用户信息
-        UserInfoVO data = getUserInfo(uid);
+
         //获取用户收藏的postid
         LambdaQueryWrapper<CollectPost> likePostLambdaQueryWrapper = new LambdaQueryWrapper<>();
         likePostLambdaQueryWrapper.eq(CollectPost::getUid, uid);
@@ -383,6 +382,8 @@ public class PostServiceImpl implements PostService {
             //post类型
             postSimpleVo.setPostType(postTypeCollect.get(posts.get(i).getTagId()));
             //作者
+            //获取用户信息
+            UserInfoVO data = getUserInfo(post.getUid());
             postSimpleVo.setAuthor(data);
             postSimpleVo.setLike(hasFavorite(uid,post.getPostId()));
             postSimpleVo.setCollect(hasCollect(uid,post.getPostId()));
