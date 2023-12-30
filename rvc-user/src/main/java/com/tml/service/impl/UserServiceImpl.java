@@ -166,49 +166,52 @@ public class UserServiceImpl implements UserService {
     @Override
     public void update(UserInfoDTO userInfoDTO, String uid) {
         UserInfo user = userInfoMapper.selectByUid(uid);
-        boolean flag = false;
-
-        if(!userInfoDTO.getNickname().equals(user.getNickname())){
-            DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
-                    .id(uid)
-                    .name(USER_NICKNAME)
-                    .content(userInfoDTO.getNickname())
-                    .build();
-            rabbitMQListener.submit(nicknameTask, "text");
-            user.setNickname("审核中");
-            flag = true;
-        }
-
-        if(!userInfoDTO.getDescription().equals(user.getDescription())){
-            DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
-                    .id(uid)
-                    .name(USER_DESCRIPTION)
-                    .content(userInfoDTO.getDescription())
-                    .build();
-            rabbitMQListener.submit(descriptionTask, "text");
-            user.setDescription("审核中");
-            flag = true;
-        }
-        switch (userInfoDTO.getSex()) {
-            case "男":
-            case "女":
-                if (!user.getSex().equals(userInfoDTO.getSex())) {
-                    user.setSex(userInfoDTO.getSex());
-                    flag = true;
-                }
-                break;
-            default:
-               throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
-        }
-        if(userInfoDTO.getBirthday() != null && user.getBirthday() != userInfoDTO.getBirthday()){
-            user.setBirthday(userInfoDTO.getBirthday());
-            flag = true;
-        }
-
-        if(flag){
-            user.setUpdatedAt(LocalDateTime.now());
-            userInfoMapper.updateById(user);
-        }
+//      审核代码
+//        boolean flag = false;
+//
+//        if(!userInfoDTO.getNickname().equals(user.getNickname())){
+//            DetectionTaskDTO nicknameTask = DetectionTaskDTO.builder()
+//                    .id(uid)
+//                    .name(USER_NICKNAME)
+//                    .content(userInfoDTO.getNickname())
+//                    .build();
+//            rabbitMQListener.submit(nicknameTask, "text");
+//            user.setNickname("审核中");
+//            flag = true;
+//        }
+//
+//        if(!userInfoDTO.getDescription().equals(user.getDescription())){
+//            DetectionTaskDTO descriptionTask = DetectionTaskDTO.builder()
+//                    .id(uid)
+//                    .name(USER_DESCRIPTION)
+//                    .content(userInfoDTO.getDescription())
+//                    .build();
+//            rabbitMQListener.submit(descriptionTask, "text");
+//            user.setDescription("审核中");
+//            flag = true;
+//        }
+//        switch (userInfoDTO.getSex()) {
+//            case "男":
+//            case "女":
+//                if (!user.getSex().equals(userInfoDTO.getSex())) {
+//                    user.setSex(userInfoDTO.getSex());
+//                    flag = true;
+//                }
+//                break;
+//            default:
+//               throw new ServerException(ResultEnums.SEX_VALUE_ERROR);
+//        }
+//        if(userInfoDTO.getBirthday() != null && user.getBirthday() != userInfoDTO.getBirthday()){
+//            user.setBirthday(userInfoDTO.getBirthday());
+//            flag = true;
+//        }
+//
+//        if(flag){
+//            user.setUpdatedAt(LocalDateTime.now());
+//            userInfoMapper.updateById(user);
+//        }
+        BeanUtils.copyProperties(userInfoDTO, user);
+        userInfoMapper.updateById(user);
     }
 
     @Override
@@ -308,6 +311,7 @@ public class UserServiceImpl implements UserService {
             throw new ServerException(ResultEnums.FILE_SIZE_LIMIT);
         }
         try {
+            UserInfo userInfo = userInfoMapper.selectByUid(uid);
             UploadModelForm form = UploadModelForm.builder()
                     .bucket(FileConfig.USER_BUCKET)
                     .path(FileConfig.USER_PATH)
@@ -319,13 +323,15 @@ public class UserServiceImpl implements UserService {
                 throw new ServerException(result.getCode().toString(), result.getMessage());
             }
             ReceiveUploadFileDTO receiveUploadFileDTO = result.getData();
-            DetectionTaskDTO imageTask = DetectionTaskDTO.builder()
-                    .id(uid)
-                    .name(USER_AVATAR)
-                    .content(receiveUploadFileDTO.getUrl())
-                    .build();
-            rabbitMQListener.submit(imageTask, "image");
-
+//            审核代码
+//            DetectionTaskDTO imageTask = DetectionTaskDTO.builder()
+//                    .id(uid)
+//                    .name(USER_AVATAR)
+//                    .content(receiveUploadFileDTO.getUrl())
+//                    .build();
+//            rabbitMQListener.submit(imageTask, "image");
+            userInfo.setAvatar(receiveUploadFileDTO.getUrl());
+            userInfoMapper.updateById(userInfo);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
