@@ -285,16 +285,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserInfoVO getUserInfoById(String uid) {
-        if(!userInfoMapper.exist("uid", uid)){
+    public Map<String, ?> getUserInfoById(String targetUid, String uid) {
+        if(!userInfoMapper.exist("uid", targetUid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
-        return UserData.toVO(
+        UserInfoVO userInfoVO = UserData.toVO(
                 UserInfo.toVO(
-                        userInfoMapper.selectByUid(uid)
+                        userInfoMapper.selectByUid(targetUid)
                 ),
-                userDataMapper.selectByUid(uid)
+                userDataMapper.selectByUid(targetUid)
         );
+        boolean follow;
+        if(uid.isEmpty()){
+            follow = false;
+        } else follow = userFollowMapper.exist("follow_uid", uid, "followed_uid", targetUid);
+        return Map.of("userInfo", userInfoVO, "follow", follow);
     }
 
     @Override

@@ -173,11 +173,13 @@ public class UserController {
     }
 
     @GetMapping("/getUserInfoById")
+    @LaxTokenApi
     public Result getUserInfoById(@RequestParam
                                       @Valid
                                       @NotBlank
-                                      String uid){
-        return Result.success(userService.getUserInfoById(uid));
+                                      String targetUid,
+                                  @RequestHeader String uid){
+        return Result.success(userService.getUserInfoById(targetUid, uid));
     }
 
     @PostMapping("/avatar")

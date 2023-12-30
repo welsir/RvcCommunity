@@ -39,7 +39,7 @@ public interface UserService {
 
     UserInfoVO getUserInfo(String uid);
 
-    UserInfoVO getUserInfoById(String uid);
+    Map<String, ?> getUserInfoById(String targetUid, String uid);
 
     void avatar(MultipartFile file, String uid);
 
