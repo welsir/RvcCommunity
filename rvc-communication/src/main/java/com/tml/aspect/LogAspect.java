@@ -13,6 +13,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Enumeration;
 
 /**
  * 日志打印
@@ -49,24 +50,8 @@ public class LogAspect {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
 
-        //获取被增强方法上的注解对象
-        SystemLog systemLog = getSystemLog(joinPoint);
+        Enumeration<String> token = request.getHeaders("token");
 
-        log.info("=======Start===================================");
-        // 打印请求 URL
-        log.info("URL            : {}",request.getRequestURL());
-        // 打印描述信息
-        log.info("BusinessName   : {}",systemLog.businessName());
-        // 打印 Http method
-        log.info("HTTP Method    : {}",request.getMethod());
-        // 打印调用 controller 的全路径以及执行方法
-        log.info("Class Method   : {}.{}",joinPoint.getSignature().getDeclaringTypeName(),((MethodSignature) joinPoint.getSignature()).getName() );
-        // 打印请求的 IP
-        log.info("IP             : {}",request.getRemoteHost());
-//        // 打印请求入参
-//        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
-        // 结束后换行
-        log.info("==================================");
     }
 
     private SystemLog getSystemLog(ProceedingJoinPoint joinPoint) {
