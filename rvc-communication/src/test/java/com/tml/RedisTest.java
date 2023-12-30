@@ -37,10 +37,6 @@ public class RedisTest {
     @Autowired
     private StringEncryptor stringEncryptor;
 
-    @Test
-    public void Encryptor(){
- }
-
 
     @Test
     public void  remove(){
