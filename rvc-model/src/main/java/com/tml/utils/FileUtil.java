@@ -111,7 +111,7 @@ public class FileUtil {
     }
 
     public static void main(String[] args) {
-        String path = "C:\\Users\\18243\\Desktop\\butian\\chaotian\\chaotian.pth";
+        String path = "C:\\Users\18243\\Desktop\butian\\chaotian\\chaotian.index";
         System.out.println(getMD5One(path));
 
     }

@@ -87,3 +87,6 @@ assistant:
       snowflake:
         startTime: 2023-12-05 00:00:00
         register: register-redis
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

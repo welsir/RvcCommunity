@@ -5,6 +5,8 @@ import com.tml.pojo.VO.CommentFormVO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @Description
  * @Author welsir
@@ -19,9 +21,9 @@ public class CommentDO {
     private String uid;
     private String modelId;
     private String parentId;
-    private String likesNum;
+    private Long likesNum;
     private String hasShow;
-    private String createTime;
-    private String updateTime;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 
 }

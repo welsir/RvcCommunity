@@ -38,7 +38,6 @@ public class GobalExceptionHandler extends AbstractExceptionHandler {
     @ExceptionHandler(BaseException.class)
     public Result handleException(HttpServletRequest request,
                                   Exception ex) {
-        logger.error("Handle Exception Request Url:%s,Exception:%s", request.getRequestURL(), ex);
         Result result;
         //系统异常
         if (ex instanceof BaseException) {
@@ -55,8 +54,17 @@ public class GobalExceptionHandler extends AbstractExceptionHandler {
         else {
             result = new Result(ResultCodeEnum.SYSTEM_ERROR.getCode(), ex.getMessage());
         }
-        logger.info("exception handle result:" + result);
+        logger.error("基本异常,异常类:BaseException, url:%s,异常信息:%s", request.getServletPath(), result.getMessage());
         return result;
+    }
+
+    @ResponseBody
+    @ExceptionHandler(BindException.class)
+    public Result handleBindException(HttpServletRequest request,
+                                      BindException ex){
+        String message = ex.getBindingResult().getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(","));
+        logger.error("参数绑定异常,异常类:BindException, url:%s, 异常信息:%s", request.getServletPath(),message);
+        return Result.fail(message);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.tml.pojo.DTO.UserInfoDTO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,17 +24,17 @@ public class ModelVO {
     private String picture;
     private String description;
     private String note;
-    private String viewNum;
-    private String likesNum;
-    private String collectionNum;
+    private Long viewNum;
+    private Long likesNum;
+    private Long collectionNum;
     private String isLike;
     private String isCollection;
     private String uid;
     private String username;
     private String nickname;
     private String avatar;
-    private String createTime;
-    private String updateTime;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
     private String isFollow;
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,List<LabelVO> labels,String... args){
         ModelVO modelVO = modelDOToModelVO(modelDO, userInfo, args);
@@ -41,10 +42,11 @@ public class ModelVO {
         return modelVO;
     }
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,String... args){
-        ModelVO modelVO = modelDOToModelVO(modelDO, userInfo);
+        ModelVO modelVO;
+        modelVO = userInfo==null?modelDOToModelVO(modelDO):modelDOToModelVO(modelDO,userInfo);
         modelVO.setType(args[0]);
-        modelVO.setIsLike("".equals(args[1])||null==args[1]?"0":"1");
-        modelVO.setIsCollection("".equals(args[2])||null==args[2]?"0":"1");
+        modelVO.setIsLike("1".equals(args[1])?"true":"false");
+        modelVO.setIsCollection("1".equals(args[2])?"true":"false");
         return modelVO;
     }
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo){
@@ -62,6 +64,19 @@ public class ModelVO {
                 .nickname(userInfo.getNickname())
                 .username(userInfo.getUsername())
                 .createTime(modelDO.getCreateTime())
+                .updateTime(modelDO.getUpdateTime())
+                .build();
+    }
+    public static ModelVO modelDOToModelVO(ModelDO modelDO){
+        return ModelVO.builder()
+                .id(modelDO.getId().toString())
+                .name(modelDO.getName())
+                .picture(modelDO.getPicture())
+                .likesNum(modelDO.getLikesNum())
+                .collectionNum(modelDO.getCollectionNum())
+                .description(modelDO.getDescription())
+                .viewNum(modelDO.getViewNum())
+                .note(modelDO.getNote())
                 .updateTime(modelDO.getUpdateTime())
                 .build();
     }

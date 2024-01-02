@@ -18,7 +18,7 @@ public class ModelUpdateFormVO {
     private String name;
     @NotBlank(message = "模型描述不能为空")
     private String description;
-    private MultipartFile file;
+    private MultipartFile picture;
     @NotBlank(message = "模型注意事项不能为空")
     private String note;
 }

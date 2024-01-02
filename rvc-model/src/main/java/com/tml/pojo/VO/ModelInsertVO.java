@@ -17,7 +17,8 @@ import java.util.List;
  */
 @Data
 public class ModelInsertVO {
-    private String[] fileId;
+    @NotBlank(message = "分享链接不能为空")
+    private String fileUrl;
     @NotBlank(message = "名称不能为空")
     @Length(max = 10,message = "模型名称不能超过5个字")
     private String name;
@@ -30,6 +31,4 @@ public class ModelInsertVO {
     private String note;
     @NotBlank(message = "模型图片不能为空")
     private String picture;
-    @NotBlank(message = "音频文件不能为空")
-    private String audioId;
 }
