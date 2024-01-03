@@ -2,7 +2,7 @@ spring:
   application:
     name: rvc-user-service
   debug:
-    port: ${DEBUG_PORT:8888}
+    port: ${DEBUG_PORT:9001}
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
