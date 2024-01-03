@@ -105,7 +105,7 @@ public class ModelController {
      **/
     @WhiteApi
     @PostMapping("/download")
-    public Result<?> downloadModel(@RequestParam("fileId") @NotBlank String modelId,
+    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.downloadModel(modelId,uid));
     }
