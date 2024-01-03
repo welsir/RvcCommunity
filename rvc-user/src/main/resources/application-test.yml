@@ -19,7 +19,7 @@ spring:
         ip: ${SERVER_ADDR:ENC(Y5HcvI+7TfzJVRmAMpYDqR0bwJqzwMzdpQ8RCIr1y2w=)}
   datasource:
     driver-class-name: ${MYSQL_DRIVER:com.mysql.cj.jdbc.Driver}
-    url: ${MYSQL_ADDR:ENC(MYSQL_ADDR:ENC(xMRgIMkkMeGcEa2r7Evzw4AZMCHiDpIGN7ETNEIallJTWSl30aRIZqniNoQpgsujTuur8qAezCXaaNxOYKLvlFQjS7pPoe3oBCz2fFUMRhZ0G2qZG8ZYUnUjnkIZyUWDSbns7no1+8L02z0CP+ghKbPao+l7DolA9lLGx2vUbZY=)}
+    url: ${MYSQL_ADDR:ENC(xMRgIMkkMeGcEa2r7Evzw4AZMCHiDpIGN7ETNEIallJTWSl30aRIZqniNoQpgsujTuur8qAezCXaaNxOYKLvlFQjS7pPoe3oBCz2fFUMRhZ0G2qZG8ZYUnUjnkIZyUWDSbns7no1+8L02z0CP+ghKbPao+l7DolA9lLGx2vUbZY=)}
     username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
     password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
   redis:
