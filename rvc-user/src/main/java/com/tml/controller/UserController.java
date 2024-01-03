@@ -178,7 +178,7 @@ public class UserController {
                                       @Valid
                                       @NotBlank
                                       String targetUid,
-                                  @RequestHeader String uid){
+                                  @RequestHeader(required = false) String uid){
         return Result.success(userService.getUserInfoById(targetUid, uid));
     }
 
