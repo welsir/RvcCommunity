@@ -5,7 +5,7 @@ spring:
   config:
     import: classpath:you-cant-see-that.yml
   profiles:
-    active: ${ACTIVE:dev}10
+    active: ${ACTIVE:dev}
 
 sa-token:
   token-name: token
