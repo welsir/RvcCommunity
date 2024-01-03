@@ -1,6 +1,6 @@
 package com.tml.designpattern.strategy;
 
-import com.tml.pojo.vo.PostVo;
+import com.tml.domain.vo.PostVo;
 
 import java.util.List;
 

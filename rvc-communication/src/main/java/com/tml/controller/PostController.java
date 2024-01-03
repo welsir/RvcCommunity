@@ -4,10 +4,13 @@ import com.tml.aspect.annotation.ContentDetection;
 import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.enums.ContentDetectionEnum;
+import com.tml.constant.enums.ContentDetectionEnum;
 
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CoverDto;
+import com.tml.domain.dto.PageInfo;
+import com.tml.domain.dto.PostDto;
 import com.tml.feign.RvcCommunicationServiceFeignClient;
-import com.tml.pojo.dto.*;
 import com.tml.service.PostService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +45,7 @@ public class PostController {
     public Result list(@Valid PageInfo<String> params,
                        @RequestParam("tagId") String tagId,
                        @RequestHeader(required = false) String uid){
-    return Result.success(postService.list(params,tagId,uid));
+    return Result.success(postService.list(uid,params.getPage(),params.getLimit(),params.getData(),tagId));
     }
 
     @GetMapping("/details")
@@ -77,7 +80,7 @@ public class PostController {
 
     @PostMapping("/add")
     @SystemLog(businessName = "发布帖子  [T]  [审]")
-    @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
+//    @ContentDetection(type = ContentDetectionEnum.POST_CONTENT,exchangeName = DETECTION_EXCHANGE_NAME)
     @WhiteApi
     public Result add(@RequestBody @Valid PostDto postDto,
                       @RequestHeader String uid){
@@ -98,7 +101,8 @@ public class PostController {
     @WhiteApi
     public Result userFavorite(@Valid PageInfo<String> params,
                                @RequestHeader String uid){
-        return Result.success(postService.userFavorite(params,uid));
+        return Result.success(postService.userFavorite(uid,params.getPage(),params.getLimit(),"1"));
+
     }
 
     @GetMapping("/user/collect")
@@ -106,7 +110,7 @@ public class PostController {
     @WhiteApi
     public Result userCollect(@Valid PageInfo<String> params,
                               @RequestHeader String uid){
-        return Result.success( postService.userCollect(params,uid));
+        return Result.success( postService.userCollect(uid,params.getPage(),params.getLimit(),"1"));
     }
 
     @GetMapping("/user/create")
@@ -114,7 +118,7 @@ public class PostController {
     @WhiteApi
     public Result userCreate(@Valid PageInfo<String> params,
                              @RequestHeader String uid){
-        return Result.success( postService.userCreate(params,uid));
+        return Result.success( postService.userCreate(uid,params.getPage(),params.getLimit(),"1"));
     }
 
     @PostMapping("/cover")
@@ -138,7 +142,7 @@ public class PostController {
     @PostMapping("/coverUrl")
     @SystemLog(businessName = "用户上传头像  url上传")
     @LaxTokenApi
-    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
+//    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }

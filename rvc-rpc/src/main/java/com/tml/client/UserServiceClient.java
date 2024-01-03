@@ -4,6 +4,7 @@ import com.tml.constant.RemoteUserURL;
 import com.tml.pojo.VO.UserInfoVO;
 import io.github.common.web.Result;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ import java.util.Map;
  * @Author xiaochun
  */
 @FeignClient(name = "rvc-user-service")
+@Component
 public interface UserServiceClient {
     @GetMapping(value = RemoteUserURL.USER_ONE)
     Result<UserInfoVO> one(@RequestParam String uid);

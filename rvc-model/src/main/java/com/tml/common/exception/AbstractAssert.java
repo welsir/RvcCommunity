@@ -4,8 +4,6 @@ import com.alibaba.cloud.commons.lang.StringUtils;
 import com.tml.pojo.ResultCodeEnum;
 import org.springframework.lang.Nullable;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * @Description
  * @Author welsir

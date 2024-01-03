@@ -1,15 +1,12 @@
 package com.tml.util;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.CaptchaServiceClient;
 import com.tml.config.CodeCofig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserInfoMapper;
-import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.Result;
 import com.tml.pojo.enums.EmailEnums;
 import com.tml.pojo.enums.ResultEnums;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 

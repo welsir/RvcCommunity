@@ -1,15 +1,10 @@
 package com.tml.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tml.exception.RvcSQLException;
 import com.tml.mapper.FeedbackCommentLikeMapper;
 import com.tml.pojo.FeedbackCommentLike;
-import com.tml.pojo.FeedbackDO;
-import com.tml.pojo.vo.FeedbackVO;
 import com.tml.service.IFeedbackCommentLikeDaoService;
-import com.tml.service.IFeedbackDaoService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,6 +1,6 @@
 package com.tml.feign;
 
-import com.tml.pojo.dto.CoverDto;
+import com.tml.domain.dto.CoverDto;
 import io.github.common.web.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
