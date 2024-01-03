@@ -59,7 +59,7 @@ public class ModelController {
     @LaxTokenApi
     @GetMapping("/listByType")
     public Result<?> getModelListByType(@RequestParam @NotBlank(message = "id不能为空") String typeId,
-                                        @RequestParam("page") @NotBlank(message = "page不能为空") Long page,
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
                                         @RequestParam(value = "limit",required = false)  Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
@@ -173,7 +173,7 @@ public class ModelController {
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
-            @RequestParam("page") @NotBlank(message = "page不能为空") Long page,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
             @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "order",required = false) String order
     ){
@@ -192,7 +192,7 @@ public class ModelController {
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
-            @RequestParam("page") @NotBlank(message = "page不能为空") Long page,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
             @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "order",required = false) String order
     ){
@@ -215,7 +215,7 @@ public class ModelController {
     @WhiteApi
     @GetMapping("user/model")
     public Result<?> queryUserModelList(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
-                                        @RequestParam("page") @NotBlank(message = "page为空") Long page,
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
                                         @RequestParam(value = "limit",required = false)Long limit){
         return Result.success(modelService.queryUserModelList(uid,page,limit));
     }
@@ -241,7 +241,7 @@ public class ModelController {
     public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
                                         @RequestParam(value = "limit",required = false) Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
-                                        @RequestParam("page") @NotBlank(message = "page为空") Long page,
+                                        @RequestParam("page") @NotNull(message = "page为空") Long page,
                                         @RequestHeader(value = "uid",required = false) String uid){
         return Result.success(modelService.queryFirstCommentList(modelId,page,limit,sortType,uid));
     }
@@ -252,7 +252,7 @@ public class ModelController {
             @RequestParam("id") @NotBlank(message = "id为空") String commentId,
             @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "sortType",required = false) String sortType,
-            @RequestParam("page") @NotBlank(message = "page为空") Long page,
+            @RequestParam("page") @NotNull(message = "page为空") Long page,
             @RequestHeader(value = "uid",required = false) String uid
     ){
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
@@ -263,7 +263,7 @@ public class ModelController {
     @GetMapping("/label/labelHot")
     public Result<?> queryLabelList(
             @RequestHeader(value = "uid",required = false) String uid,
-            @RequestParam(value = "page") Long page,
+            @RequestParam(value = "page")@NotNull Long page,
             @RequestParam(value = "limit",required = false) Long limit
     ){
         return Result.success(modelService.getLabelList(limit,page));
