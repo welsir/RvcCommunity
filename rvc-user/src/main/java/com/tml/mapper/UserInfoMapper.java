@@ -5,7 +5,6 @@ import com.tml.pojo.DO.UserInfo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.SelectProvider;
 
 /**
  * @Date 2023/12/8

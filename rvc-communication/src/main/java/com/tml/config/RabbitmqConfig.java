@@ -32,50 +32,50 @@ public class RabbitmqConfig {
 //    }
 
     //声明QUEUE_INFORM_TEXT 队列
-//    @Bean(TEXT_QUEUE_NAME )
-//    public Queue QUEUE_INFORM_TEXT(){
-//        return new Queue(TEXT_QUEUE_NAME );
-//    }
-//
-//
-//    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
-//    @Bean
-//    public Binding BINDING_QUEUE_INFORM_TEXT(@Qualifier(TEXT_QUEUE_NAME ) Queue queue,
-//                                              @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
-//        return BindingBuilder.bind(queue).to(exchange).with(TEXT_ROUTER_KEY).noargs();
-//    }
-//
-//
-//
-//    //声明QUEUE_INFORM_IMAGE 队列
-//    @Bean(IMAGE_QUEUE_NAME )
-//    public Queue QUEUE_INFORM_IMAGE(){
-//        return new Queue(IMAGE_QUEUE_NAME );
-//    }
-//
-//
-//    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
-//    @Bean
-//    public Binding BINDING_QUEUE_INFORM_IMAGE (@Qualifier(IMAGE_QUEUE_NAME  ) Queue queue,
-//                                             @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
-//        return BindingBuilder.bind(queue).to(exchange).with(IMAGE_ROUTER_KEY ).noargs();
-//    }
-//
-//
-//
-//    //声明QUEUE_INFORM_AUDIO 队列
-//    @Bean(AUDIO_QUEUE_NAME)
-//    public Queue QUEUE_INFORM_AUDIO(){
-//        return new Queue(AUDIO_QUEUE_NAME );
-//    }
-//
-//
-//    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
-//    @Bean
-//    public Binding BINDING_QUEUE_INFORM_AUDIO(@Qualifier(AUDIO_QUEUE_NAME) Queue queue,
-//                                             @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
-//        return BindingBuilder.bind(queue).to(exchange).with(AUDIO_ROUTER_KEY).noargs();
-//    }
+    @Bean(TEXT_QUEUE_NAME )
+    public Queue QUEUE_INFORM_TEXT(){
+        return new Queue(TEXT_QUEUE_NAME );
+    }
+
+
+    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
+    @Bean
+    public Binding BINDING_QUEUE_INFORM_TEXT(@Qualifier(TEXT_QUEUE_NAME ) Queue queue,
+                                              @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(TEXT_ROUTER_KEY).noargs();
+    }
+
+
+
+    //声明QUEUE_INFORM_IMAGE 队列
+    @Bean(IMAGE_QUEUE_NAME )
+    public Queue QUEUE_INFORM_IMAGE(){
+        return new Queue(IMAGE_QUEUE_NAME );
+    }
+
+
+    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
+    @Bean
+    public Binding BINDING_QUEUE_INFORM_IMAGE (@Qualifier(IMAGE_QUEUE_NAME  ) Queue queue,
+                                             @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(IMAGE_ROUTER_KEY ).noargs();
+    }
+
+
+
+    //声明QUEUE_INFORM_AUDIO 队列
+    @Bean(AUDIO_QUEUE_NAME)
+    public Queue QUEUE_INFORM_AUDIO(){
+        return new Queue(AUDIO_QUEUE_NAME );
+    }
+
+
+    //ROUTINGKEY_TEXT队列绑定交换机，指定routingKey
+    @Bean
+    public Binding BINDING_QUEUE_INFORM_AUDIO(@Qualifier(AUDIO_QUEUE_NAME) Queue queue,
+                                             @Qualifier(RES_EXCHANGE_NAME) Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(AUDIO_ROUTER_KEY).noargs();
+    }
 
 
 }

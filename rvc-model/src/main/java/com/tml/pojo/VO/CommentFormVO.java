@@ -2,7 +2,6 @@ package com.tml.pojo.VO;
 
 import lombok.Data;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 
 /**

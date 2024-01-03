@@ -2,10 +2,8 @@ package com.tml;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.tml.pojo.entity.Post;
-import com.tml.pojo.entity.PostType;
+import com.tml.domain.entity.PostType;
 import com.tml.utils.RedisCache;
-import io.netty.handler.codec.string.StringEncoder;
 import org.jasypt.encryption.StringEncryptor;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,13 +36,6 @@ public class RedisTest {
 
     @Autowired
     private StringEncryptor stringEncryptor;
-
-    @Test
-    public void Encryptor(){
-        System.out.println(stringEncryptor.encrypt("1.94.28.8"));
-
-
-    }
 
 
     @Test

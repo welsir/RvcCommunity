@@ -1,7 +1,6 @@
 package com.tml.pojo.VO;
 
 import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.DTO.UserInfoDTO;
 import lombok.Builder;
 import lombok.Data;
 

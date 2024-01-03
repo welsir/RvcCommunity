@@ -1,10 +1,8 @@
 package com.tml.pojo.VO;
 
 import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * @Date 2023/12/10

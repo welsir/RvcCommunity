@@ -3,7 +3,6 @@ package com.tml.controller;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.exception.RvcSQLException;
-import com.tml.pojo.FeedbackTypeDO;
 import com.tml.pojo.form.FeedbackCommentForm;
 import com.tml.pojo.form.FeedbackForm;
 import com.tml.pojo.vo.FeedbackCommentVO;

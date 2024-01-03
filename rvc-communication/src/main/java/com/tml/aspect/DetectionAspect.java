@@ -3,8 +3,8 @@ package com.tml.aspect;
 
 import com.alibaba.fastjson.JSON;
 import com.tml.aspect.annotation.ContentDetection;
-import com.tml.enums.ContentDetectionEnum;
-import com.tml.pojo.dto.DetectionTaskDto;
+import com.tml.constant.enums.ContentDetectionEnum;
+import com.tml.domain.dto.DetectionTaskDto;
 import io.github.common.web.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -66,17 +66,8 @@ public class DetectionAspect {
         log.info("=======Start===================================");
 
     }
-    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
 
-        Result res = (Result)(ret);
-
-        //获取被增强方法上的注解对象
-        ContentDetection contentDetection = getContentDetection(joinPoint);
-        String exchangeName = contentDetection.exchangeName();
-        String uuid = res.getData().toString();
-        ContentDetectionEnum type = contentDetection.type();
-        Object[] args = joinPoint.getArgs();
-
+    public String getContentValue( Object[] args) throws IllegalAccessException {
         String contentValue = null;
         if (args != null && args.length > 0) {
             for (Object arg : args) {
@@ -92,21 +83,40 @@ public class DetectionAspect {
                         } else if ("coverUrl".equals(field.getName())) {
                             contentValue = (String) field.get(arg);
                             break;
+                        } else if ("audioUrl".equals(field.getName())) {
+                            contentValue = (String) field.get(arg);
+                            break;
                         }
                     }
                 }
-                DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                        .id(uuid)
-                        .content(contentValue)
-                        .name(type.getName()+":" + type.getType())
-                        .build();
-                //在此处 上传任务到mq
-                rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
 
             }
         }
+        return contentValue;
     }
 
+    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
 
+        Result res = (Result)(ret);
+
+        //获取被增强方法上的注解对象
+        ContentDetection contentDetection = getContentDetection(joinPoint);
+        String exchangeName = contentDetection.exchangeName();
+        String uuid = res.getData().toString();
+        ContentDetectionEnum type = contentDetection.type();
+        Object[] args = joinPoint.getArgs();
+
+        String contentValue = getContentValue(args);
+
+        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+                .id(uuid)
+                .content(contentValue)
+                .routerKey(type.getRouterKey())
+                .name(type.getFullName())
+                .build();
+        //在此处 上传任务到mq
+        rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER +type.getType(), JSON.toJSONString(textDetectionTaskDto));
+
+    }
 
 }

@@ -1,8 +1,6 @@
 package com.tml.pojo.DO;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tml.pojo.VO.CommentFormVO;
-import lombok.Builder;
 import lombok.Data;
 
 /**

@@ -3,8 +3,6 @@ package com.tml.service.impl;
 import com.tml.constant.RedisKeyPool;
 import com.tml.pojo.FeedbackTypeDO;
 import com.tml.service.FeedbackTypeService;
-import com.tml.service.IFeedbackTypeDaoService;
-import io.github.common.RedisKey;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;

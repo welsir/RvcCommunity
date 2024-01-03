@@ -1,7 +1,6 @@
 package com.tml.service;
 
 import com.tml.exception.RvcSQLException;
-import com.tml.pojo.FeedbackCommentLike;
 import com.tml.pojo.FeedbackLike;
 
 import java.util.HashSet;
