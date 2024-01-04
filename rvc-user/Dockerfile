@@ -31,7 +31,7 @@ EXPOSE ${SERVER_PORT}
 EXPOSE ${DEBUG_PORT}
 
 #启用debug
-ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9000","-jar","/rvc-user.jar"]
+ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9001","-jar","/rvc-user.jar"]
 # 正常启动
 #ENTRYPOINT ["java","-jar","/rvc-user.jar"]
 #<Auto> -e:test -m:rvc-user -v:1.0 -rp:9000 -de:<-e ACTIVE=test -e SERVER_PORT=9000>
