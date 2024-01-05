@@ -24,11 +24,11 @@ ARG MQ_USERNAME
 ARG MQ_PWD
 
 ENV SERVER_PORT=${SERVER_PORT}
-ENV DEBUG_PORT=${DEBUG_PORT}
+#ENV DEBUG_PORT=${DEBUG_PORT}
 ENV ACTIVE=${ACTIVE}
 
 EXPOSE ${SERVER_PORT}
-EXPOSE ${DEBUG_PORT}
+EXPOSE ${9001}
 
 #启用debug
 ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9001","-jar","/rvc-user.jar"]
