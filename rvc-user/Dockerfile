@@ -3,6 +3,7 @@ COPY *.jar /rvc-user.jar
 
 
 ARG SERVER_PORT
+ARG DEBUG_PORT
 ARG ACTIVE
 ARG UNIQUE_ID
 
@@ -24,14 +25,14 @@ ARG MQ_USERNAME
 ARG MQ_PWD
 
 ENV SERVER_PORT=${SERVER_PORT}
-#ENV DEBUG_PORT=${DEBUG_PORT}
+ENV DEBUG_PORT=${DEBUG_PORT}
 ENV ACTIVE=${ACTIVE}
 
 EXPOSE ${SERVER_PORT}
-EXPOSE ${9001}
+EXPOSE ${DEBUG_PORT}
 
 #启用debug
-ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1.94.28.8:9001","-jar","/rvc-user.jar"]
+ENTRYPOINT ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1.94.28.8:${DEBUG_PORT}","-jar","/rvc-user.jar"]
 # 正常启动
 #ENTRYPOINT ["java","-jar","/rvc-user.jar"]
 #<Auto> -e:test -m:rvc-user -v:1.0 -rp:9000 -de:<-e ACTIVE=test -e SERVER_PORT=9000>
