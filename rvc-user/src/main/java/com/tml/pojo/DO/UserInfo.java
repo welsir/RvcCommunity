@@ -49,10 +49,11 @@ public class UserInfo {
         UserInfoVO userInfoVO = new UserInfoVO();
         userInfoVO.setUid(userInfo.getUid());
         userInfoVO.setUsername(userInfo.getUsername());
+        userInfoVO.setNickname(userInfo.getNickname());
         userInfoVO.setBirthday(userInfo.getBirthday());
         userInfoVO.setSex(userInfo.getSex());
         userInfoVO.setAvatar(userInfo.getAvatar());
-        userInfoVO.setDescription(userInfoVO.getDescription());
+        userInfoVO.setDescription(userInfo.getDescription());
         return userInfoVO;
     }
 }
