@@ -64,8 +64,7 @@ jobs:
           fi
           
           if [[ "$commit_message" =~ -dp:([^\ ]*) ]]; then
-            if [[ "$env" = "test"]]; then
-              debug_port="${BASH_REMATCH[1]}"
+          debug_port="${BASH_REMATCH[1]}"
           fi
           
           if [[ "$commit_message" =~ -de:\<([^>]+)\> ]]; then
@@ -132,7 +131,11 @@ jobs:
           cp ./Dockerfile ./docker
           cp ./target/*.jar ./docker
           cd docker
-          docker build --build-arg DEBUG_PORT=${{ env.DEBUG_PORT }} -t $DOCKER_REPO/$MODULE:$VERSION .
+          if [ "${{ env.ENV }}" != "test" ]; then
+            docker build -t $DOCKER_REPO/$MODULE:$VERSION .
+          else 
+            docker build --build-arg DEBUG_PORT=${{ env.DEBUG_PORT }} -t $DOCKER_REPO/$MODULE:$VERSION .
+          fi
           docker login -u $DOCKER_REPO -p $DOCKER_PASSWORD
           docker push $DOCKER_REPO/$MODULE:$VERSION
 
