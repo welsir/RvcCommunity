@@ -31,5 +31,5 @@ ENV ACTIVE=${ACTIVE}
 EXPOSE ${SERVER_PORT}
 EXPOSE ${DEBUG_PORT}
 
-ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"${DEBUG_PORT}\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT} -jar /rvc-user.jar; else java -jar /rvc-user.jar; fi"]
+ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-user.jar; else java -jar /rvc-user.jar; fi"]
 #<Auto> -e:test -m:rvc-user -v:1.0 -rp:9000 -de:<-e ACTIVE=test -e SERVER_PORT=9000>
