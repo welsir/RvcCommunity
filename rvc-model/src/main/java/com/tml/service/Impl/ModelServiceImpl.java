@@ -437,17 +437,21 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
-        AbstractAssert.isNull(commentMapper.selectById(commentId),ResultCodeEnum.COMMENT_NOT_EXITS);
+        CommentDO commentDO = commentMapper.selectById(commentId);
+        AbstractAssert.isNull(commentDO,ResultCodeEnum.COMMENT_NOT_EXITS);
         if(ModelConstant.FLAG.equals(type)){
             AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
             UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("uid",uid).eq("id",commentId).setSql("likes_num = likes_num+1");
+            wrapper.eq("id",commentId).setSql("likes_num = likes_num+1");
             commentMapper.update(null,wrapper);
             return commentMapper.insertUserCommentRelative(commentId,uid)==1;
         }
         if(ModelConstant.UN_FLAG.equals(type)){
+            if(commentDO.getLikesNum()==0){
+                return true;
+            }
             UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("uid",uid).eq("id",commentId).setSql("likes_num = likes_num-1");
+            wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
             commentMapper.update(null,wrapper);
             commentMapper.delUserCommentLikes(commentId,uid);
             return true;
@@ -482,7 +486,8 @@ public class ModelServiceImpl implements ModelService {
     @Override
     @Transactional
     public Boolean userLikesModel(String status, String modelId, String uid) {
-        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        ModelDO modelDO = mapper.selectById(modelId);
+        AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelLikes(uid,modelId),ResultCodeEnum.USER_LIKES_ERROR);
             ModelLikeDO build =  ModelLikeDO.builder()
@@ -494,6 +499,9 @@ public class ModelServiceImpl implements ModelService {
             )>0 &&
                     mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
+            if(modelDO.getLikesNum()==0){
+                return true;
+            }
             return mapper.delModelLikes(uid,modelId)==1 &&
                     mapper.update(null,new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num - 1"))==1;
         }
@@ -502,7 +510,8 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
-        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        ModelDO modelDO = mapper.selectById(modelId);
+        AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
             ModelCollectionDO build = ModelCollectionDO.builder()
@@ -513,6 +522,9 @@ public class ModelServiceImpl implements ModelService {
                     build)>0 &&
                     mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num +1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)){
+            if(modelDO.getCollectionNum()==0){
+                return true;
+            }
             return mapper.delModelCollection(uid,modelId)>0 &&
                     mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"))>0;
         }
