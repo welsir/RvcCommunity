@@ -64,7 +64,8 @@ jobs:
           fi
           
           if [[ "$commit_message" =~ -dp:([^\ ]*) ]]; then
-          debug_port="${BASH_REMATCH[1]}"
+            if [[ "$env" = "test"]]; then
+              debug_port="${BASH_REMATCH[1]}"
           fi
           
           if [[ "$commit_message" =~ -de:\<([^>]+)\> ]]; then
