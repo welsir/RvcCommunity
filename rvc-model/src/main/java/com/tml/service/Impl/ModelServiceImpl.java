@@ -446,6 +446,9 @@ public class ModelServiceImpl implements ModelService {
             return commentMapper.insertUserCommentRelative(commentId,uid)==1;
         }
         if(ModelConstant.UN_FLAG.equals(type)){
+            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("uid",uid).eq("id",commentId).setSql("likes_num = likes_num-1");
+            commentMapper.update(null,wrapper);
             commentMapper.delUserCommentLikes(commentId,uid);
             return true;
         }
@@ -477,8 +480,8 @@ public class ModelServiceImpl implements ModelService {
     }
 
     @Override
+    @Transactional
     public Boolean userLikesModel(String status, String modelId, String uid) {
-        //todo:需要等待用户模块提供查询用户是否存在接口
         AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
             AbstractAssert.notNull(mapper.queryUserModelLikes(uid,modelId),ResultCodeEnum.USER_LIKES_ERROR);
@@ -489,10 +492,10 @@ public class ModelServiceImpl implements ModelService {
             return mapper.insertModelUserLikes(
                     build
             )>0 &&
-                    mapper.update(null, new UpdateWrapper<ModelDO>().setSql("likes_num = likes_num+1"))>0;
+                    mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
             return mapper.delModelLikes(uid,modelId)==1 &&
-                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("likes_num = likes_num - 1"))==1;
+                    mapper.update(null,new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num - 1"))==1;
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
