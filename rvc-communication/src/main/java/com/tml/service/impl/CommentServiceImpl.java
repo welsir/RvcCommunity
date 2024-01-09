@@ -4,6 +4,7 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.lang.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tml.client.UserServiceClient;
 import com.tml.designpattern.chain.ext.CommentExistApproveChain;
@@ -13,9 +14,11 @@ import com.tml.designpattern.chain.ext.UserExistApproveChain;
 import com.tml.domain.dto.CoinDto;
 import com.tml.domain.dto.CommentDto;
 import com.tml.domain.dto.PageInfo;
+import com.tml.domain.entity.Post;
 import com.tml.handler.exception.SystemException;
 import com.tml.mapper.comment.CommentMapper;
 import com.tml.mapper.comment.LikeCommentMapper;
+import com.tml.mapper.post.PostMapper;
 import com.tml.pojo.VO.UserInfoVO;
 import com.tml.domain.entity.Comment;
 import com.tml.domain.entity.LikeComment;
@@ -47,6 +50,7 @@ public class CommentServiceImpl implements CommentService {
     private final LikeCommentMapper likeCommentMapper;
     private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
+    private final PostMapper postMapper;
 
 
 //责任链
@@ -57,6 +61,7 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
+    @Transactional
     public String comment(CommentDto commentDto, String uid) {
         String commentId = Uuid.getUuid();
 //数据校验  用户存在 -》 帖子存在
@@ -70,6 +75,12 @@ public class CommentServiceImpl implements CommentService {
         comment.setDetectionStatus(DETECTION_SUCCESS);
         comment.setUserId(uid);
         commentMapper.insert(comment);
+
+//        帖子的评论数+1
+        LambdaUpdateWrapper<Post> updateWrapper = Wrappers.<Post>lambdaUpdate()
+                .eq(Post::getPostId, commentDto.getPostId())
+                .setSql("comment_num = comment_num + 1");
+        postMapper.update(null,updateWrapper);
         return commentId;
     }
 
