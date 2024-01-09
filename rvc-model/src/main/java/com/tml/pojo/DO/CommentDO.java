@@ -1,6 +1,8 @@
 package com.tml.pojo.DO;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.tml.pojo.VO.CommentFormVO;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 @TableName("rvc_model_comment")
 public class CommentDO {
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     private String content;
     private String uid;

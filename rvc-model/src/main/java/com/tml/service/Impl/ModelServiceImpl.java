@@ -585,6 +585,7 @@ public class ModelServiceImpl implements ModelService {
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
         io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
+        AbstractAssert.isNull(userInfo.getData(), ResultCodeEnum.GET_USER_INFO_FAIL);
         builder.uid(commentUid)
                 .id(commentDO.getId().toString())
                 .commentTime(commentDO.getCreateTime())
@@ -605,6 +606,7 @@ public class ModelServiceImpl implements ModelService {
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
         io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
+        AbstractAssert.isNull(userInfo.getData(), ResultCodeEnum.GET_USER_INFO_FAIL);
         builder
                 .id(commentDO.getId().toString())
                 .uid(commentUid)
