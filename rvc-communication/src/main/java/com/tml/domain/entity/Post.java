@@ -4,6 +4,12 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import io.github.constant.TimeConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -47,12 +53,24 @@ public class Post {
     private Long collectNum;
 //        浏览数
     private Long watchNum;
-//        创建日期
+
     @TableField(fill = FieldFill.INSERT)
-    private Date createAt;
-//        更新日期
+//    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+//    @JsonSerialize(using = LocalDateTimeSerializer.class)
+//    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
+    private LocalDateTime createAt;
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateAt;
+//    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+//    @JsonSerialize(using = LocalDateTimeSerializer.class)
+//    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
+    private LocalDateTime updateAt;
+////        创建日期
+//    @TableField(fill = FieldFill.INSERT)
+//    private Date createAt;
+////        更新日期
+//    @TableField(fill = FieldFill.INSERT_UPDATE)
+//    private Date updateAt;
     //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
     private Integer detectionStatus;
 
