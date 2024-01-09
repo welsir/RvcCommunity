@@ -2,6 +2,7 @@ package com.tml.pojo.DO;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.tml.pojo.vo.UserInfoVO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,4 +27,10 @@ public class UserData {
     private int fansNum;
 
     private int modelNum;
+
+    public static UserInfoVO toVO(UserInfoVO userInfoVO, UserData userData){
+        userInfoVO.setFollowNum(userData.getFollowNum());
+        userInfoVO.setFansNum(userData.getFansNum());
+        return userInfoVO;
+    }
 }

@@ -55,7 +55,7 @@ public class RabbitMQListener extends ReceiveHandler {
         String name = detectionStatusDto.getName();
         String id = detectionStatusDto.getId();
         String content = stringRedisTemplate.opsForValue().get(BASE + name + id);
-        UserInfo user = userDetectionStrategy.process(detectionStatusDto, userInfoMapper.selectById(id), content);
+        UserInfo user = userDetectionStrategy.process(detectionStatusDto, userInfoMapper.selectByUid(id), content);
         userInfoMapper.updateById(user);
         stringRedisTemplate.delete(BASE + name + id);
     }

@@ -1,10 +1,7 @@
 package com.tml.service;
 
 import com.tml.exception.RvcSQLException;
-import com.tml.pojo.dto.LoginDTO;
-import com.tml.pojo.dto.RegisterDTO;
-import com.tml.pojo.dto.UpdatePasswordDTO;
-import com.tml.pojo.dto.UserInfoDTO;
+import com.tml.pojo.dto.*;
 import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,21 +29,23 @@ public interface UserService {
 
     Map<String, UserInfoVO> list(List<String> uidList);
 
-    void update(UserInfoDTO userInfoDTO, String uid, String username);
+    void update(UserInfoDTO userInfoDTO, String uid);
 
-    void follow(String followUid, String uid, String username) throws RvcSQLException;
+    void follow(String followUid, String uid) throws RvcSQLException;
 
-    void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid, String username);
+    void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid);
 
-    UserInfoVO getUserInfo(String uid, String username);
+    void forgotPassword(ForgotPassword forgotPassword);
 
-    UserInfoVO getUserInfoById(String uid);
+    UserInfoVO getUserInfo(String uid);
 
-    void avatar(MultipartFile file, String uid, String username);
+    Map<String, ?> getUserInfoById(String targetUid, String uid);
+
+    void avatar(MultipartFile file, String uid);
 
     boolean exist(String uid);
 
-    List<UserInfoVO> getMyFollowUser(String uid, String username);
+    List<UserInfoVO> getMyFollowUser(String uid);
 
     boolean isFollowed(String uid1, String uid2);
 }

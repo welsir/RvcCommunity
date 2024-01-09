@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -56,8 +57,8 @@ public class CodeUtil {
 
     public boolean emailVerify(String email, EmailEnums enums, String code){
         String c = stringRedisTemplate.opsForValue().get(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
-        if(c != null && c.equals(code)){
-            stringRedisTemplate.delete(enums.getCodeHeader() + email);
+        if(c != null && c.equalsIgnoreCase(code)){
+            stringRedisTemplate.delete(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
             return true;
         }
         return false;
@@ -78,8 +79,8 @@ public class CodeUtil {
 
     public boolean preVerify(String uuid, String code){
         String c = stringRedisTemplate.opsForValue().get(CodeCofig.IMAGE_BASE + uuid);
-        if(c != null && c.equals(code)){
-            stringRedisTemplate.delete(uuid);
+        if(c != null && c.equalsIgnoreCase(code)){
+            stringRedisTemplate.delete(CodeCofig.IMAGE_BASE + uuid);
             return true;
         }
         return false;
