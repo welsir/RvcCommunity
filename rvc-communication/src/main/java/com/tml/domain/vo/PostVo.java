@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @NAME: PostVo
@@ -50,9 +51,9 @@ public class PostVo {
     //        浏览数
     private Long watchNum;
     //        创建日期
-    private LocalDateTime createAt;
+    private Date createAt;
     //        更新日期
-    private LocalDateTime updateAt;
+    private Date updateAt;
 
     //是否点赞
     private boolean like;
