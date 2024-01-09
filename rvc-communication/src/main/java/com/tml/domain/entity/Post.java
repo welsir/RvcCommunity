@@ -1,5 +1,6 @@
 package com.tml.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST;
 
@@ -46,9 +48,11 @@ public class Post {
 //        浏览数
     private Long watchNum;
 //        创建日期
-    private LocalDateTime createAt;
+    @TableField(fill = FieldFill.INSERT)
+    private Date createAt;
 //        更新日期
-    private LocalDateTime updateAt;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Date updateAt;
     //审核状态（0：审核中；1：审核通过；2、审核失败（不通过）；3、人工审核）
     private Integer detectionStatus;
 
