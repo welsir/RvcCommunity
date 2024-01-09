@@ -347,7 +347,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserInfoVO> getMyFollowUser(String uid) {
-        List<UserFollow> userFollows = userFollowMapper.selectByMap(Map.of("follow_id", uid));
+        List<UserFollow> userFollows = userFollowMapper.selectByMap(Map.of("follow_uid", uid));
         List<String> followedUids = userFollows.stream().map(UserFollow::getFollowedUid).collect(Collectors.toList());
         if(followedUids.isEmpty()){
             return null;
