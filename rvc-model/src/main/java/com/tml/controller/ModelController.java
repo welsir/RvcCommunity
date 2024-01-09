@@ -132,8 +132,7 @@ public class ModelController {
         return Result.success(modelService.uploadImage(file,uid));
     }
 
-    @InternalApi
-//    @WhiteApi
+    @WhiteApi
     @PostMapping("/upload/audio")
     public Result<?> uploadAudio(
             MultipartFile file,
