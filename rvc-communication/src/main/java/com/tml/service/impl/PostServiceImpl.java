@@ -157,6 +157,7 @@ public class PostServiceImpl implements PostService {
         postVo.setAuthor(getUserInfo(post.getUid()));
         postVo.setPostType(postTypeMapper.selectById(post.getTagId()));
         postVo.setCover(coverMapper.selectById(post.getCoverId()).getCoverUrl());
+        postVo.setCoverId(post.getCoverId());
 //        如果用户未登录直接返回vo对象
         if (Objects.isNull(uid)){
             return postVo;

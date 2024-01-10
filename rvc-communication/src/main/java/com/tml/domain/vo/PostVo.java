@@ -48,6 +48,8 @@ public class PostVo {
     private String content;
     //        帖子封面
     private String cover;
+
+    private String coverId;
     //        评论数
     private Long commentNum;
     //        点赞数
