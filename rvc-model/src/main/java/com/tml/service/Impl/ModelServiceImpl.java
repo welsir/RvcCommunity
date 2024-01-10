@@ -591,6 +591,7 @@ public class ModelServiceImpl implements ModelService {
                 .id(commentDO.getId().toString())
                 .commentTime(commentDO.getCreateTime())
                 .likesNum(commentDO.getLikesNum())
+                .content(commentDO.getContent())
                 .modelId(commentDO.getModelId())
                 .picture(userInfo.getData().getAvatar())
                 .nickname(userInfo.getData().getNickname());
