@@ -11,6 +11,6 @@ public class TimeSortStrategy implements SortStrategy {
     public void sort(List<PostVo> posts) {
 
         // 根据时间排序
-        posts.sort(Comparator.comparing(PostVo::getCreateAt));
+        posts.sort(Comparator.comparing(PostVo::getCreateAt).reversed());
     }
 }
