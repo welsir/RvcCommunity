@@ -74,7 +74,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                 }
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return response.setComplete();
-            } catch (NotLoginException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);

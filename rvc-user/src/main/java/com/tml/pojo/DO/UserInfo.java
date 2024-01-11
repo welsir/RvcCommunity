@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.tml.pojo.vo.UserInfoVO;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -43,4 +44,16 @@ public class UserInfo {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
+
+    public static UserInfoVO toVO(UserInfo userInfo){
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setUid(userInfo.getUid());
+        userInfoVO.setUsername(userInfo.getUsername());
+        userInfoVO.setNickname(userInfo.getNickname());
+        userInfoVO.setBirthday(userInfo.getBirthday());
+        userInfoVO.setSex(userInfo.getSex());
+        userInfoVO.setAvatar(userInfo.getAvatar());
+        userInfoVO.setDescription(userInfo.getDescription());
+        return userInfoVO;
+    }
 }

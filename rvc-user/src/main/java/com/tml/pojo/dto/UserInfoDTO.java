@@ -26,7 +26,6 @@ public class UserInfoDTO {
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonFormat(pattern = DATE_PATTERN, timezone = "GMT+8")
-    @NotNull
     private LocalDate birthday;
 
     @NotBlank
@@ -35,6 +34,5 @@ public class UserInfoDTO {
     @NotBlank
     private String sex;
 
-    @NotBlank
     private String description;
 }

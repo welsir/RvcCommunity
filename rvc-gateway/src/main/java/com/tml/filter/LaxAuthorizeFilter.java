@@ -55,11 +55,6 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
             // 请求头中获取令牌
             String token = headers.getFirst(AUTHORIZE_TOKEN);
             ServerHttpRequest newRequest = null;
-            // 判断请求头中是否有令牌
-            if (StringUtils.isEmpty(token)) {
-                newRequest = request.mutate().header("uid","").header("username","").build();
-                return chain.filter(exchange.mutate().request(newRequest).build());
-            }
             try {
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
                 if (StpUtil.isLogin(loginID)) {
@@ -71,10 +66,11 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
                 }
-            } catch (NotLoginException e) {
-                newRequest = request.mutate().header("uid","").header("username","").build();
-                return chain.filter(exchange.mutate().request(newRequest).build());
+            } catch (Exception e) {
+               commonLogger.error("token解析失败:%s",e.getMessage());
             }
+            newRequest = request.mutate().header("uid","").header("username","").build();
+            return chain.filter(exchange.mutate().request(newRequest).build());
         }
 
         // 放行
