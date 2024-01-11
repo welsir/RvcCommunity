@@ -105,6 +105,7 @@ public class PostServiceImpl implements PostService {
                 .eq(!Strings.isBlank(tagId),"tag_id",tagId)//tagId 不为空  更具tagId 查询
                 .orderBy(!Strings.isBlank(order),false,strategyMap.get(order));
 
+
         Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),postQueryWrapper);
         //获取的分页结果
         List<Post> records = list.getRecords();
