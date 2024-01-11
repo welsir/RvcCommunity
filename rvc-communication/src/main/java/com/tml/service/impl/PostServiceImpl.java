@@ -103,7 +103,8 @@ public class PostServiceImpl implements PostService {
         postQueryWrapper.eq("detection_status",DETECTION_SUCCESS)
                 .eq("has_delete",0)
                 .eq(!Strings.isBlank(tagId),"tag_id",tagId)//tagId 不为空  更具tagId 查询
-                .orderBy(!Strings.isBlank(order),false,strategyMap.get(order));
+                .orderBy(!Strings.isBlank(order),false,strategyMap.get(order))
+                .orderBy(true, false, "post_id");;
 
 
         Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),postQueryWrapper);
