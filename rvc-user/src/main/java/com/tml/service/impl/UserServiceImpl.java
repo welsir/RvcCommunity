@@ -1,5 +1,6 @@
 package com.tml.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.tml.client.FileServiceClient;
 import com.tml.common.rabbitmq.RabbitMQListener;
@@ -18,6 +19,7 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.pojo.vo.UserInfoVO;
 import com.tml.service.UserService;
 import com.tml.util.*;
+import org.apache.catalina.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -130,15 +132,26 @@ public class UserServiceImpl implements UserService {
             case 1:
                 codeUtil.sendCode(email, LOGIN);
                 break;
-            case 2:
-                codeUtil.sendCode(email, PASSWORD);
-                break;
             case 3:
                 codeUtil.sendCode(email, FORGOT_PASSWORD);
                 break;
             default:
                 throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
         }
+    }
+
+    @Override
+    public void resetPwdEmailCode(String email, String code, String uuid, String uid) {
+        if(!codeUtil.preVerify(uuid, code)){
+            throw new ServerException(ResultEnums.PRE_CODE_ERROR);
+        }
+        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("uid", uid)
+                .eq("email", email);
+        if(userInfoMapper.selectCount(queryWrapper) <= 0){
+            throw new ServerException(ResultEnums.EMAIL_NOT_BELONG_USER);
+        }
+        codeUtil.sendCode(email, PASSWORD);
     }
 
     @Override
@@ -258,13 +271,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid) {
+    public boolean updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid) {
         if(!codeUtil.emailVerify(updatePasswordDTO.getEmail(), PASSWORD, updatePasswordDTO.getEmailCode())){
             throw new ServerException(ResultEnums.VER_CODE_ERROR);
         }
-        UserInfo userInfo = userInfoMapper.selectByClumneAndValue("email", updatePasswordDTO.getEmail());
+        UserInfo userInfo = userInfoMapper.selectByUid(uid);
         userInfo.setPassword(DigestUtils.md5Hex(updatePasswordDTO.getPassword()));
-        userInfoMapper.updateById(userInfo);
+        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("uid", uid)
+                .eq("email", updatePasswordDTO.getPassword());
+        return userInfoMapper.update(userInfo, queryWrapper) >= 1;
     }
 
     @Override
