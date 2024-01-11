@@ -35,7 +35,7 @@ public class CodeUtil {
     public void sendCode(String email, EmailEnums enums){
         switch (enums){
             case LOGIN:
-            case PASSWORD:
+            case FORGOT_PASSWORD:
                 if(!userInfoMapper.exist("email", email)){
                     throw new ServerException(ResultEnums.ACCOUNT_NOT_EXIST);
                 }

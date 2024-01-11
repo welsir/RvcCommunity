@@ -3,10 +3,11 @@ package com.tml.controller;
 import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.common.UserContext;
 import com.tml.common.annotation.ListNotEmpty;
 import com.tml.exception.RvcSQLException;
+import com.tml.exception.ServerException;
 import com.tml.pojo.dto.*;
+import com.tml.pojo.enums.ResultEnums;
 import com.tml.service.UserService;
 import io.github.common.web.Result;
 import org.hibernate.validator.constraints.Length;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.swing.text.StyledEditorKit;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -95,6 +95,28 @@ public class UserController {
         return Result.success();
     }
 
+    @GetMapping("/resetPwdEmailCode")
+    @WhiteApi
+    public Result resetPwdEmailCode(@RequestHeader String uid,
+                                    @RequestParam
+                                        @Valid
+                                        @NotNull(message = "邮箱不能为空")
+                                        @Length(min = 6, max = 30, message = "邮箱长度必须在6到30之间")
+                                        @Email( message = "参数必须为邮箱")
+                                        String email,
+                                    @RequestParam
+                                        @Valid
+                                        @Length(min = 4, max = 10, message = "验证码长度必须在4到6之间")
+                                        @NotBlank(message = "前置验证码不为空")
+                                        String code,
+                                    @RequestParam
+                                        @Valid
+                                        @NotBlank(message = "前置验证码标识不能为空")
+                                        String uuid){
+        userService.resetPwdEmailCode(email, code, uuid, uid);
+        return Result.success();
+    }
+
     /**
      * @param uid String
      * @return {@link Result}
@@ -153,7 +175,8 @@ public class UserController {
                                      @Valid
                                      UpdatePasswordDTO updatePasswordDTO,
                                  @RequestHeader String uid){
-        userService.updatePassword(updatePasswordDTO, uid);
+        if(userService.updatePassword(updatePasswordDTO, uid))
+            throw new ServerException(ResultEnums.FAIL_RESET);
         return Result.success();
     }
 
