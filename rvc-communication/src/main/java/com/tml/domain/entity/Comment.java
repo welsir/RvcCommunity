@@ -4,9 +4,16 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import io.github.constant.TimeConstant;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COMMENT;
@@ -20,7 +27,7 @@ import static com.tml.constant.DBConstant.RVC_COMMUNICATION_COMMENT;
 @Data
 @Builder
 @TableName(RVC_COMMUNICATION_COMMENT)
-public class Comment {
+public class Comment{
     //评论id
     @TableId
     private String postCommentId;
@@ -38,12 +45,24 @@ public class Comment {
     private String rootCommentId;
     //回复目标用户id
     private String toUserId;
-    //修改时间
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateAt;
-    //评论时间
+
     @TableField(fill = FieldFill.INSERT)
-    private Date createAt;
+//    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+//    @JsonSerialize(using = LocalDateTimeSerializer.class)
+//    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
+    private LocalDateTime createAt;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+//    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+//    @JsonSerialize(using = LocalDateTimeSerializer.class)
+//    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
+    private LocalDateTime updateAt;
+//    //修改时间
+//    @TableField(fill = FieldFill.INSERT_UPDATE)
+//    private Date updateAt;
+//    //评论时间
+//    @TableField(fill = FieldFill.INSERT)
+//    private Date createAt;
 //    标签
     private String labels;
 }

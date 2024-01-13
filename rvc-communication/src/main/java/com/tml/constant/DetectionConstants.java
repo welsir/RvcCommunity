@@ -22,4 +22,7 @@ public class DetectionConstants {
     public static final Integer DETECTION_FAIL = 2;
     public static final Integer DETECTION_Manual = 3;
 
+
+
+
 }

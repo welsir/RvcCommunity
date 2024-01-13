@@ -1,12 +1,19 @@
 package com.tml.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.tml.pojo.VO.UserInfoVO;
 import com.tml.domain.entity.PostType;
+import io.github.constant.TimeConstant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @NAME: PostVo
@@ -41,6 +48,8 @@ public class PostVo {
     private String content;
     //        帖子封面
     private String cover;
+
+    private String coverId;
     //        评论数
     private Long commentNum;
     //        点赞数
@@ -49,9 +58,14 @@ public class PostVo {
     private Long collectNum;
     //        浏览数
     private Long watchNum;
-    //        创建日期
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
     private LocalDateTime createAt;
     //        更新日期
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
     private LocalDateTime updateAt;
 
     //是否点赞

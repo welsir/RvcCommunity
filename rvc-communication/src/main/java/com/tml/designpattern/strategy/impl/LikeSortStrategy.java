@@ -12,6 +12,6 @@ public class LikeSortStrategy implements SortStrategy {
         // 根据点赞排序
 //        posts.sort(Comparator.comparingInt(PostVo::getLikeNum).reversed());
 //        Collections.sort(posts, Comparator.comparingInt(PostVo::getLikeNum).reversed());
-        posts.sort(Comparator.comparing(PostVo::getLikeNum));
+        posts.sort(Comparator.comparing(PostVo::getLikeNum).reversed());
     }
 }

@@ -78,11 +78,12 @@ public class PostServiceImpl implements PostService {
     private final TagExistApproveChain tagExistApproveChain;
     private final CoverExistApproveChain coverExistApproveChain;
 
-    private final Map<String, SortStrategy> strategyMap = new HashMap<>();
+    private final Map<String, String> strategyMap = new HashMap<>();
     {
-        strategyMap.put("1", new TimeSortStrategy());
-        strategyMap.put("2", new LikeSortStrategy());
-        strategyMap.put("3", new ViewSortStrategy());
+        strategyMap.put("1", "create_at");
+        strategyMap.put("2", "like_num");
+        strategyMap.put("3", "watch_num");
+        strategyMap.put("4", "collect_num");
     }
 
     @Override
@@ -92,11 +93,22 @@ public class PostServiceImpl implements PostService {
             userExistApproveChain.approve();
         }
         //分页
-        LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS)  // 审核通过
-                .eq(Post::getHasDelete,0)//没有被删除
-                .eq(!Strings.isBlank(tagId),Post::getTagId,tagId);//tagId 不为空  更具tagId 查询
-        Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),queryWrapper);
+//        LambdaQueryWrapper<Post> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.eq(Post::getDetectionStatus, DETECTION_SUCCESS)  // 审核通过
+//                .eq(Post::getHasDelete,0)//没有被删除
+//                .orderBy(!Strings.isBlank(order),)
+//                .eq(!Strings.isBlank(tagId),Post::getTagId,tagId);//tagId 不为空  更具tagId 查询
+
+
+        QueryWrapper<Post> postQueryWrapper = new QueryWrapper<>();
+        postQueryWrapper.eq("detection_status",DETECTION_SUCCESS)
+                .eq("has_delete",0)
+                .eq(!Strings.isBlank(tagId),"tag_id",tagId)//tagId 不为空  更具tagId 查询
+                .orderBy(!Strings.isBlank(order),false,strategyMap.get(order))
+                .orderBy(true, false, "post_id");;
+
+
+        Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),postQueryWrapper);
         //获取的分页结果
         List<Post> records = list.getRecords();
         List<PostVo> postVos = BeanCopyUtils.copyBeanList(records, PostVo.class);
@@ -131,9 +143,9 @@ public class PostServiceImpl implements PostService {
                 postVo.setCollect(hasCollect(uid,postVo.getPostId()));
             }
         }
-        //         排序
-        SortStrategy sortStrategy = strategyMap.get(order);
-        sortStrategy.sort(postVos);
+//        //         排序
+//        SortStrategy sortStrategy = strategyMap.get(order);
+//        sortStrategy.sort(postVos);
         return postVos;
 
     }
@@ -157,6 +169,7 @@ public class PostServiceImpl implements PostService {
         postVo.setAuthor(getUserInfo(post.getUid()));
         postVo.setPostType(postTypeMapper.selectById(post.getTagId()));
         postVo.setCover(coverMapper.selectById(post.getCoverId()).getCoverUrl());
+        postVo.setCoverId(post.getCoverId());
 //        如果用户未登录直接返回vo对象
         if (Objects.isNull(uid)){
             return postVo;

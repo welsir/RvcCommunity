@@ -1,8 +1,11 @@
 package com.tml.domain.dto;
 
 import lombok.Data;
+import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.Length;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -21,7 +24,6 @@ public class CommentDto {
     @NotNull(message = "postId 不能为空")
     private String postId;
 
-//    @NotNull
 //    @NotNulls(message = "rootCommentId 不能为空")
     private String rootCommentId;
 
@@ -32,6 +34,14 @@ public class CommentDto {
 //    @NotNull
 //    @NotNull(message = "toCommentId 不能为空")
     private String toCommentId;
+
+    public void setRootCommentId(String rootCommentId) {
+        if (Strings.isBlank(rootCommentId)) { // StringUtils 是 org.apache.commons.lang3 包下的工具类，用于判断字符串是否为空
+            this.rootCommentId = "-1";
+        } else {
+            this.rootCommentId = rootCommentId;
+        }
+    }
 }
 
 
