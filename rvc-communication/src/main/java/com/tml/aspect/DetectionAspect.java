@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
 
-import static com.tml.constant.DetectionConstants.DETECTION_ROUTER_KEY_HEADER;
+import static com.tml.constant.DetectionConstants.*;
 
 
 /**
@@ -67,7 +67,11 @@ public class DetectionAspect {
 
     }
 
-    public String getContentValue( Object[] args) throws IllegalAccessException {
+    public DetectionTaskDto setContentValue(Object[] args) throws IllegalAccessException {
+        /**
+         * 根据请求入参名来选择要审核的内容
+         */
+        DetectionTaskDto detectionTaskDto = new DetectionTaskDto();
         String contentValue = null;
         if (args != null && args.length > 0) {
             for (Object arg : args) {
@@ -77,14 +81,20 @@ public class DetectionAspect {
                     for (Field field : fields) {
                         field.setAccessible(true);
                         //入参名
-                        if ("content".equals(field.getName())) {
+                        if (DETECTION_TEXT_KEY.equals(field.getName())) {
                             contentValue = (String) field.get(arg);
+                            detectionTaskDto.setContent(contentValue);
+                            detectionTaskDto.setType("text");
                             break;
-                        } else if ("coverUrl".equals(field.getName())) {
+                        } else if (DETECTION_IMG_KEY.equals(field.getName())) {
                             contentValue = (String) field.get(arg);
+                            detectionTaskDto.setContent(contentValue);
+                            detectionTaskDto.setType("img");
                             break;
-                        } else if ("audioUrl".equals(field.getName())) {
+                        } else if (DETECTION_AUDIO_KEY.equals(field.getName())) {
                             contentValue = (String) field.get(arg);
+                            detectionTaskDto.setContent(contentValue);
+                            detectionTaskDto.setType("audio");
                             break;
                         }
                     }
@@ -92,31 +102,23 @@ public class DetectionAspect {
 
             }
         }
-        return contentValue;
+        return detectionTaskDto;
     }
 
     private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
-
+        /**
+         * 获取审核内容的主键id
+         * 获取被增强方法上的注解对象
+         */
         Result res = (Result)(ret);
-
-        //获取被增强方法上的注解对象
-        ContentDetection contentDetection = getContentDetection(joinPoint);
-        String exchangeName = contentDetection.exchangeName();
         String uuid = res.getData().toString();
-        ContentDetectionEnum type = contentDetection.type();
+        ContentDetection contentDetection = getContentDetection(joinPoint);
+        //获取审核内容
         Object[] args = joinPoint.getArgs();
-
-        String contentValue = getContentValue(args);
-
-        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                .id(uuid)
-                .content(contentValue)
-                .routerKey(type.getRouterKey())
-                .name(type.getFullName())
-                .build();
-        //在此处 上传任务到mq
-        rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER +type.getType(), JSON.toJSONString(textDetectionTaskDto));
-
+        DetectionTaskDto detectionTaskDto = setContentValue(args);
+        //设置参数，发布任务
+        detectionTaskDto.setId(uuid);
+        detectionTaskDto.setRouterKey(contentDetection.routerKey());
+        rabbitTemplate.convertAndSend(DETECTION_EXCHANGE_NAME,DETECTION_ROUTER_KEY,JSON.toJSONString(detectionTaskDto));
     }
-
 }

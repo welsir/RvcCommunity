@@ -15,7 +15,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface ContentDetection {
-    ContentDetectionEnum type();
-    String exchangeName();
-
+    String routerKey();
 }

@@ -46,7 +46,7 @@ spring:
         prefetch: ${MQ_PREFETCH:5}
         concurrency: ${MIN_CONCURRENCY:5}
         max-concurrency: ${MAX_CONCURRENCY:10}
-        acknowledge-mode: manual
+        acknowledge-mode: auto
 management:
   endpoints:
     web:

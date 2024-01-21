@@ -1,19 +1,28 @@
 package com.tml.handler.mq;
 
-import com.tml.mq.ReceiveHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.tml.mq.ReceiveHandler;
 import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
 import com.tml.designpattern.strategy.impl.CoverProcessStrategy;
 import com.tml.designpattern.strategy.impl.PostProcessStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.tml.constant.DetectionConstants.*;
 import static com.tml.constant.enums.ContentDetectionEnum.*;
 
 /**
@@ -24,7 +33,7 @@ import static com.tml.constant.enums.ContentDetectionEnum.*;
  */
 @Component
 @Slf4j
-public class ProcessReceive extends ReceiveHandler {
+public class ProcessReceive  {
 
     private final Map<String, DetectionProcessStrategy> strategyMap = new HashMap<>();
 
@@ -35,16 +44,41 @@ public class ProcessReceive extends ReceiveHandler {
         strategyMap.put(POST_CONTENT.getFullName(),postProcessStrategy);
     }
 
-    @Override
-    public void process(DetectionStatusDto detectionTaskDto) {
-        log.debug("{}",detectionTaskDto);
-        ////处理逻辑  更新数据库
-        DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(detectionTaskDto.getName());
-        //如果没有的话就是其他服务的处理  直接放行
-        if(Objects.isNull(detectionProcessStrategy)){
-            return;
-        }
-////处理逻辑  更新数据库
+
+    /**
+     * 评论
+     * @param message
+     * @throws Exception
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = DETECTION_RES_COMMENT_QUEUE),
+            exchange = @Exchange(name = DETECTION_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
+            key = DETECTION_RES_COMMENT_KEY
+    ))
+    public void comment(Message message) throws Exception {
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
+        DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(COMMENT.getFullName());
+        detectionProcessStrategy.process(detectionTaskDto);
+    }
+
+
+    /**
+     * 封面
+     * @param message
+     * @throws Exception
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = DETECTION_RES_COVER_QUEUE),
+            exchange = @Exchange(name = DETECTION_EXCHANGE_NAME,type = ExchangeTypes.TOPIC),
+            key = DETECTION_RES_COVER_KEY
+    ))
+    public void cover(Message message) throws Exception {
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
+        DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(POST_COVER.getFullName());
         detectionProcessStrategy.process(detectionTaskDto);
     }
 }

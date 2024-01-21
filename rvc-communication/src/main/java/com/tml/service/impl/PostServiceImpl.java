@@ -48,6 +48,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
+import static com.tml.constant.DetectionConstants.UN_DETECTION;
 import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
 /**
@@ -500,7 +501,10 @@ public class PostServiceImpl implements PostService {
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
                 .createAt(LocalDate.now())
-                .detectionStatus(DETECTION_SUCCESS)   //关闭审核 审核状态改为成功
+                /**
+                 * DETECTION_SUCCESS
+                 */
+                .detectionStatus(UN_DETECTION)
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);

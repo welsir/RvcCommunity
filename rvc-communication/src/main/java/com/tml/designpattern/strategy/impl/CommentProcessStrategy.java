@@ -27,8 +27,6 @@ public class CommentProcessStrategy implements DetectionProcessStrategy {
         }else{
             comment.setDetectionStatus(2);
         }
-
         commentMapper.updateById(comment);
-
     }
 }

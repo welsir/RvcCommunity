@@ -71,8 +71,11 @@ public class CommentServiceImpl implements CommentService {
         commentCheck(commentDto);
         Comment comment = Convert.convert(new TypeReference<Comment>(){}, commentDto);
         comment.setPostCommentId(commentId);
-        //关闭审核(将正在审核中改为审核成功)
-        comment.setDetectionStatus(DETECTION_SUCCESS);
+        /**
+         * DETECTION_SUCCESS  :审核成功
+         * UN_DETECTION   :审核中
+         */
+        comment.setDetectionStatus(UN_DETECTION);
         comment.setUserId(uid);
         commentMapper.insert(comment);
 
