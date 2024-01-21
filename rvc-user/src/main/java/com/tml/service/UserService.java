@@ -5,6 +5,7 @@ import com.tml.pojo.dto.*;
 import com.tml.pojo.vo.UserInfoVO;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import io.github.common.web.Result;
 
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,8 @@ public interface UserService {
 
     void sendCode(String email, String code, String uuid, int type);
 
+    void resetPwdEmailCode(String email, String code, String uuid, String uid);
+
     UserInfoVO one(String uid);
 
     Map<String, UserInfoVO> list(List<String> uidList);
@@ -33,7 +36,7 @@ public interface UserService {
 
     void follow(String followUid, String uid) throws RvcSQLException;
 
-    void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid);
+    boolean updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid);
 
     void forgotPassword(ForgotPassword forgotPassword);
 
