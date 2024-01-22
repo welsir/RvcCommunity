@@ -189,7 +189,7 @@ public class ModelServiceImpl implements ModelService {
         modelDO.setCollectionNum(0L);
         modelDO.setViewNum(0L);
         modelDO.setHasDelete(false);
-        modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
+        modelDO.setHasShow(String.valueOf(DETECTION_SUCCESS.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
         String typeId = model.getTypeId();
