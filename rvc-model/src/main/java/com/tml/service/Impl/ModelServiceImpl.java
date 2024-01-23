@@ -240,7 +240,8 @@ public class ModelServiceImpl implements ModelService {
                 .set("description",modelUpdateFormVO.getDescription())
                 .set("note",modelUpdateFormVO.getNote())
                 .set("picture",res.getData().getUrl())
-                .set("update_time",lt);
+                .set("update_time",lt)
+                .set("has_show", DETECTION_SUCCESS.getStatus().toString());
         mapper.update(null,wrapper);
         //todo:走审核
         return true;
