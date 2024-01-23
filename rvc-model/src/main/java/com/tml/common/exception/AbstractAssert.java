@@ -34,7 +34,7 @@ public abstract class AbstractAssert {
 
     public static void isNull(Object object, ResultCodeEnum message) {
         if (object == null) {
-            throw new BaseException(object,message);
+            throw new BaseException(message);
         }
     }
 

@@ -620,12 +620,6 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isNull(isLike,ResultCodeEnum.SYSTEM_ERROR);
         AbstractAssert.isNull(isCollection,ResultCodeEnum.SYSTEM_ERROR);
 
-        if(userInfoVO==null){
-            Result<UserInfoVO> userInfo = userServiceClient.one(myUid);
-            userInfoVO = userInfo.getData();
-            AbstractAssert.isNull(userInfoVO,ResultCodeEnum.GET_USER_INFO_FAIL);
-        }
-
         try {
             modelVO = ModelVO.modelDOToModelVO(model,userInfoVO,labelList,type,isLike,isCollection);
         }catch (RuntimeException e){

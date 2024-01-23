@@ -1,5 +1,6 @@
 package com.tml.common.exception;
 
+import com.alibaba.cloud.commons.lang.StringUtils;
 import com.tml.common.Result;
 import com.tml.common.log.AbstractLogger;
 import com.tml.pojo.ResultCodeEnum;
@@ -8,7 +9,6 @@ import io.github.exception.handler.AssistantExceptionHandlerCondition;
 import io.github.exception.handler.annotation.AssistantControllerAdvice;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -47,7 +47,7 @@ public class GobalExceptionHandler extends AbstractExceptionHandler {
                 result = Result.fail(se.getMessage());
             } else {
                 result = Result.fail(resultCode.getCode(),
-                        StringUtils.isEmpty(se.getMessage()) ? resultCode.getMsg():se.getMessage());
+                        StringUtils.isBlank(se.getMessage()) ? resultCode.getMsg():se.getMessage());
             }
         }
         //参数错误
