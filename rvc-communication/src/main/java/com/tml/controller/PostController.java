@@ -142,7 +142,7 @@ public class PostController {
     @PostMapping("/coverUrl")
     @SystemLog(businessName = "用户上传封面  url上传")
     @ContentDetection(routerKey = DETECTION_RES_COVER_KEY)
-    @LaxTokenApi
+    @WhiteApi
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }
