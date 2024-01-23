@@ -612,14 +612,14 @@ public class ModelServiceImpl implements ModelService {
         Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
         Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
 
-        AbstractAssert.isBlank(ConcurrentUtil.futureGet(typeFuture),ResultCodeEnum.GET_TYPE_ERROR);
-        AbstractAssert.isNull(ConcurrentUtil.futureGet(likeFuture),ResultCodeEnum.SYSTEM_ERROR);
-        AbstractAssert.isNull(ConcurrentUtil.futureGet(collectionFuture),ResultCodeEnum.SYSTEM_ERROR);
-
         String type = ConcurrentUtil.futureGet(typeFuture);
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
         List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
+        logger.info("type:%s,isLike:%s,isCollection:%s",type,isLike,isCollection);
+        AbstractAssert.isBlank(type,ResultCodeEnum.GET_TYPE_ERROR);
+        AbstractAssert.isNull(isLike,ResultCodeEnum.SYSTEM_ERROR);
+        AbstractAssert.isNull(isCollection,ResultCodeEnum.SYSTEM_ERROR);
 
         if(userInfoVO==null){
             Result<UserInfoVO> userInfo = userServiceClient.one(myUid);
@@ -655,9 +655,16 @@ public class ModelServiceImpl implements ModelService {
         try {
             Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
             Map<String, UserInfoVO> userInfo = result.getData();
-            List<ModelVO> modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                    .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
-                    .collect(Collectors.toList());
+            List<ModelVO> modelVOList;
+            if(StringUtils.isBlank(uid)){
+                modelVOList  = IntStream.range(0, modelPage.getRecords().size())
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfo.get(uids.get(i))))
+                        .collect(Collectors.toList());
+            }else {
+                modelVOList = IntStream.range(0, modelPage.getRecords().size())
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                        .collect(Collectors.toList());
+            }
             return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
         }catch (RuntimeException e){
             logger.error(e);
