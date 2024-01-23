@@ -37,4 +37,5 @@ public interface CommentMapper extends BaseMapper<CommentDO> {
 
     @Select("select id from rvc_model_comment where parent_id = #{firstCommentId}")
     List<String> querySecondComments(String firstCommentId);
+
 }

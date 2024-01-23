@@ -1,9 +1,11 @@
 package com.tml.controller;
 
-import com.baomidou.mybatisplus.extension.api.R;
+import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.WhiteApi;
+import com.tml.common.UserContext;
 import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -18,9 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Date 2023/12/10
@@ -45,8 +47,9 @@ public class UserController {
         return Result.success(userService.login(loginDTO));
     }
     @PostMapping("/logout")
-    public Result logout(){
-        userService.logout();
+    @WhiteApi
+    public Result logout(@RequestHeader String uid,@RequestHeader String username){
+        userService.logout(uid, username);
         return Result.success();
     }
 
@@ -57,7 +60,7 @@ public class UserController {
     @PostMapping("/register")
     public Result register(@RequestBody
                                @Valid
-                               RegisterDTO registerDTO){
+                               RegisterDTO registerDTO) throws RvcSQLException {
         return Result.success(userService.register(registerDTO));
     }
 
@@ -99,24 +102,21 @@ public class UserController {
      * @return {@link Result}
      */
     @GetMapping("/one")
-    public Result one(@RequestParam
-                          @Valid
-                          @NotNull(message = "uid不能为空")
-                          @Length(min = 19, max = 19, message = "uid长度必须为19")
-                          String uid){
+    @InternalApi
+    public Result one(@RequestParam String uid){
         return Result.success(userService.one(uid));
     }
+
     /**
      * @param uidList List<String>
      * @return {@link Result}
      */
     @PostMapping("/list")
+    @InternalApi
     public Result list(@RequestBody
-                           @Valid
                            @ListNotEmpty
-                           @ListElementSize(min = 19, max = 19, message = "uid长度为19")
                            List<String> uidList){
-        return Result.success(Map.of("userList", userService.list(uidList)));
+        return Result.success(userService.list(uidList));
     }
 
     /**
@@ -127,8 +127,10 @@ public class UserController {
     @WhiteApi
     public Result update(@RequestBody
                              @Valid
-                             UserInfoDTO userInfoDTO){
-        userService.update(userInfoDTO);
+                             UserInfoDTO userInfoDTO,
+                         @RequestHeader String uid,
+                         @RequestHeader String username){
+        userService.update(userInfoDTO, uid, username);
         return Result.success();
     }
 
@@ -140,10 +142,13 @@ public class UserController {
     @WhiteApi
     public Result follow(@RequestPart
                              @Valid
+                             @NotBlank(message = "uid不能为空")
                              @Length(min = 19, max = 19, message = "uid长度为19")
-                             @NotNull(message = "uid不能为空")
-                             String uid){
-        userService.follow(uid);
+                             String followUid,
+                         @RequestHeader String uid,
+                         @RequestHeader String username) throws RvcSQLException {
+        UserContext.setCurruntUser(uid, username);
+        userService.follow(followUid, uid, username);
         return Result.success();
     }
 
@@ -151,25 +156,52 @@ public class UserController {
     @WhiteApi
     public Result updatePassword(@RequestBody
                                      @Valid
-                                     UpdatePasswordDTO updatePasswordDTO){
-        userService.updatePassword(updatePasswordDTO);
+                                     UpdatePasswordDTO updatePasswordDTO,
+                                 @RequestHeader String uid,
+                                 @RequestHeader String username){
+        userService.updatePassword(updatePasswordDTO, uid, username);
         return Result.success();
     }
 
     @GetMapping("/getUserInfo")
     @WhiteApi
-    public Result getUserInfo(){
-        return Result.success(userService.getUserInfo());
+    public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
+        return Result.success(userService.getUserInfo(uid, username));
+    }
+
+    @GetMapping("/getUserInfoById")
+    public Result getUserInfoById(@RequestParam
+                                      @Valid
+                                      @NotBlank
+                                      String uid){
+        return Result.success(userService.getUserInfoById(uid));
     }
 
     @PostMapping("/avatar")
     @WhiteApi
-    public Result avatar(@RequestPart("file") MultipartFile file){
-        return Result.success(userService.avatar(file));
+    public Result avatar(@RequestPart("file") MultipartFile file,
+                         @RequestHeader String uid,
+                         @RequestHeader String username){
+        UserContext.setCurruntUser(uid, username);
+        userService.avatar(file, uid, username);
+        return Result.success("审核中");
     }
 
     @GetMapping("/exist")
+    @InternalApi
     public Result exist(@RequestParam String uid){
         return Result.success(userService.exist(uid));
+    }
+
+    @GetMapping("/getMyFollowUser")
+    @WhiteApi
+    public Result getMyFollowUser(@RequestHeader String uid, @RequestHeader String username){
+        return Result.success(userService.getMyFollowUser(uid, username));
+    }
+
+    @GetMapping("/isFollowed")
+    @InternalApi
+    public Result isFollowed(@RequestParam String uid1, @RequestParam String uid2){
+        return Result.success(userService.isFollowed(uid1, uid2));
     }
 }

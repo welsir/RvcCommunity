@@ -18,4 +18,5 @@ public interface IFeedbackDaoService {
     Boolean feedbackCommentAdd(Long fb_id) throws RvcSQLException;
 
     Boolean hasFeedback(Long fb_id);
+    Boolean changeLikeNum(Long fb_id,Boolean isLike);
 }

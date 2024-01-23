@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NonNull;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -36,8 +37,9 @@ public class UserInfo {
 
     private String phone;
 
-    private LocalDateTime birthday;
+    private LocalDate birthday;
 
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime registerData;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)

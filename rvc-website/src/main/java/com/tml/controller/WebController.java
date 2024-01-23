@@ -1,14 +1,21 @@
 package com.tml.controller;
 
 import com.google.protobuf.ServiceException;
+import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.pojo.WebInfoDO;
 import com.tml.service.*;
 import io.github.common.web.Result;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.annotation.Resource;
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.constraints.Max;
 import java.util.Map;
 
+@Validated
 @RestController
 @RequestMapping("/web")
 public class WebController {
@@ -24,7 +31,6 @@ public class WebController {
 
     @Resource
     TeamService teamService;
-
 
     /**
      * 获取网站首页信息
@@ -78,6 +84,7 @@ public class WebController {
      * @return
      */
     @GetMapping("/notice/detail")
+    @LaxTokenApi
     public Result getNotice(@RequestParam String noticeId,
                             @RequestHeader(required = false) String uid){
         return noticeService.getWebNoticeDetail(noticeId,uid);
@@ -90,6 +97,7 @@ public class WebController {
      * @return
      */
     @GetMapping("/notice/watch")
+    @LaxTokenApi
     public Result watchNotice(@RequestParam String noticeId,
                             @RequestHeader(required = false) String uid) throws ServiceException {
         return noticeService.watchNotice(noticeId,uid);

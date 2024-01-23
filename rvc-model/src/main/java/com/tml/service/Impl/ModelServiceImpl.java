@@ -1,23 +1,24 @@
 package com.tml.service.Impl;
 
+import com.alibaba.cloud.commons.lang.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.client.FileServiceClient;
+import com.tml.client.UserServiceClient;
 import com.tml.common.DetectionStatusEnum;
-import com.tml.common.Result;
 import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.AbstractAssert;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
 import com.tml.config.SystemConfig;
 import com.tml.core.async.AsyncService;
-import com.tml.core.client.FileServiceClient;
-import com.tml.core.client.UserServiceClient;
-import com.tml.core.rabbitmq.ModelListener;
+
 import com.tml.mapper.*;
 import com.tml.pojo.DO.*;
-
-import com.tml.pojo.DTO.*;
+import com.tml.pojo.DTO.AsyncDetectionForm;
+import com.tml.pojo.DTO.DetectionTaskDTO;
+import com.tml.pojo.DTO.ReceiveUploadFileDTO;
 import com.tml.pojo.ResultCodeEnum;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
@@ -25,24 +26,28 @@ import com.tml.utils.ConcurrentUtil;
 import com.tml.utils.DateUtil;
 import com.tml.utils.FileUtil;
 import com.tml.utils.WrapperUtil;
+import io.github.common.web.Result;
+import io.github.id.snowflake.SnowflakeGenerator;
+import io.github.id.snowflake.SnowflakeRegisterException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cloud.openfeign.FeignClientProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.tml.common.DetectionStatusEnum.DETECTION_SUCCESS;
 import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
 
 /**
@@ -71,30 +76,46 @@ public class ModelServiceImpl implements ModelService {
     AbstractLogger logger;
     @Resource
     AsyncService asyncService;
-    @Resource
-    ModelListener listener;
+//    @Resource
+//    ModelListener listener;
     @Resource
     SystemConfig systemConfig;
+    @Resource
+    SnowflakeGenerator snowflakeGenerator;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
+    /**
+     * @description: 分页查询所有模型集合
+     * @param: size
+     * @param page
+     * @param sortType
+     * @param uid
+     * @return: Page<ModelVO>
+     **/
     @Override
-    public Page<ModelVO> getModelList(String size, String page,String sortType,String uid) {
-        try {
-            QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
-            WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
-                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
-            return getModelListCommon(wrapper, page, size, uid);
-        }catch (BaseException e){
-            throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
-        }
+    public Page<ModelVO> getModelList(Long size, Long page,String sortType,String uid) {
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
+        return getModelListCommon(wrapper, page, size, uid);
     }
 
+    /**
+     * @description: 分页、类别模型集合
+     * @param: typeId
+     * @param page
+     * @param size
+     * @param order
+     * @param uid
+     * @return: Page<ModelVO>
+     **/
     @Override
-    public Page<ModelVO> getModelList(String type,String page,String size,String sortType,String uid) {
+    public Page<ModelVO> getModelList(String typeId,Long page,Long size,String order,String uid) {
+        AbstractAssert.isNull(typeMapper.selectById(typeId), ResultCodeEnum.TYPE_NOT_EXIT);
         try {
             QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
             wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
-                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType,"type_id",type));
+                    "has_delete",ModelConstant.UN_DELETE,"sort",order,"type_id",typeId));
             return getModelListCommon(wrapper, page, size, uid);
         }catch (BaseException e){
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
@@ -109,33 +130,37 @@ public class ModelServiceImpl implements ModelService {
      **/
     @Override
     public ModelVO queryOneModel(String modelId, String uid) {
+        ModelDO model = mapper.selectById(modelId);
+        AbstractAssert.isNull(model,ResultCodeEnum.MODEL_NOT_EXITS);
         try {
-            ModelDO model = mapper.selectById(modelId);
-            AbstractAssert.isNull(model,"NullPointException:modelDO");
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
-            Callable<List<String>> labelTask = () -> labelMapper.selectListById(modelId);
+            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
-            Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
-            Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-            Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
-
             String type = ConcurrentUtil.futureGet(typeFuture);
+            Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
             String isLike = ConcurrentUtil.futureGet(likeFuture);
+            Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
             String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-            List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
-            UserInfoDTO dto = null;
-            if(uid!=null){
-                Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(uid);
+            Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+            List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
+
+            UserInfoVO dto;
+            ModelVO modelVO;
+            List<String> list = modelUserMapper.queryUidByModelIds(List.of(model.getId()));
+            if(!uid.isBlank()||!uid.isEmpty()){
+                io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
                 dto = userInfo.getData();
                 AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
+                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,isLike,isCollection);
+            }else {
+                modelVO = ModelVO.modelDOToModelVO(model, null,labelList,type,isLike,isCollection);
             }
-            ModelVO modelVO = ModelVO.modelDOToModelVO(model, dto,labelList, type, isLike,isCollection);
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
-        }catch (RuntimeException e){
+        }catch (BaseException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.QUERY_MODEL_FAIL);
         }
@@ -144,352 +169,409 @@ public class ModelServiceImpl implements ModelService {
     @Transactional
     @Override
     public void insertOneModel(ModelInsertVO model,String uid) {
+        //todo:默认只提供一个链接，需要上传用户自行将模型相关文件放入一个文件夹
+        AbstractAssert.isNull(typeMapper.selectTypeById(model.getTypeId()),ResultCodeEnum.TYPE_NOT_EXIT);
         ModelDO modelDO = new ModelDO();
         BeanUtils.copyProperties(model,modelDO);
-        modelDO.setUpdateTime(DateUtil.formatDate());
-        modelDO.setCreateTime(DateUtil.formatDate());
-        modelDO.setLikesNum("0");
-        modelDO.setCollectionNum("0");
-        modelDO.setViewNum("0");
-        modelDO.setHasShow(String.valueOf(DetectionStatusEnum.UN_DETECTION.getStatus()));
+        try {
+            modelDO.setId(snowflakeGenerator.generate());
+        } catch (SnowflakeRegisterException e) {
+            throw new BaseException(e.toString());
+        }
+        LocalDateTime today = LocalDateTime.now();
+        modelDO.setUpdateTime(today);
+        modelDO.setCreateTime(today);
+        modelDO.setLikesNum(0L);
+        modelDO.setCollectionNum(0L);
+        modelDO.setViewNum(0L);
+        modelDO.setHasDelete(false);
+        modelDO.setHasShow(String.valueOf(DETECTION_SUCCESS.getStatus()));
         mapper.insert(modelDO);
         AbstractAssert.isBlank(modelDO.getId().toString(),ResultCodeEnum.ADD_MODEL_FAIL);
-        if(model.getLabelId()!=null){
-            try{
-                labelMapper.insertLabel(modelDO.getId().toString(),model.getLabelId());
-            }catch (RuntimeException e){
-                logger.error(e);
-                throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
-            }
-        }
+        String typeId = model.getTypeId();
+        typeMapper.insertModelType(modelDO.getId().toString(),typeId);
         ModelUserDO modelUserDO = new ModelUserDO();
         modelUserDO.setModelId(String.valueOf(modelDO.getId()));
         modelUserDO.setUid(uid);
         try {
             modelUserMapper.insert(modelUserDO);
+            mapper.insertModelFileRelative(modelDO.getId().toString(),model.getFileUrl());
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.INSERT_MODEL_USER_RELATIVE_FAIL);
         }
-        asyncService.processModelAsync(modelDO);
+        asyncService.processModelAsync(modelDO, model.getLabel());
     }
 
     @Override
-    public String downloadModel(String modelId) {
-        Result<String> result = fileServiceClient.downloadModel(
-                DownloadModelForm.builder().fileId(modelId).isPrivate("true").bucket(ModelConstant.DEFAULT_BUCKET).build());
-        return result.getData();
+    public String downloadModel(String modelId, String uid) {
+        ModelFileDO modelFileDO = mapper.queryModelFile(modelId);
+        AbstractAssert.isNull(modelFileDO,ResultCodeEnum.MODEL_NOT_EXITS);
+        return modelFileDO.getUrl();
     }
-
     @Override
-    public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO) {
-        String name = ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.ModelDO";
-        List<DetectionTaskDTO> dtos = Arrays.asList(
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getDescription(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getName(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getNote(), name),
-                DetectionTaskDTO.createDTO(modelUpdateFormVO.getId(), modelUpdateFormVO.getPicture(), name)
-        );
-        List<String> types = Arrays.asList(
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.TEXT_TYPE,
-                ModelConstant.IMAGE_TYPE
-        );
-        List<AsyncDetectionForm> forms = IntStream.range(0, dtos.size())
-                .mapToObj(i -> DetectionTaskDTO.createAsyncDetectionForm(dtos.get(i), types.get(i)))
-                .collect(Collectors.toList());
-        HashMap<String, String> map = new HashMap<>();
-        map.put("description",modelUpdateFormVO.getDescription());
-        map.put("name",modelUpdateFormVO.getName());
-        map.put("note",modelUpdateFormVO.getNote());
-        map.put("picture",modelUpdateFormVO.getPicture());
-        listener.setMap(modelUpdateFormVO.getId(),map);
-        asyncService.listenerMq(forms);
+    public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
+        AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
+        LocalDateTime lt = LocalDateTime.now();
+        UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id",modelUpdateFormVO.getId())
+                .set("name",modelUpdateFormVO.getName())
+                .set("description",modelUpdateFormVO.getDescription())
+                .set("note",modelUpdateFormVO.getNote())
+                .set("picture",modelUpdateFormVO.getPicture())
+                .set("update_time",lt)
+                .set("has_show", DETECTION_SUCCESS.getStatus().toString());
+        mapper.update(null,wrapper);
+        //todo:走审核
         return true;
     }
 
-    //todo:需要重新判断文件逻辑(.index and .pth（可单文件上传）)
     @Override
-    public ReceiveUploadFileDTO uploadModel(MultipartFile file) {
-        if(FileUtil.checkModelFileIsAvailable(file)){
+    public List<ReceiveUploadFileDTO> uploadModel(MultipartFile[] file,String uid) {
+        if(!FileUtil.checkModelFileIsAvailable(file)){
             throw new BaseException(ResultCodeEnum.MODEL_FILE_ILLEGAL);
         }
         try {
-            UploadModelForm form = UploadModelForm.builder()
-                    .file(file)
-                    .path(ModelConstant.DEFAULT_MODEL_PATH)
-                    .bucket(ModelConstant.DEFAULT_BUCKET)
-                    .md5(FileUtil.getMD5Checksum(file.getInputStream()))
-                    .build();
-            Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+            com.tml.pojo.Result<List<ReceiveUploadFileDTO>> res = fileServiceClient.uploadModelList(
+                    List.of(file[0],file[1]),
+                    List.of(ModelConstant.DEFAULT_MODEL_PATH,ModelConstant.DEFAULT_MODEL_PATH),
+                    List.of(FileUtil.getMD5Checksum(file[0].getInputStream()),FileUtil.getMD5Checksum(file[1].getInputStream())),
+                    ModelConstant.DEFAULT_BUCKET);
             return res.getData();
-        } catch (NoSuchAlgorithmException | IOException e) {
-            logger.error("%s:"+e.getStackTrace()[0],e);
+        } catch (NoSuchAlgorithmException e) {
+            logger.error(e);
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            logger.error(e);
+            throw new RuntimeException(e);
+        }catch (Exception e){
+            logger.error(e);
             throw new BaseException(e.toString());
         }
     }
 
     @Override
-    public ReceiveUploadFileDTO uploadImage(MultipartFile file) {
-        if(FileUtil.isImageFile(file.getOriginalFilename())&&!FileUtil.imageSizeIsAvailable(file)){
-            return this.uploadModel(file);
+    public ReceiveUploadFileDTO uploadImage(MultipartFile file,String uid) {
+        if(FileUtil.checkImageFileIsAvailable(file)){
+            try {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(file)
+                        .path(ModelConstant.DEFAULT_IMAGE_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(file.getInputStream()))
+                        .build();
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                return res.getData();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                logger.error("%s:"+e.getStackTrace()[0],e);
+                throw new BaseException(e.toString());
+            }
         }else{
             throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
         }
     }
 
     @Override
-    public void insertRelative(String type, String modelId,String uid,String isClick) {
-        if("collection".equals(type)){
-            if("false".equals(isClick)){
-                ModelCollectionDO build = ModelCollectionDO.builder()
-                        .modelId(modelId)
-                        .uid(uid)
+    public ReceiveUploadFileDTO uploadAudio(MultipartFile file, String uid) {
+        if(FileUtil.checkAudioFileIsAvailable(file)){
+            try {
+                UploadModelForm form = UploadModelForm.builder()
+                        .file(file)
+                        .path(ModelConstant.DEFAULT_MODEL_PATH)
+                        .bucket(ModelConstant.DEFAULT_BUCKET)
+                        .md5(FileUtil.getMD5Checksum(file.getInputStream()))
                         .build();
-                mapper.insertModelUserCollection(
-                        build);
-            }else{
-                mapper.delModelCollection(uid,modelId);
+                com.tml.pojo.Result<ReceiveUploadFileDTO> res = fileServiceClient.uploadModel(form);
+                return res.getData();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                logger.error("%s:"+e.getStackTrace()[0],e);
+                throw new BaseException(e.toString());
             }
-        }else {
-            if("false".equals(isClick)){
-                ModelLikeDO build =  ModelLikeDO.builder()
-                        .modelId(modelId)
-                        .uid(uid)
-                        .build();
-                mapper.insertModelUserLikes(
-                        build
-                );
-            }else{
-                mapper.delModelLikes(uid,modelId);
-            }
+        }else{
+            throw new BaseException(ResultCodeEnum.UPLOAD_AUDIO_FAIL);
         }
     }
 
     @Override
     public String insertLabel(String label, String uid) {
-        Assert.notNull(uid,"用户未登录");
+        AbstractAssert.notNull(labelMapper.queryLabelIsExits(label),ResultCodeEnum.LABEL_IS_EXIT);
         LabelDO labelDO = new LabelDO();
+        LocalDateTime lt = LocalDateTime.now();
         try {
+            labelDO.setId(snowflakeGenerator.generate());
             labelDO.setLabel(label);
-            labelDO.setCreateTime(DateUtil.formatDate());
-            labelDO.setHasShow(UN_DETECTION.getStatus().toString());
+            labelDO.setCreateTime(lt);
+            labelDO.setHasShow(DETECTION_SUCCESS.getStatus().toString());
             labelMapper.insert(labelDO);
-            DetectionTaskDTO dto = DetectionTaskDTO.builder()
-                    .id(String.valueOf(labelDO.getId()))
-                    .name("model-com.tml.pojo.DO.LabelDO").content(labelDO.getLabel()).
-                    build();
-            AsyncDetectionForm form = new AsyncDetectionForm();
-            form.setTaskDTO(dto);
-            form.setType("text");
-            asyncService.listenerMq(List.of(form));
+            //todo:走审核
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.ADD_MODEL_LABEL_FAIL);
+        } catch (SnowflakeRegisterException e) {
+            throw new RuntimeException(e);
         }
         return String.valueOf(labelDO.getId());
     }
 
     @Override
-    public List<UserLikesModelVO> getUserLikesList(String uid) {
-        List<ModelLikeDO> modelLikeDOList = mapper.getUserLikesModel(uid);
-        List<String> modelIds = modelLikeDOList.stream()
-                .map(ModelLikeDO::getModelId)
-                .collect(Collectors.toList());
-
-        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
-                .stream()
-                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
-
-        List<UserLikesModelVO> list = new ArrayList<>();
-        for (ModelLikeDO modelLikeDO : modelLikeDOList) {
-            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelLikeDO.getModelId()));
-            if (modelDO != null) {
-                UserLikesModelVO modelVO = new UserLikesModelVO();
-                modelVO.setId(modelDO.getId().toString());
-                modelVO.setName(modelDO.getName());
-                modelVO.setPicture(modelDO.getPicture());
-                modelVO.setLikesNum(modelDO.getLikesNum());
-                modelVO.setCollectionNum(modelDO.getCollectionNum());
-                list.add(modelVO);
-            }
+    public Page<ModelVO> getUserLikesList(String uid,Long page,Long limit,String order) {
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        limit = limit==null? systemPage :limit>systemPage? systemPage :limit;
+        List<String> modelIds = mapper.getUserLikesModel(uid);
+        if(modelIds.isEmpty()){
+            return new Page<ModelVO>(page, limit, 0).setSize(0);
         }
-        return list;
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+        wrapper.in("id",modelIds);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",order));
+        Page<ModelDO> modelDOPage = mapper.selectPage(new Page<>(page, limit), wrapper);
+        List<ModelVO> modelVOList = modelDOPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
+                .collect(Collectors.toList());
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
     @Override
-    public List<UserCollectionModelVO> getUserCollectionList(String uid) {
-        List<ModelCollectionDO> modelCollectionDOList = mapper.getUserCollectionModel(uid);
-        List<String> modelIds = modelCollectionDOList.stream()
-                .map(ModelCollectionDO::getModelId)
-                .collect(Collectors.toList());
-        Map<Long, ModelDO> modelDOMap = mapper.selectBatchIds(modelIds)
-                .stream()
-                .collect(Collectors.toMap(ModelDO::getId, Function.identity()));
-
-        List<UserCollectionModelVO> list = new ArrayList<>();
-        for (ModelCollectionDO modelCollectionDO : modelCollectionDOList) {
-            ModelDO modelDO = modelDOMap.get(Long.parseLong(modelCollectionDO.getModelId()));
-            if (modelDO != null) {
-                UserCollectionModelVO modelVO = new UserCollectionModelVO();
-                modelVO.setName(modelDO.getName());
-                modelVO.setPicture(modelDO.getPicture());
-                modelVO.setLikesNum(modelDO.getLikesNum());
-                modelVO.setCollectionNum(modelDO.getCollectionNum());
-                list.add(modelVO);
-            }
+    public Page<ModelVO> getUserCollectionList(String uid,Long page,Long limit,String order) {
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        limit = limit==null? systemPage :limit>systemPage? systemPage :limit;
+        List<String> modelIds = mapper.getUserCollectionModel(uid);
+        if(modelIds.isEmpty()){
+            return new Page<ModelVO>(page, limit, 0).setSize(0);
         }
-        return list;
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+
+        wrapper.in("id",modelIds);
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",order));
+        Page<ModelDO> modelDOPage = mapper.selectPage(new Page<>(page, limit), wrapper);
+        List<ModelVO> modelVOList = modelDOPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
+                .collect(Collectors.toList());
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
     @Transactional
     @Override
-    public Boolean delSingleModel(String modelId) {
+    public Boolean delSingleModel(String modelId,String uid) {
+        AbstractAssert.isNull(modelUserMapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+        AbstractAssert.isNull(modelUserMapper.queryModelUserRelative(uid,modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelId);
         wrapper.set("has_delete",ModelConstant.DELETE);
+        LocalDateTime lt = LocalDateTime.now();
+        wrapper.set("update_time",lt);
         mapper.deleteLikesByModelId(modelId);
         mapper.deleteCollectionByModelId(modelId);
-        return mapper.update(null,wrapper)==1;
+        return mapper.update(null,wrapper)>0;
     }
 
-
     @Override
-    public Page<ModelVO> queryUserModelList(String uid,String page,String limit) {
+    public Page<ModelVO> queryUserModelList(String uid,Long page,Long limit) {
         List<String> modelIds = modelUserMapper.selectModelIdByUid(uid);
-        long maxLimit = limit ==null?Long.parseLong(systemConfig.getPageSize()):Math.min(Long.parseLong(limit), Long.parseLong(systemConfig.getPageSize()));
+        long maxLimit = limit ==null?Long.parseLong(systemConfig.getPageSize()):Math.min(limit, Long.parseLong(systemConfig.getPageSize()));
         QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",modelIds);
         wrapper = WrapperUtil.setWrappers(wrapper,Map.of("sort",""));
-        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), maxLimit,false),wrapper);
-        List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(modelDO -> convertToModelVO(modelDO,uid))
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(page, maxLimit,false),wrapper);
+        List<ModelVO> modelVOList = modelPage.getRecords().stream().map(modelDO -> convertToModelVO(modelDO, uid, null))
                 .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList);
+        return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
     }
 
+    //todo:换成细粒度更小的事务控制
     @Transactional
     @Override
     public String commentModel(CommentFormVO commentFormVO,String uid) {
+        AbstractAssert.isNull(mapper.selectById(commentFormVO.getModelId()),ResultCodeEnum.MODEL_NOT_EXITS);
+        if(StringUtils.isBlank(commentFormVO.getReplyId())){
+            AbstractAssert.notNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
+        }else {
+            AbstractAssert.isNull(commentMapper.selectById(commentFormVO.getReplyId()),ResultCodeEnum.COMMENT_NOT_EXITS);
+        }
         try {
             CommentDO commentDO = new CommentDO();
+            commentDO.setId(snowflakeGenerator.generate());
             commentDO.setContent(commentFormVO.getContent());
             commentDO.setModelId(commentFormVO.getModelId());
             commentDO.setUid(uid);
-            commentDO.setHasShow(UN_DETECTION.getStatus().toString());
-            commentDO.setUpdateTime(DateUtil.formatDate());
-            commentDO.setCreateTime(DateUtil.formatDate());
+            commentDO.setHasShow(DETECTION_SUCCESS.getStatus().toString());
+            LocalDateTime lt = LocalDateTime.now();
+            commentDO.setUpdateTime(lt);
+            commentDO.setCreateTime(lt);
             commentDO.setParentId(commentFormVO.getReplyId());
-            commentDO.setLikesNum("0");
+            commentDO.setLikesNum(0L);
             commentMapper.insert(commentDO);
             if(commentDO.getParentId()==null||"".equals(commentDO.getParentId())){
                 commentMapper.insertFirstModelComment(commentDO.getModelId(),commentDO.getId().toString());
             }
-            DetectionTaskDTO dto = DetectionTaskDTO.builder()
-                    .id(commentDO.getId().toString())
-                    .content(commentFormVO.getContent())
-                    .name(ModelConstant.SERVICE_NAME + "-com.tml.pojo.DO.CommentDO").build();
-            AsyncDetectionForm form = new AsyncDetectionForm();
-            form.setTaskDTO(dto);
-            form.setType(ModelConstant.TEXT_TYPE);
-            asyncService.listenerMq(List.of(form));
+            //todo:走审核
             return commentDO.getId().toString();
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.ADD_COMMENT_FAIL);
+        } catch (SnowflakeRegisterException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    //todo:换成细粒度更小的事务控制
     @Transactional
     @Override
     public Boolean likeComment(String uid, String commentId,String type) {
-
-        if(commentMapper.selectDOById(commentId,uid)!=null){
-            if(ModelConstant.FLAG.equals(type)){
-                throw new BaseException(ResultCodeEnum.USER_COMMENT_FAIL);
+        CommentDO commentDO = commentMapper.selectById(commentId);
+        AbstractAssert.isNull(commentDO,ResultCodeEnum.COMMENT_NOT_EXITS);
+        if(ModelConstant.FLAG.equals(type)){
+            AbstractAssert.notNull(commentMapper.selectDOById(commentId,uid),ResultCodeEnum.USER_LIKES_ERROR);
+            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id",commentId).setSql("likes_num = likes_num+1");
+            commentMapper.update(null,wrapper);
+            return commentMapper.insertUserCommentRelative(commentId,uid)==1;
+        }
+        if(ModelConstant.UN_FLAG.equals(type)){
+            if(commentDO.getLikesNum()==0){
+                return true;
             }
+            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+            wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
+            commentMapper.update(null,wrapper);
             commentMapper.delUserCommentLikes(commentId,uid);
             return true;
         }
-        UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-        wrapper.eq("id",commentId)
-                .setSql("likes_num = likes_num + 1");
-        commentMapper.insertUserCommentRelative(commentId,uid);
-        return commentMapper.update(null,wrapper) == 1;
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
     @Override
-    public Page<FirstCommentVO> queryFirstCommentList(String modelId, String page, String limit, String sortType,String uid) {
+    public Page<FirstCommentVO> queryFirstCommentList(String modelId, Long page, Long limit, String sortType,String uid) {
+        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.MODEL_NOT_EXITS);
         List<String> firsComments  = commentMapper.queryCommentIds(modelId);
+        AbstractAssert.isTrue(firsComments==null||firsComments.isEmpty(),ResultCodeEnum.COMMENT_NOT_EXITS);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",firsComments);
-        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",""));
+        wrapper = WrapperUtil.setWrappers(
+                wrapper,
+                Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
         return getFirstComment(wrapper,page,limit,uid);
     }
 
     @Override
-    public Page<SecondCommentVO> querySecondCommentList(String parentCommentId,String page,String limit,String sortType, String uid) {
+    public Page<SecondCommentVO> querySecondCommentList(String parentCommentId,Long page,Long limit,String sortType, String uid) {
         List<String> secondComments  = commentMapper.querySecondComments(parentCommentId);
         QueryWrapper<CommentDO> wrapper = new QueryWrapper<>();
         wrapper.in("id",secondComments);
-        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
+        wrapper = WrapperUtil.setWrappers(
+                wrapper,
+                Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),"sort",sortType));
         return getSecondCommentList(wrapper,page,limit,uid);
     }
 
     @Override
+    @Transactional
     public Boolean userLikesModel(String status, String modelId, String uid) {
+        ModelDO modelDO = mapper.selectById(modelId);
+        AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
+            AbstractAssert.notNull(mapper.queryUserModelLikes(uid,modelId),ResultCodeEnum.USER_LIKES_ERROR);
             ModelLikeDO build =  ModelLikeDO.builder()
                     .modelId(modelId)
                     .uid(uid)
                     .build();
             return mapper.insertModelUserLikes(
                     build
-            )==1;
-        }else {
-            return mapper.delModelLikes(uid,modelId)==1;
+            )>0 &&
+                    mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
+        }else if(ModelConstant.UN_FLAG.equals(status)) {
+            if(modelDO.getLikesNum()==0){
+                return true;
+            }
+            return mapper.delModelLikes(uid,modelId)==1 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num - 1"))==1;
         }
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
     @Override
     public Boolean userCollectionModel(String status, String modelId, String uid) {
+        ModelDO modelDO = mapper.selectById(modelId);
+        AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
+            AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
             ModelCollectionDO build = ModelCollectionDO.builder()
                     .modelId(modelId)
                     .uid(uid)
                     .build();
             return mapper.insertModelUserCollection(
-                    build)==1;
-        }else{
-            return mapper.delModelCollection(uid,modelId)==1;
+                    build)>0 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num +1"))>0;
+        }else if(ModelConstant.UN_FLAG.equals(status)){
+            if(modelDO.getCollectionNum()==0){
+                return true;
+            }
+            return mapper.delModelCollection(uid,modelId)>0 &&
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"))>0;
         }
+        throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
 
-    private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
-        limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
-        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
+    @Override
+    public List<LabelVO> getLabelList(Long limit,Long page) {
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        limit = limit==null? systemPage :limit>systemPage? systemPage :limit;
+        QueryWrapper<LabelDO> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("hot");
+        Page<LabelDO> label = labelMapper.selectPage(new Page<>(page, limit, false), wrapper);
+        return label.getRecords().stream()
+                .map(labelDO -> new LabelVO(labelDO.getId().toString(), labelDO.getLabel()))
+                .collect(Collectors.toList());
+    }
+
+//    @Override
+//    public List<ModelFileVO> getModelFies(String modelId) {
+//        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
+//        ModelFileDO modelFileDO = mapper.queryModelFile(modelId);
+//        com.tml.pojo.Result<String> index = fileServiceClient.downloadModel
+//                (DownloadModelForm.builder().fileId(modelFileDO.getIndexFileId()).build());
+//        ModelFileVO modelFileVO1 = new ModelFileVO();
+//        modelFileVO1.setId(modelFileDO.getModelId());
+//        modelFileVO1.setFileName(".index");
+//        modelFileVO1.setUrl(index.getData());
+//        com.tml.pojo.Result<String> pth = fileServiceClient.downloadModel(DownloadModelForm.builder().fileId(modelFileDO.getPthFileId()).build());
+//        ModelFileVO modelFileVO2 = new ModelFileVO();
+//        modelFileVO2.setId(modelFileDO.getModelId());
+//        modelFileVO2.setFileName(".pth");
+//        modelFileVO2.setUrl(pth.getData());
+//        return List.of(modelFileVO1,modelFileVO2);
+//    }
+
+    @Override
+    public List<TypeDO> queryTypeList() {
+        return typeMapper.selectList(null);
+    }
+
+    private Page<FirstCommentVO> getFirstComment(QueryWrapper<CommentDO> queryWrapper,Long page,Long limit,String uid){
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        limit = limit==null? systemPage :limit>systemPage? systemPage :limit;
+        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(page, limit, false), queryWrapper);
         List<FirstCommentVO> firstCommentVOList = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToFirstCommentVO(commentDO, uid))
                 .collect(Collectors.toList());
-        return new Page<FirstCommentVO>().setRecords(firstCommentVOList);
+        return new Page<FirstCommentVO>().setRecords(firstCommentVOList).setSize(firstCommentVOList.size());
     }
 
     private FirstCommentVO convertToFirstCommentVO(CommentDO commentDO,String uid){
         FirstCommentVO.FirstCommentVOBuilder builder = FirstCommentVO.builder();
         if(uid==null||"".equals(uid)){
-            builder.isLikes("0");
+            builder.isLikes(false);
         }else{
-            builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
+            builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)!=null);
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
-        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
+        io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
+        AbstractAssert.isNull(userInfo.getData(), ResultCodeEnum.GET_USER_INFO_FAIL);
         builder.uid(commentUid)
                 .id(commentDO.getId().toString())
                 .commentTime(commentDO.getCreateTime())
-                .commentTime(commentDO.getCreateTime())
-                .content(commentDO.getContent())
                 .likesNum(commentDO.getLikesNum())
+                .content(commentDO.getContent())
                 .modelId(commentDO.getModelId())
                 .picture(userInfo.getData().getAvatar())
                 .nickname(userInfo.getData().getNickname());
@@ -504,8 +586,11 @@ public class ModelServiceImpl implements ModelService {
             builder.isLikes(commentMapper.selectDOById(commentDO.getId().toString(),uid)==null?"0":"1");
         }
         String commentUid = commentMapper.queryUidByCommentId(commentDO.getId().toString());
-        Result<UserInfoDTO> userInfo = userServiceClient.getUserInfo(commentUid);
-        builder.uid(commentUid)
+        io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(commentUid);
+        AbstractAssert.isNull(userInfo.getData(), ResultCodeEnum.GET_USER_INFO_FAIL);
+        builder
+                .id(commentDO.getId().toString())
+                .uid(commentUid)
                 .parentId(commentDO.getParentId())
                 .commentTime(commentDO.getCreateTime())
                 .content(commentDO.getContent())
@@ -515,11 +600,9 @@ public class ModelServiceImpl implements ModelService {
         return builder.build();
     }
 
-    private ModelVO convertToModelVO(ModelDO model,String myUid) {
+    private ModelVO convertToModelVO(ModelDO model, String myUid, UserInfoVO userInfoVO) {
         ModelVO modelVO;
-        String uid;
-        Result<UserInfoDTO> userInfo;
-        Callable<List<String>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
+        Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(model.getId().toString());
         Callable<String> typeTask = () -> typeMapper.selectById(model.getTypeId()).getType();
         Callable<String> likeTask = () -> mapper.queryUserModelLikes(myUid,model.getId().toString())==null?"0":"1";
         Callable<String> collectionTask = () -> mapper.queryUserModelCollection(myUid,model.getId().toString())==null?"0":"1";
@@ -527,40 +610,59 @@ public class ModelServiceImpl implements ModelService {
         Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
         Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
         Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-        Future<List<String>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
+        Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
 
         String type = ConcurrentUtil.futureGet(typeFuture);
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
-        List<String> labelList = ConcurrentUtil.futureGet(labelFuture);
+        List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
+        AbstractAssert.isBlank(type,ResultCodeEnum.GET_TYPE_ERROR);
+        AbstractAssert.isNull(isLike,ResultCodeEnum.SYSTEM_ERROR);
+        AbstractAssert.isNull(isCollection,ResultCodeEnum.SYSTEM_ERROR);
+
         try {
-            ModelUserDO modelUserDO = modelUserMapper.selectById(model.getId());
-            uid = modelUserDO.getUid();
-            userInfo = userServiceClient.getUserInfo(uid);
+            modelVO = ModelVO.modelDOToModelVO(model,userInfoVO,labelList,type,isLike,isCollection);
         }catch (RuntimeException e){
             logger.error(e);
             throw new BaseException(ResultCodeEnum.GET_USER_INFO_FAIL);
         }
-        modelVO = ModelVO.modelDOToModelVO(model,userInfo.getData(),labelList,type,isLike,isCollection);
         return modelVO;
     }
 
-    private Page<SecondCommentVO> getSecondCommentList(QueryWrapper<CommentDO> queryWrapper,String page,String limit,String uid){
-        limit = (limit==null|| "".equals(limit))? systemConfig.getPageSize():Long.parseLong(limit)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():limit;
-        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(limit), false), queryWrapper);
+    private Page<SecondCommentVO> getSecondCommentList(QueryWrapper<CommentDO> queryWrapper,Long page,Long limit,String uid){
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        limit = limit==null? systemPage :limit>systemPage? systemPage :limit;
+        Page<CommentDO> commentDOPage = commentMapper.selectPage(new Page<>(page, limit, false), queryWrapper);
         List<SecondCommentVO> secondCommentVOS = commentDOPage.getRecords().stream()
                 .map(commentDO -> convertToSecondCommentVO(commentDO, uid))
                 .collect(Collectors.toList());
-        return new Page<SecondCommentVO>().setRecords(secondCommentVOS);
+        return new Page<SecondCommentVO>().setRecords(secondCommentVOS).setSize(secondCommentVOS.size());
     }
 
-    private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, String page, String size, String uid) {
-        size = (size==null|| "".equals(size))? systemConfig.getPageSize():Long.parseLong(size)>Long.parseLong(systemConfig.getPageSize())?systemConfig.getPageSize():size;
-        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(Long.parseLong(page), Long.parseLong(size),false), wrapper);
-        List<ModelVO> modelVOList = modelPage.getRecords().stream()
-                .map(modelDO -> convertToModelVO(modelDO,uid))
-                .collect(Collectors.toList());
-        return new Page<ModelVO>().setRecords(modelVOList);
+    private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, Long page, Long size, String uid) {
+        long systemPage = Long.parseLong(systemConfig.getPageSize());
+        size = size==null? systemPage :size > systemPage ? systemPage :size;
+        Page<ModelDO> modelPage = mapper.selectPage(new Page<>(page, size,false), wrapper);
+        List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
+        List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
+        try {
+            Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
+            Map<String, UserInfoVO> userInfo = result.getData();
+            List<ModelVO> modelVOList;
+            if(StringUtils.isBlank(uid)){
+                modelVOList  = IntStream.range(0, modelPage.getRecords().size())
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfo.get(uids.get(i))))
+                        .collect(Collectors.toList());
+            }else {
+                modelVOList = IntStream.range(0, modelPage.getRecords().size())
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                        .collect(Collectors.toList());
+            }
+            return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
+        }catch (RuntimeException e){
+            logger.error(e);
+            throw new BaseException(e.toString());
+        }
     }
 
 }

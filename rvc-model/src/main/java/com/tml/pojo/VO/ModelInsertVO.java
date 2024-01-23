@@ -17,18 +17,18 @@ import java.util.List;
  */
 @Data
 public class ModelInsertVO {
-    @Size(max = 19, message = "ID长度不能超过19")
-    private String fileId;
+    @NotBlank(message = "分享链接不能为空")
+    private String fileUrl;
     @NotBlank(message = "名称不能为空")
     @Length(max = 10,message = "模型名称不能超过5个字")
     private String name;
-    @NotBlank(message = "模型类型不能为空")
+    @NotBlank(message = "模型类型id不能为空")
     private String typeId;
-    private List<String> labelId;
-    @NotNull(message = "不能传入空字符")
+    private List<String> label;
+    @NotBlank(message = "模型描述不能为空")
     private String description;
-    @NotNull(message = "不能传入空字符")
+    @NotBlank(message = "模型注意事项不能为空")
     private String note;
-    @NotBlank(message = "不能传入空字符")
+    @NotBlank(message = "模型图片不能为空")
     private String picture;
 }

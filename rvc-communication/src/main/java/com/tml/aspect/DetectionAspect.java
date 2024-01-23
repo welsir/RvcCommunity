@@ -2,12 +2,9 @@ package com.tml.aspect;
 
 
 import com.alibaba.fastjson.JSON;
-import com.tml.annotation.ContentDetection;
+import com.tml.aspect.annotation.ContentDetection;
 import com.tml.enums.ContentDetectionEnum;
-import com.tml.mq.handler.ProducerHandler;
 import com.tml.pojo.dto.DetectionTaskDto;
-import com.tml.utils.BeanUtils;
-import com.tml.utils.Uuid;
 import io.github.common.web.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,9 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
-import java.util.Map;
 
-import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 import static com.tml.constant.DetectionConstants.DETECTION_ROUTER_KEY_HEADER;
 
 
@@ -43,7 +38,7 @@ public class DetectionAspect {
     /**
      * 定义切点
      */
-    @Pointcut("@annotation(com.tml.annotation.ContentDetection)")
+    @Pointcut("@annotation(com.tml.aspect.annotation.ContentDetection)")
     public void pt2(){}
 
 
@@ -71,7 +66,7 @@ public class DetectionAspect {
         log.info("=======Start===================================");
 
     }
-    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) {
+    private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
 
         Result res = (Result)(ret);
 
@@ -90,35 +85,28 @@ public class DetectionAspect {
                     Field[] fields = argClass.getDeclaredFields();
                     for (Field field : fields) {
                         field.setAccessible(true);
+                        //入参名
                         if ("content".equals(field.getName())) {
-                            try {
-                                 contentValue = (String) field.get(arg);
-
-                                DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-                                        .id(uuid)
-                                        .content(contentValue)
-                                        .name(type.getName()+":" + type.getType())
-                                        .build();
-                                //在此处 上传任务到mq
-                                rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            }
+                            contentValue = (String) field.get(arg);
+                            break;
+                        } else if ("coverUrl".equals(field.getName())) {
+                            contentValue = (String) field.get(arg);
+                            break;
                         }
                     }
                 }
+                DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
+                        .id(uuid)
+                        .content(contentValue)
+                        .name(type.getName()+":" + type.getType())
+                        .build();
+                //在此处 上传任务到mq
+                rabbitTemplate.convertAndSend(exchangeName, DETECTION_ROUTER_KEY_HEADER + type.getType(), JSON.toJSONString(textDetectionTaskDto));
+
             }
         }
-        System.out.println(contentValue);
-
-
-
-
-
-//        DetectionTaskDto textDetectionTaskDto = DetectionTaskDto.builder()
-//        .id(uuid)
-//        .content(commentDto.getContent())
-//        .name("comment.text")
-//        .build();
     }
+
+
+
 }

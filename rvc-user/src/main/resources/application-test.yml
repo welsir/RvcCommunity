@@ -1,6 +1,6 @@
 spring:
   application:
-    name: tml-user-service
+    name: rvc-user-service
   cloud:
     nacos:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
@@ -14,6 +14,8 @@ spring:
             refresh: true
             group: DEFAULT_GROUP
       discovery:
+        namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
+        cluster-name: BJ
         ip: ${SERVER_ADDR:ENC(Y5HcvI+7TfzJVRmAMpYDqR0bwJqzwMzdpQ8RCIr1y2w=)}
   datasource:
     driver-class-name: ${MYSQL_DRIVER:com.mysql.cj.jdbc.Driver}
@@ -42,9 +44,3 @@ spring:
         acknowledge-mode: manual
     exchange-type: ${EXCHANGE_TYPE:ENC(WUANSPJwXgpu928eZLdjtHxqz08RemFd)}
     pre-command: ${PRE_COMMAND:ENC(nRHKgZnkufKa8nZmJ6MsMjF26vxXrT7mRxmRgSqW6Gs=)}
-
-user:
-  retry:
-    max-retries: 3
-    retry-interval: 1000
-

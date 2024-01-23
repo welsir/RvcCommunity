@@ -16,4 +16,14 @@ public interface ModelUserMapper extends BaseMapper<ModelUserDO> {
     @Select("select model_id from rvc_model_model_user where uid = #{uid}")
     List<String> selectModelIdByUid(String uid);
 
+    @Select("<script>" +
+            "select uid from rvc_model_model_user where model_id in " +
+            "<foreach item='modelId' collection='modelIds' open='(' separator=',' close=')'>" +
+            "#{modelId}" +
+            "</foreach>" +
+            "</script>")
+    List<String> queryUidByModelIds(List<Long> modelIds);
+
+    @Select("select * from rvc_model_model_user where uid = #{uid} and model_id = #{modelId}")
+    Object queryModelUserRelative(String uid,String modelId);
 }

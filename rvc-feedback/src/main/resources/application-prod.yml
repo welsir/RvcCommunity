@@ -11,7 +11,7 @@ spring:
     password: ${REDIS_PWD:ENC(g+DlVpnt76Ji9s86jd28sGrL+GMWgvWivTRehbesgrA=)} # Redis服务器连接密码（默认为空）
     timeout: 3000ms # 连接超时时间（毫秒）
   application:
-    name: rvc-feedback-${UNIQUE_ID:0}-service
+    name: rvc-feedback-service
   cloud:
     nacos:
       server-addr: ${NACOS_SERVER_ADDR:ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)}
@@ -19,8 +19,15 @@ spring:
       password: ${NACOS_SERVER_PASSWORD:ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)}
       config:
         file-extension: yaml
+        namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
+        shared-configs:
+          - dataId: feign-config.yaml
+            refresh: true
+            group: DEFAULT_GROUP
       discovery:
+        namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
         ip: ${SERVER_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)}
+        cluster-name: BJ
   rabbitmq:
     host: ${MQ_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)} # rabbitMQ的ip地址
     port: ${MQ_PORT:ENC(o4a1BoPYeYviHisCyAaRQJ9BRzQt7Yxp)} # 端口

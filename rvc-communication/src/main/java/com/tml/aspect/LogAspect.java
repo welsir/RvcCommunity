@@ -1,7 +1,7 @@
 package com.tml.aspect;
 
 import com.alibaba.fastjson.JSON;
-import com.tml.annotation.SystemLog;
+import com.tml.aspect.annotation.SystemLog;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 @Aspect
 @Slf4j
 public class LogAspect {
-    @Pointcut("@annotation(com.tml.annotation.SystemLog)")
+    @Pointcut("@annotation(com.tml.aspect.annotation.SystemLog)")
     public void pt(){
 
     }
@@ -63,8 +63,8 @@ public class LogAspect {
         log.info("Class Method   : {}.{}",joinPoint.getSignature().getDeclaringTypeName(),((MethodSignature) joinPoint.getSignature()).getName() );
         // 打印请求的 IP
         log.info("IP             : {}",request.getRemoteHost());
-        // 打印请求入参
-        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
+//        // 打印请求入参
+//        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
         // 结束后换行
         log.info("==================================");
     }

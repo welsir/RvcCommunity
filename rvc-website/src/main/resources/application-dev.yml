@@ -17,8 +17,12 @@ spring:
       server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
       username: ENC(qqqHXA1bwhhYPJ9SXXZqyO5j//wygYDK)
       password: ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)
+      discovery:
+        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
+        cluster-name: BJ
       config:
         file-extension: yaml
+        namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
 management:
   endpoints:
     web:

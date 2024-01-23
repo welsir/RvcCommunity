@@ -1,7 +1,9 @@
 package com.tml.pojo.VO;
 
 import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -14,7 +16,7 @@ public class UserInfoVO {
 
     private String username;
 
-    private LocalDateTime birthday;
+    private LocalDate birthday;
 
     private String nickname;
 

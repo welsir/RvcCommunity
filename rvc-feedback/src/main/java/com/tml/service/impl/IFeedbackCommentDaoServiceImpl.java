@@ -70,4 +70,11 @@ public class IFeedbackCommentDaoServiceImpl extends AssistantMJPServiceImpl<Feed
                 .eq("reply_fb_id",replyFbId)
                 .count()>0;
     }
+
+    @Override
+    @Transactional(rollbackFor = RvcSQLException.class)
+    public Boolean changeCommentLike(Long commentId, Boolean likeStatus) {
+        String sql = likeStatus?"like_num=like_num+1":"like_num=like_num-1";
+        return update().setSql(sql).eq("cm_id",commentId).update();
+    }
 }

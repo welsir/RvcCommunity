@@ -20,9 +20,6 @@ public class SystemConfig {
     @Value("${page.size}")
     private String pageSize;
 
-    @Value("${file.image.image-file-size}")
-    private String imageSize;
-
     @Value("${labels.allow_labels}")
     private String[] allowLabels;
 
@@ -35,9 +32,17 @@ public class SystemConfig {
     @Value("${file.image.image-type}")
     private String[] imageType;
 
-//    @Value("${file.model.model-type}")
-//    private String[] modelType;
+    @Value("${file.image.image-file-size}")
+    private String imageSize;
+
+    @Value("${file.model.model-type}")
+    private String[] modelType;
 
     @Value("${file.model.model-file-size}")
-    private String modelFileSize;
+    private String modelSize;
+
+    @Value("${file.audio.audio-type}")
+    private String[] audioType;
+    @Value("${file.audio.audio-file-size}")
+    private String audioSize;
 }

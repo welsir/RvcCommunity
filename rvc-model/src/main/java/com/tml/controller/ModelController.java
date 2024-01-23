@@ -1,15 +1,20 @@
 package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.annotation.apiAuth.InternalApi;
+import com.tml.annotation.apiAuth.LaxTokenApi;
+import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @Description
@@ -32,9 +37,10 @@ public class ModelController {
      * @param uid 用户uid，用于显式是否点赞收藏信息
      * @return Result<?>
      */
+    @LaxTokenApi
     @GetMapping("/list")
-    public Result<?> getModelList(@RequestParam("page") @NotBlank String page,
-                                  @RequestParam(value = "limit",required = false) String limit,
+    public Result<?> getModelList(@RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                  @RequestParam(value = "limit",required = false) Long limit,
                                   @RequestParam(value = "sortType",required = false)  String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(limit,page,sortType,uid);
@@ -50,10 +56,11 @@ public class ModelController {
      * @param uid 同上
      * @return Result<?>
      */
-    @GetMapping("/list/{typeId}")
-    public Result<?> getModelListByType(@PathVariable @NotBlank String typeId,
-                                        @RequestParam("page") @NotBlank String page,
-                                        @RequestParam(value = "limit",required = false)  String limit,
+    @LaxTokenApi
+    @GetMapping("/listByType")
+    public Result<?> getModelListByType(@RequestParam @NotBlank(message = "id不能为空") String typeId,
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                        @RequestParam(value = "limit",required = false)  Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(typeId,page,limit,sortType,uid);
@@ -66,8 +73,9 @@ public class ModelController {
      * @param uid
      * @return Result<?>
      */
-    @GetMapping("/one/{modelId}")
-    public Result<?> getOneModel(@PathVariable @NotBlank String modelId,
+    @LaxTokenApi
+    @GetMapping("/getModelMsg")
+    public Result<?> getOneModel(@RequestParam("modelId") @NotBlank(message = "id不能为空") String modelId,
                                  @RequestHeader(value = "uid",required = false) String uid){
         ModelVO model = modelService.queryOneModel(modelId,uid);
         return Result.success(model);
@@ -75,124 +83,202 @@ public class ModelController {
 
     //todo:考虑重复上传问题
     /**
-     * @description:
+     * @description: 新建模型
      * @param: model
      * @param uid
      * @return: Result<?>
      **/
-    @PostMapping("/one")
+    @InternalApi
+//    @WhiteApi
+    @PostMapping("/addModel")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
-                                    @RequestHeader(value = "uid") String uid){
+                                    @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         modelService.insertOneModel(model,uid);
         return Result.success();
     }
 
-    @PostMapping("/download/{modelId}")
-    public Result<?> downloadModel(@PathVariable @NotBlank String modelId,
-                                   @RequestHeader(value = "uid") String uid){
-        String modelUrl = modelService.downloadModel(modelId);
-        return Result.success(modelUrl);
+    /**
+     * @description: 下载模型文件
+     * @param: modelId
+     * @param uid
+     * @return: Result<?>
+     **/
+    @WhiteApi
+    @PostMapping("/download")
+    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
+                                   @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.downloadModel(modelId,uid));
     }
-
+    @WhiteApi
     @PostMapping("/update")
-    public Result<?> editModel(@RequestBody @Validated ModelUpdateFormVO modelUpdateFormVO,
-                               @RequestHeader(value = "uid") String uid){
-        Boolean flag = modelService.editModelMsg(modelUpdateFormVO);
+    public Result<?> editModel(@Validated ModelUpdateFormVO modelUpdateFormVO,
+                               @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
+        Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
     }
-
+    @InternalApi
+//    @WhiteApi
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
-            MultipartFile file,
-            @RequestHeader(value = "uid") String uid){
-        return Result.success(modelService.uploadModel(file));
+            MultipartFile[] file,
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.uploadModel(file,uid));
     }
-
+    @WhiteApi
     @PostMapping("/upload/image")
     public Result<?> uploadImage(
             MultipartFile file,
-            @RequestHeader(value = "uid") String uid){
-        return Result.success(modelService.uploadImage(file));
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.uploadImage(file,uid));
     }
 
+    @WhiteApi
+    @PostMapping("/upload/audio")
+    public Result<?> uploadAudio(
+            MultipartFile file,
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid
+    ){
+        return Result.success(modelService.uploadAudio(file,uid));
+    }
+    @WhiteApi
     @PostMapping("/relative/likes")
-    public Result<?> modelUserLike(@RequestParam("status") String status,
-                                   @RequestParam("modelId")String modelId,
-                                   @RequestHeader(value = "uid") String uid){
+    public Result<?> modelUserLike(@RequestParam("status") @NotBlank(message = "status为空") String status,
+                                   @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
+                                   @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userLikesModel(status,modelId,uid));
     }
+    @WhiteApi
     @PostMapping("/relative/collection")
-    public Result<?> modelUserCollection(@RequestParam("status") String status,
-                                   @RequestParam("modelId")String modelId,
-                                   @RequestHeader(value = "uid") String uid){
+    public Result<?> modelUserCollection(@RequestParam("status") @NotBlank(message = "status为空") String status,
+                                   @RequestParam("modelId")@NotBlank(message = "id为空") String modelId,
+                                   @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.userCollectionModel(status,modelId,uid));
     }
+    @WhiteApi
     @PostMapping("/label")
     public Result<?> insertLabel(
-            @RequestParam("label") String label,
-            @RequestHeader(value = "uid") String uid
+            @RequestParam("label") @NotBlank(message = "label为空") String label,
+            @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid
     ){
         return Result.success(modelService.insertLabel(label, uid));
     }
 
+    /**
+     * @description: 获取用户点赞列表
+     * @param: uid
+     * @return: Result<?>
+     **/
+    @WhiteApi
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
-            @RequestHeader(value = "uid") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+            @RequestParam(value = "limit",required = false) Long limit,
+            @RequestParam(value = "order",required = false) String order
     ){
-        return Result.success(modelService.getUserLikesList(uid));
+        return Result.success(modelService.getUserLikesList(uid,page,limit,order));
     }
 
+    /**
+     * @description: 获取用户收藏列表
+     * @param: uid
+     * @param page
+     * @param limit
+     * @param order
+     * @return: Result<?>
+     **/
+    @WhiteApi
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
-            @RequestHeader(value = "uid") String uid
+            @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+            @RequestParam(value = "limit",required = false) Long limit,
+            @RequestParam(value = "order",required = false) String order
     ){
-        return Result.success(modelService.getUserCollectionList(uid));
+        return Result.success(modelService.getUserCollectionList(uid,page,limit,order));
     }
 
-    @DeleteMapping("one")
-    public Result<?> delOneModel(@RequestParam("id") String modelId,
-                                 @RequestHeader("uid") String uid){
-        return Result.success(modelService.delSingleModel(modelId));
+    /**
+     * @description: 删除某个模型
+     * @param: modelId
+     * @param uid
+     * @return: Result<?>
+     **/
+    @WhiteApi
+    @DeleteMapping("/delModel")
+    public Result<?> delOneModel(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
+                                 @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
+        return Result.success(modelService.delSingleModel(modelId,uid));
     }
 
+    @WhiteApi
     @GetMapping("user/model")
-    public Result<?> queryUserModelList(@RequestHeader("uid") String uid,
-                                        @RequestParam("page") String page,
-                                        @RequestParam(value = "limit",required = false)String limit){
+    public Result<?> queryUserModelList(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                        @RequestParam(value = "limit",required = false)Long limit){
         return Result.success(modelService.queryUserModelList(uid,page,limit));
     }
 
+
+    @WhiteApi
     @PostMapping("/comment")
     public Result<?> addComment(@RequestBody @Validated CommentFormVO commentFormVO,
-                                     @RequestHeader("uid") String uid){
+                                     @RequestHeader("uid") @NotBlank(message = "id为空") String uid){
         return Result.success(modelService.commentModel(commentFormVO,uid));
     }
 
+    @WhiteApi
     @PostMapping("/comment/likes")
-    public Result<?> likeComment(@RequestHeader("uid") String uid,
-                                 @RequestParam("type") String type,
-                                 @RequestParam("id") @NotBlank String commentId){
+    public Result<?> likeComment(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
+                                 @RequestParam("type") @NotBlank(message = "type为空") String type,
+                                 @RequestParam("id") @NotBlank(message = "id为空") String commentId){
         return Result.success(modelService.likeComment(uid,commentId,type));
     }
 
+    @LaxTokenApi
     @GetMapping("/comment/first")
-    public Result<?> queryFirstComments(@RequestParam("id")@NotBlank String commentId,
-                                        @RequestParam(value = "limit",required = false) String limit,
+    public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
+                                        @RequestParam(value = "limit",required = false) Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
-                                        @RequestParam("page") @NotBlank String page,
+                                        @RequestParam("page") @NotNull(message = "page为空") Long page,
                                         @RequestHeader(value = "uid",required = false) String uid){
-        return Result.success(modelService.queryFirstCommentList(commentId,page,limit,sortType,uid));
+        return Result.success(modelService.queryFirstCommentList(modelId,page,limit,sortType,uid));
     }
 
+    @LaxTokenApi
     @GetMapping("/comment/second")
     public Result<?> querySecondComments(
-            @RequestParam("id") @NotBlank String commentId,
-            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam("id") @NotBlank(message = "id为空") String commentId,
+            @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "sortType",required = false) String sortType,
-            @RequestParam("page") @NotBlank String page,
+            @RequestParam("page") @NotNull(message = "page为空") Long page,
             @RequestHeader(value = "uid",required = false) String uid
     ){
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
+    }
+
+
+    @LaxTokenApi
+    @GetMapping("/label/labelHot")
+    public Result<?> queryLabelList(
+            @RequestHeader(value = "uid",required = false) String uid,
+            @RequestParam(value = "page")@NotNull Long page,
+            @RequestParam(value = "limit",required = false) Long limit
+    ){
+        return Result.success(modelService.getLabelList(limit,page));
+    }
+
+//    @LaxTokenApi
+//    @GetMapping("/model/modelFile")
+//    public Result<?> queryModelFiles(@RequestHeader(value = "uid",required = false)String uid,
+//                                     @RequestParam(value = "modelId")String modelId){
+//        return Result.success(modelService.getModelFies(modelId));
+//    }
+
+    @LaxTokenApi
+    @GetMapping("/model/type")
+    public Result<?> queryType(){
+        return Result.success(modelService.queryTypeList());
     }
 
 }

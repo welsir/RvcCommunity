@@ -3,12 +3,11 @@ package com.tml.filter;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
+
+import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -21,37 +20,39 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import javax.annotation.Resource;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
 
+import static com.tml.constant.GatewayConstantPool.AUTHORIZE_TOKEN;
+
 @Component
-@RefreshScope
-@ConfigurationProperties(prefix = "api")
 @Data
-@Slf4j
+@RefreshScope
+@ConfigurationProperties("api")
 public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean {
 
-    private static final String AUTHORIZE_TOKEN = "token";
+    private HashSet<String> whiteApi = new HashSet<>();
 
-    private HashSet<String> whiteApi;
-
-    private ArrayList<String> laxTokenApi;
+    @Resource
+    CommonLogger commonLogger;
 
     @SneakyThrows
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        URL url = new URL(request.getURI().toString());
-        String requestUrl = url.getFile();
-        // 获取请求头
-        HttpHeaders headers = request.getHeaders();
-        // 请求头中获取令牌
-        String token = headers.getFirst(AUTHORIZE_TOKEN);
+        String path = request.getURI().getPath();
 
-        if(whiteApi.contains(requestUrl)){
+        if(whiteApi.contains(path)){
+            // 获取请求头
+            HttpHeaders headers = request.getHeaders();
+            // 请求头中获取令牌
+            String token = headers.getFirst(AUTHORIZE_TOKEN);
             // 判断请求头中是否有令牌
             if (StringUtils.isEmpty(token)) {
                 //7. 响应中放入返回的状态吗, 没有权限访问
@@ -71,6 +72,8 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
                 }
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                return response.setComplete();
             } catch (NotLoginException e) {
                 e.printStackTrace();
                 //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
@@ -86,11 +89,11 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
 
     @Override
     public int getOrder() {
-        return 0;
+        return 2;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.info("whiteApi="+whiteApi);
+        commonLogger.info("whiteApi="+whiteApi);
     }
 }

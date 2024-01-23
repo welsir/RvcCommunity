@@ -1,23 +1,28 @@
 package com.tml.core.async;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tml.common.constant.ModelConstant;
 import com.tml.common.exception.BaseException;
 import com.tml.common.log.AbstractLogger;
-import com.tml.core.rabbitmq.ModelListener;
+import com.tml.mapper.LabelMapper;
 import com.tml.mapper.ModelMapper;
+import com.tml.pojo.DO.LabelDO;
 import com.tml.pojo.DO.ModelDO;
-import com.tml.pojo.DTO.AsyncDetectionForm;
-import com.tml.pojo.DTO.DetectionTaskDTO;
 import com.tml.pojo.ResultCodeEnum;
+import com.tml.utils.DateUtil;
+import io.github.id.snowflake.SnowflakeGenerator;
+import io.github.id.snowflake.SnowflakeRegisterException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.tml.common.DetectionStatusEnum.DETECTION_SUCCESS;
+import static com.tml.common.DetectionStatusEnum.UN_DETECTION;
 
 /**
  * @Description
@@ -30,60 +35,70 @@ public class AsyncService {
     @Resource
     AbstractLogger logger;
     @Resource
-    ModelListener listener;
-    @Resource
     ModelMapper mapper;
+    @Resource
+    LabelMapper labelMapper;
+    @Resource
+    SnowflakeGenerator snowflakeGenerator;
+
+    private  static final ConcurrentHashMap<String,Integer> modelViews = new ConcurrentHashMap<>();
     @Async
-    public void processModelAsync(ModelDO modelDO) {
+    public void processModelAsync(ModelDO modelDO,List<String> labels) {
         try {
-            String auditId = String.valueOf(modelDO.getId());
-            String name = ModelConstant.SERVICE_NAME +"-com.tml.pojo.DO.ModelDO";
-            DetectionTaskDTO build = DetectionTaskDTO.builder()
-                    .id(auditId)
-                    .content(modelDO.getDescription())
-                    .name(name)
-                    .build();
-            // 调用审核模块接口
-            //todo:下一版本优化调用方式，或许可以封装一个抽象框架去将所有需要审核的信息存放并且构建事务方法保证统一性
-            listener.setMap(auditId,4);
-            listener.setMap(auditId,auditId+name);
-            listener.sendMsgToMQ(build,"text");
-            build.setContent(modelDO.getName());
-            listener.sendMsgToMQ(build,"text");
-            build.setContent(modelDO.getNote());
-            listener.sendMsgToMQ(build,"text");
-            build.setContent(modelDO.getPicture());
-            listener.sendMsgToMQ(build,"image");
-            logger.info("异步审核完毕");
+            //判断label是否存在
+            for (String label : labels) {
+                LabelDO labelDO = new LabelDO();
+                try {
+                    LocalDateTime lt = LocalDateTime.now();
+                    labelDO.setId(snowflakeGenerator.generate());
+                    labelDO.setLabel(label);
+                    labelDO.setHasShow(DETECTION_SUCCESS.getStatus().toString());
+                    labelDO.setHot(0L);
+                    labelDO.setCreateTime(lt);
+                    labelMapper.labelIsExit(labelDO);
+                } catch (SnowflakeRegisterException e) {
+                    throw new BaseException(e.toString());
+                } catch (DuplicateKeyException e){
+                    labelMapper.updateHot(label);
+                }
+            }
         } catch (Exception e) {
             // 异常处理
-            logger.error("调用审核服务失败%s:%s ", e.getMessage(), e);
-            throw new BaseException();
+            logger.error(e);
+            throw new BaseException(e.toString());
         }
-
     }
-
     @Async
     public void asyncAddModelViewNums(String modelId){
         try {
-            UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id",modelId)
-                            .setSql("likes_num = likes_num+1");
-            mapper.update(null,wrapper);
+            modelViews.compute(modelId,(key,val)->{
+                if(val==null){
+                    val=1;
+                    return val;
+                }
+                return val+1;
+            });
         }catch (RuntimeException e){
-            logger.error("%s:"+e.getStackTrace()[0],e);
+            logger.error(e);
             throw new BaseException(ResultCodeEnum.UPDATE_MODEL_VIEWS_FAIL);
         }
     }
 
-    @Async
-    public void listenerMq(List<AsyncDetectionForm> listenList){
-        for (AsyncDetectionForm asyncdetectionForm : listenList) {
-            String type = asyncdetectionForm.getType();
-            listener.setMap(asyncdetectionForm.getTaskDTO().getId(),listenList.size());
-            listener.setMap(asyncdetectionForm.getTaskDTO().getId(),ModelConstant.SERVICE_NAME+"-"+asyncdetectionForm.getTaskDTO().getName());
-            listener.sendMsgToMQ(asyncdetectionForm.getTaskDTO(),type);
+    @Scheduled(fixedRate = 10000)
+    public void clearMap() {
+        if (modelViews.size() == 0) {
+            return;
         }
+        modelViews.forEach(
+                (key,val)->{
+                    Long nums = mapper.queryModelViesNums(key);
+                    UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
+                    wrapper.eq("id",key);
+                    nums +=val;
+                    wrapper.setSql("view_num = "+nums);
+                    mapper.update(null,wrapper);
+                }
+        );
+        modelViews.clear();
     }
-
 }

@@ -1,5 +1,6 @@
 package com.tml.service;
 
+import com.tml.exception.RvcSQLException;
 import com.tml.pojo.dto.LoginDTO;
 import com.tml.pojo.dto.RegisterDTO;
 import com.tml.pojo.dto.UpdatePasswordDTO;
@@ -19,9 +20,9 @@ import java.util.Map;
 public interface UserService {
     Map<String, String> login(LoginDTO loginDTO);
 
-    void logout();
+    void logout(String uid, String username);
 
-    Map<String, String> register(RegisterDTO registerDTO);
+    Map<String, String> register(RegisterDTO registerDTO) throws RvcSQLException;
 
     Map<String, String> preCode();
 
@@ -29,17 +30,23 @@ public interface UserService {
 
     UserInfoVO one(String uid);
 
-    List<UserInfoVO> list(List<String> uidList);
+    Map<String, UserInfoVO> list(List<String> uidList);
 
-    void update(UserInfoDTO userInfoDTO);
+    void update(UserInfoDTO userInfoDTO, String uid, String username);
 
-    void follow(String uid);
+    void follow(String followUid, String uid, String username) throws RvcSQLException;
 
-    void updatePassword(UpdatePasswordDTO updatePasswordDTO);
+    void updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid, String username);
 
-    UserInfoVO getUserInfo();
+    UserInfoVO getUserInfo(String uid, String username);
 
-    String avatar(MultipartFile file);
+    UserInfoVO getUserInfoById(String uid);
+
+    void avatar(MultipartFile file, String uid, String username);
 
     boolean exist(String uid);
+
+    List<UserInfoVO> getMyFollowUser(String uid, String username);
+
+    boolean isFollowed(String uid1, String uid2);
 }
