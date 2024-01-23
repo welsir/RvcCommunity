@@ -24,6 +24,11 @@ public class BaseException extends RuntimeException{
         this.resultCode = message;
     }
 
+    public BaseException(Object object, ResultCodeEnum message) {
+        params = new Object[]{object};
+        this.resultCode = message;
+    }
+
     public ResultCodeEnum getResultCode() {
         return resultCode;
     }

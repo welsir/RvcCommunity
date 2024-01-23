@@ -616,7 +616,6 @@ public class ModelServiceImpl implements ModelService {
         String isLike = ConcurrentUtil.futureGet(likeFuture);
         String isCollection = ConcurrentUtil.futureGet(collectionFuture);
         List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
-        logger.info("type:%s,isLike:%s,isCollection:%s",type,isLike,isCollection);
         AbstractAssert.isBlank(type,ResultCodeEnum.GET_TYPE_ERROR);
         AbstractAssert.isNull(isLike,ResultCodeEnum.SYSTEM_ERROR);
         AbstractAssert.isNull(isCollection,ResultCodeEnum.SYSTEM_ERROR);
