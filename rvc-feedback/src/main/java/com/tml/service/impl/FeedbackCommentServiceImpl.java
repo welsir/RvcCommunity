@@ -107,13 +107,13 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
         if(StringUtils.hasText(uid)){
 
             List<Long> cmIdList = pageVO.getPageList().stream()
-                    .map(FeedbackCommentVO::getCmid)
+                    .map(commentVO->{return Long.parseLong(commentVO.getCmid());})
                     .collect(Collectors.toList());
 
             HashSet<Long> likeSet = commentLikeDaoService.getCommentLikeList(uid, cmIdList);
 
             pageVO.getPageList().forEach(
-                    cm -> cm.setHasLike(likeSet.contains(cm.getCmid())?1:0)
+                    cm -> cm.setHasLike(likeSet.contains(Long.parseLong(cm.getCmid()))?1:0)
             );
         }
         return Result.success(pageVO);
