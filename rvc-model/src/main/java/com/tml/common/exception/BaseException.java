@@ -19,6 +19,11 @@ public class BaseException extends RuntimeException{
 
     protected ResultCodeEnum resultCode;
 
+    public BaseException(String str, ResultCodeEnum message) {
+        this.msg = str;
+        this.resultCode = message;
+    }
+
     public ResultCodeEnum getResultCode() {
         return resultCode;
     }
