@@ -153,6 +153,8 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .status(0)
                 .hasShow(DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                 .build();
+
+        commonLogger.info("%s 提交了feedback,内容为:%s,时间为:%s,今天的时间为:%s",uid,form.getContent(),feedbackDO.getCreateAt(),today);
         BeanUtils.copyProperties(form,feedbackDO);
         feedbackDO.setFbid(fbid);
 

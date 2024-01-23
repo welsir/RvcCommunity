@@ -83,6 +83,7 @@ public class FeedbackController {
 
     @GetMapping("/type/list")
     public Result<?> getTypeList(){
+
         return Result.success(Map.of("list",typeService.queryAll()));
     }
 
