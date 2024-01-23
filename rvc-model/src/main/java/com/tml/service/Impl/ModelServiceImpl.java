@@ -643,19 +643,27 @@ public class ModelServiceImpl implements ModelService {
         long systemPage = Long.parseLong(systemConfig.getPageSize());
         size = size==null? systemPage :size > systemPage ? systemPage :size;
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(page, size,false), wrapper);
+        if(modelPage.getRecords()==null||modelPage.getRecords().isEmpty()){
+            return new Page<ModelVO>().setRecords(new ArrayList<>()).setSize(0);
+        }
+
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
         try {
             Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
             Map<String, UserInfoVO> userInfo = result.getData();
+            List<UserInfoVO> userInfoVOS = new ArrayList<>();
+            for (int i = 0; i < uids.size(); i++) {
+                userInfoVOS.add(userInfo.get(uids.get(i)));
+            }
             List<ModelVO> modelVOList;
             if(StringUtils.isBlank(uid)){
                 modelVOList  = IntStream.range(0, modelPage.getRecords().size())
-                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfo.get(uids.get(i))))
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfoVOS.get(i)))
                         .collect(Collectors.toList());
             }else {
                 modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfoVOS.get(i)))
                         .collect(Collectors.toList());
             }
             return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());

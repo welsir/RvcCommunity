@@ -88,8 +88,7 @@ public class ModelController {
      * @param uid
      * @return: Result<?>
      **/
-    @InternalApi
-//    @WhiteApi
+    @WhiteApi
     @PostMapping("/addModel")
     public Result<?> insertOneModel(@Validated ModelInsertVO model,
                                     @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid){
