@@ -94,14 +94,10 @@ public class ModelServiceImpl implements ModelService {
      **/
     @Override
     public Page<ModelVO> getModelList(Long size, Long page,String sortType,String uid) {
-        try {
-            QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
-            wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
-                    "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
-            return getModelListCommon(wrapper, page, size, uid);
-        }catch (BaseException e){
-            throw new BaseException(ResultCodeEnum.QUERY_MODEL_LIST_FAIL);
-        }
+        QueryWrapper<ModelDO> wrapper = new QueryWrapper<>();
+        wrapper = WrapperUtil.setWrappers(wrapper,Map.of("has_show",DetectionStatusEnum.DETECTION_SUCCESS.getStatus().toString(),
+                "has_delete",ModelConstant.UN_DELETE,"sort",sortType));
+        return getModelListCommon(wrapper, page, size, uid);
     }
 
     /**
@@ -216,30 +212,13 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public Boolean editModelMsg(ModelUpdateFormVO modelUpdateFormVO,String uid) {
         AbstractAssert.isNull(mapper.selectById(modelUpdateFormVO.getId()),ResultCodeEnum.MODEL_NOT_EXITS);
-        if(!FileUtil.isImageFile(modelUpdateFormVO.getPicture().getOriginalFilename())){
-            throw new BaseException(ResultCodeEnum.UPLOAD_IMAGE_FAIL);
-        }
-        com.tml.pojo.Result<ReceiveUploadFileDTO> res;
-        try {
-            res = fileServiceClient.uploadModel(
-                    UploadModelForm.builder()
-                            .file(modelUpdateFormVO.getPicture())
-                            .path(ModelConstant.DEFAULT_MODEL_PATH)
-                            .bucket(ModelConstant.DEFAULT_BUCKET)
-                            .md5(FileUtil.getMD5Checksum(modelUpdateFormVO.getPicture().getInputStream()))
-                            .build());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         LocalDateTime lt = LocalDateTime.now();
         UpdateWrapper<ModelDO> wrapper = new UpdateWrapper<>();
         wrapper.eq("id",modelUpdateFormVO.getId())
                 .set("name",modelUpdateFormVO.getName())
                 .set("description",modelUpdateFormVO.getDescription())
                 .set("note",modelUpdateFormVO.getNote())
-                .set("picture",res.getData().getUrl())
+                .set("picture",modelUpdateFormVO.getPicture())
                 .set("update_time",lt)
                 .set("has_show", DETECTION_SUCCESS.getStatus().toString());
         mapper.update(null,wrapper);
@@ -647,6 +626,7 @@ public class ModelServiceImpl implements ModelService {
             userInfoVO = userInfo.getData();
             AbstractAssert.isNull(userInfoVO,ResultCodeEnum.GET_USER_INFO_FAIL);
         }
+
         try {
             modelVO = ModelVO.modelDOToModelVO(model,userInfoVO,labelList,type,isLike,isCollection);
         }catch (RuntimeException e){
@@ -669,7 +649,6 @@ public class ModelServiceImpl implements ModelService {
     private Page<ModelVO> getModelListCommon(QueryWrapper<ModelDO> wrapper, Long page, Long size, String uid) {
         long systemPage = Long.parseLong(systemConfig.getPageSize());
         size = size==null? systemPage :size > systemPage ? systemPage :size;
-        //todo:建索引优化
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(page, size,false), wrapper);
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
@@ -681,6 +660,7 @@ public class ModelServiceImpl implements ModelService {
                     .collect(Collectors.toList());
             return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());
         }catch (RuntimeException e){
+            logger.error(e);
             throw new BaseException(e.toString());
         }
     }
