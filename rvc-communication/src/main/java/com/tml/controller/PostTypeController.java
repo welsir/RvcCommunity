@@ -27,4 +27,5 @@ public class PostTypeController {
     public Result list(){
         return Result.success(postTypeService.listType());
     }
+
 }

@@ -48,6 +48,7 @@ import static com.tml.constant.CommonConstant.IMG_TYPE_LIST;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
 import static com.tml.constant.DetectionConstants.DETECTION_SUCCESS;
+import static com.tml.constant.DetectionConstants.UN_DETECTION;
 import static com.tml.constant.enums.AppHttpCodeEnum.*;
 
 /**
@@ -100,12 +101,15 @@ public class PostServiceImpl implements PostService {
 //                .eq(!Strings.isBlank(tagId),Post::getTagId,tagId);//tagId 不为空  更具tagId 查询
 
 
+
         QueryWrapper<Post> postQueryWrapper = new QueryWrapper<>();
         postQueryWrapper.eq("detection_status",DETECTION_SUCCESS)
                 .eq("has_delete",0)
                 .eq(!Strings.isBlank(tagId),"tag_id",tagId)//tagId 不为空  更具tagId 查询
-                .orderBy(!Strings.isBlank(order),false,strategyMap.get(order))
-                .orderBy(true, false, "post_id");;
+                .orderByDesc(strategyMap.get(order))
+                .orderByDesc("post_id");
+
+//                .orderBy(true, false, "");
 
 
         Page<Post> list = postMapper.selectPage(new Page<>(pageNum,pageSize),postQueryWrapper);
@@ -497,7 +501,10 @@ public class PostServiceImpl implements PostService {
                 .uid(coverDto.getUid())
                 .coverUrl(coverDto.getCoverUrl())
                 .createAt(LocalDate.now())
-                .detectionStatus(DETECTION_SUCCESS)   //关闭审核 审核状态改为成功
+                /**
+                 * DETECTION_SUCCESS
+                 */
+                .detectionStatus(UN_DETECTION)
                 .coverId(uuid)
                 .build();
         coverMapper.insert(build);

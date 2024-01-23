@@ -27,7 +27,9 @@ spring:
         file-extension: yaml
         namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
       discovery:
-        ip: ${SERVER_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)}
+#        ip: ${SERVER_ADDR:ENC(jZPMcqD9wkpa7UeNYw7+KV1LXmCpRp3/SjM1AHdHQ6s=)}
+        ip: 127.0.0.1
+
         namespace: 9623bd6c-3483-4f9e-a40d-1d54e190eb9b
         cluster-name: BJ
   rabbitmq:
@@ -43,7 +45,7 @@ spring:
         prefetch: ${MQ_PREFETCH:5}
         concurrency: ${MIN_CONCURRENCY:5}
         max-concurrency: ${MAX_CONCURRENCY:10}
-        acknowledge-mode: manual
+        acknowledge-mode: auto
 management:
   endpoints:
     web:
