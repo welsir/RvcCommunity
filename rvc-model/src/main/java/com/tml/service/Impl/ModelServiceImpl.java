@@ -523,7 +523,6 @@ public class ModelServiceImpl implements ModelService {
                 .map(labelDO -> new LabelVO(labelDO.getId().toString(), labelDO.getLabel()))
                 .collect(Collectors.toList());
     }
-
 //    @Override
 //    public List<ModelFileVO> getModelFies(String modelId) {
 //        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
