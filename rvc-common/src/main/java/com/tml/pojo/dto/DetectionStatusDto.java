@@ -12,5 +12,9 @@ public class DetectionStatusDto {
     private String labels;
 
 
+    //废弃字段
+    private String name;
+
+
 
 }
