@@ -12,22 +12,22 @@ import org.springframework.context.annotation.Configuration;
  * @Author welsir
  * @Date 2023/12/12 19:51
  */
-//@Configuration
-//public class MybatisPlusConfig {
-//
-//    @Bean
-//    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-//        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-//        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
-//        paginationInnerInterceptor.setDbType(DbType.MYSQL);
-//        paginationInnerInterceptor.setOverflow(true);
-//        interceptor.addInnerInterceptor(paginationInnerInterceptor);
-//        return interceptor;
-//    }
-//
-//    @Bean
-//    public ConfigurationCustomizer configurationCustomizer() {
-//        return configuration -> configuration.setUseDeprecatedExecutor(false);
-//    }
-//
-//}
+@Configuration
+public class MybatisPlusConfig {
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
+        paginationInnerInterceptor.setDbType(DbType.MYSQL);
+        paginationInnerInterceptor.setOverflow(true);
+        interceptor.addInnerInterceptor(paginationInnerInterceptor);
+        return interceptor;
+    }
+
+    @Bean
+    public ConfigurationCustomizer configurationCustomizer() {
+        return configuration -> configuration.setUseDeprecatedExecutor(false);
+    }
+
+}
