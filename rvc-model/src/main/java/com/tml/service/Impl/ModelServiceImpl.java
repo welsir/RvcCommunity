@@ -404,7 +404,7 @@ public class ModelServiceImpl implements ModelService {
             if(commentDO.getParentId()==null||"".equals(commentDO.getParentId())){
                 commentMapper.insertFirstModelComment(commentDO.getModelId(),commentDO.getId().toString());
             }
-            //todo:走审核
+
             return commentDO.getId().toString();
         }catch (RuntimeException e){
             logger.error(e);
