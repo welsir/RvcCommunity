@@ -1,10 +1,11 @@
 FROM adoptopenjdk:11-jre-hotspot
-COPY *.jar /rvc-website.jar
+COPY *.jar /rvc-communication.jar
 
 
 ARG SERVER_PORT
 ARG ACTIVE
 ARG UNIQUE_ID
+ARG DEBUG_PORT
 
 ARG MYSQL_ADDR
 ARG MYSQL_USERNAME
@@ -24,21 +25,10 @@ ARG MQ_USERNAME
 ARG MQ_PWD
 
 ENV SERVER_PORT=${SERVER_PORT}
+ENV DEBUG_PORT=${DEBUG_PORT}
 ENV ACTIVE=${ACTIVE}
-ENV UNIQUE_ID=${UNIQUE_ID}
-
-#ENV MYSQL_ADDR=${MYSQL_ADDR}
-#ENV MYSQL_USERNAME=${MYSQL_USERNAME}
-#ENV MYSQL_PASSWORD=${MYSQL_PASSWORD}
-#
-#ENV REDIS_ADDR=${REDIS_ADDR}
-#ENV REDIS_PORT=${REDIS_PORT}
-#ENV REDIS_PWD=${REDIS_PWD}
-#
-#ENV NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR}
-#ENV NACOS_SERVER_USER=${NACOS_SERVER_USER}
-#ENV NACOS_SERVER_PASSWORD=${NACOS_SERVER_PASSWORD}
 
 EXPOSE ${SERVER_PORT}
+EXPOSE ${DEBUG_PORT}
 
-ENTRYPOINT ["java","-jar","/rvc-website.jar"]
+ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-communication.jar; else java -jar /rvc-communication.jar; fi"]
