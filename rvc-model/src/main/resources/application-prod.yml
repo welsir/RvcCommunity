@@ -68,7 +68,7 @@ file:
     enable: true
   image:
     image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
-    image-type: ${IMAGE_TYPE:ENC(iJSGa95s7NSA3b9uMLIvCWu67Fp3tdMtUSVQ7VZVRRYsTkiRa9qW+Q==)}
+    image-type: ${IMAGE_TYPE:ENC(sVC2A+yzRP/TG18umYxZYCSL69KRmJqomkK640ATH6qAU2lkcePRwylXen7EEvO9NJXCDjQQ5l0=)}
   model:
     model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
     model-type: ${MODEL_TYPE:ENC(s/b/P1wycc8fmvSEFCZfldt3xy99xZNDqVrl2less4c=)}
