@@ -61,6 +61,7 @@ public class AsyncService {
                 } catch (DuplicateKeyException e){
                     labelMapper.updateHot(label);
                     labelMapper.insertLabelModel(modelDO.getId().toString(),label);
+
                 }
             }
         } catch (Exception e) {
