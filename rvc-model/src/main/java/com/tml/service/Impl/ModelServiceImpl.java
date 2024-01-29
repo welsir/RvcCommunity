@@ -511,7 +511,8 @@ public class ModelServiceImpl implements ModelService {
         ModelDO modelDO = mapper.selectById(modelId);
         AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
-            AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
+            ModelCollectionDO collectionDO = mapper.queryUserModelCollection(uid, modelId);
+            AbstractAssert.notNull(collectionDO,ResultCodeEnum.USER_COLLECTION_ERROR);
             ModelCollectionDO build = ModelCollectionDO.builder()
                     .modelId(modelId)
                     .uid(uid)
