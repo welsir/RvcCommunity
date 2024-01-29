@@ -40,10 +40,9 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -83,6 +82,7 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     SnowflakeGenerator snowflakeGenerator;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * @description: 分页查询所有模型集合
@@ -150,7 +150,7 @@ public class ModelServiceImpl implements ModelService {
             UserInfoVO dto;
             ModelVO modelVO;
             List<String> list = modelUserMapper.queryUidByModelIds(List.of(model.getId()));
-            if(!uid.isBlank()||!uid.isEmpty()){
+            if(uid==null||!uid.isBlank()||!uid.isEmpty()){
                 io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
                 dto = userInfo.getData();
                 AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
@@ -428,14 +428,22 @@ public class ModelServiceImpl implements ModelService {
             return commentMapper.insertUserCommentRelative(commentId,uid)==1;
         }
         if(ModelConstant.UN_FLAG.equals(type)){
-            if(commentDO.getLikesNum()==0){
+            if(commentDO.getLikesNum()<=0){
                 return true;
             }
-            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
-            commentMapper.update(null,wrapper);
-            commentMapper.delUserCommentLikes(commentId,uid);
-            return true;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+                    wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
+                    commentMapper.update(null,wrapper);
+                    commentMapper.delUserCommentLikes(commentId,uid);
+                }
+                lock.unlock();
+                return true;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -480,11 +488,20 @@ public class ModelServiceImpl implements ModelService {
             )>0 &&
                     mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
-            if(modelDO.getLikesNum()==0){
+            if(modelDO.getLikesNum()<=0){
                 return true;
             }
-            return mapper.delModelLikes(uid,modelId)==1 &&
-                    mapper.update(null,new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num - 1"))==1;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    int sql1 = mapper.update(null, new UpdateWrapper<ModelDO>().eq("id", modelId).setSql("likes_num = likes_num - 1"));
+                    int sql2 = mapper.delModelLikes(uid, modelId);
+                    lock.unlock();
+                    return true;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -503,11 +520,20 @@ public class ModelServiceImpl implements ModelService {
                     build)>0 &&
                     mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num +1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)){
-            if(modelDO.getCollectionNum()==0){
+            if(modelDO.getCollectionNum()<=0){
                 return true;
             }
-            return mapper.delModelCollection(uid,modelId)>0 &&
-                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"))>0;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"));
+                    mapper.delModelCollection(uid,modelId);
+                    lock.unlock();
+                    return true;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
