@@ -17,11 +17,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class FeedbackCommentVO {
 
-    private Long cmid;
+    private String cmid;
 
-    private Long replyFbId;
+    private String replyFbId;
 
-    private Long replyCmId;
+    private String replyCmId;
 
     private String uid;
 

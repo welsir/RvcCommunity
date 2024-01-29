@@ -12,6 +12,7 @@ import com.tml.service.FeedbackCommentService;
 import com.tml.service.IFeedbackCommentLikeDaoService;
 import com.tml.service.IFeedbackDaoService;
 import io.github.common.PageVO;
+import io.github.common.SafeBag;
 import io.github.common.logger.CommonLogger;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
@@ -61,19 +62,25 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
 
         List<String> replyUidList = pageVO.getPageList().stream()
                 .map(FeedbackCommentVO::getReplyUid)
-                .filter(replyUid -> StringUtils.hasText(replyUid))
+                .filter(StringUtils::hasText)
                 .collect(Collectors.toList());
 
         //TODO 待聚合
-        Map<String, UserInfoVO> map = userServiceClient.list(uidList).getData();
+        Map<String, UserInfoVO> map;
+        try {
+            map = userServiceClient.list(uidList).getData();
+        }catch (Exception e){
+            map = null;
+        }
 
         Map<String, UserInfoVO> replyUidMap = userServiceClient.list(replyUidList).getData();
 
         if(map!=null){
+            SafeBag<Map<String, UserInfoVO>> safeBag = new SafeBag<>(map);
             pageVO.getPageList().forEach(
                     feedbackCommentVO -> {
                         String search_uid = feedbackCommentVO.getUid();
-                        UserInfoVO userInfoVO = map.get(search_uid);
+                        UserInfoVO userInfoVO = safeBag.getData().get(search_uid);
                         if(userInfoVO!=null){
                             feedbackCommentVO.setAvatar(userInfoVO.getAvatar());
                             feedbackCommentVO.setNickname(userInfoVO.getNickname());
@@ -100,13 +107,13 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
         if(StringUtils.hasText(uid)){
 
             List<Long> cmIdList = pageVO.getPageList().stream()
-                    .map(FeedbackCommentVO::getCmid)
+                    .map(commentVO->{return Long.parseLong(commentVO.getCmid());})
                     .collect(Collectors.toList());
 
             HashSet<Long> likeSet = commentLikeDaoService.getCommentLikeList(uid, cmIdList);
 
             pageVO.getPageList().forEach(
-                    cm -> cm.setHasLike(likeSet.contains(cm.getCmid())?1:0)
+                    cm -> cm.setHasLike(likeSet.contains(Long.parseLong(cm.getCmid()))?1:0)
             );
         }
         return Result.success(pageVO);
@@ -133,11 +140,11 @@ public class FeedbackCommentServiceImpl implements FeedbackCommentService {
         FeedbackCommentDO feedbackCommentDO = FeedbackCommentDO.builder()
                 .hasShow(1)
                 .likeNum(0L)
-                .createAt(today)
-                .updateAt(today)
                 .cmid(snowflakeGenerator.generate())
                 .replyCmId(replyCmId)
                 .replyFbId(replyFbId)
+                .createAt(today)
+                .updateAt(today)
                 .comment(form.getComment())
                 .uid(uid)
                 .build();
