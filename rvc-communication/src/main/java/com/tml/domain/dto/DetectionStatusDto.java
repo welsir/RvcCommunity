@@ -4,15 +4,12 @@ import lombok.Data;
 
 @Data
 public class DetectionStatusDto {
-
-//    private String uuid;
-
+    //返回的唯一id
     private String id;
-
-    //由调用者来判断是否违规
+    //审核结果
     private String labels;
 
+
+    //废弃字段
     private String name;
-
-
 }
