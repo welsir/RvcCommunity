@@ -601,6 +601,7 @@ public class ModelServiceImpl implements ModelService {
                 .picture(userInfo.getData().getAvatar())
                 .nickname(userInfo.getData().getNickname());
         return builder.build();
+
     }
 
     private SecondCommentVO convertToSecondCommentVO(CommentDO commentDO,String uid){
