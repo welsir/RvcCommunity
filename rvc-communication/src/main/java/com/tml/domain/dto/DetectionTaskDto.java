@@ -27,6 +27,5 @@ public class DetectionTaskDto implements Serializable {
     private String id;
 //    内容
     private String content;
-
 }
 

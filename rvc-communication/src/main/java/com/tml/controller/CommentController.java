@@ -28,6 +28,7 @@ import static com.tml.constant.DetectionConstants.*;
 @RequestMapping("/communication/comment")
 @RequiredArgsConstructor
 @Validated
+@SuppressWarnings({"all"})
 public class CommentController {
 
     private final CommentService commentService;

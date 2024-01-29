@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Stack;
 
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 
@@ -20,6 +21,7 @@ import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"all"})
 public class PostTypeServiceImpl extends ServiceImpl<PostTypeMapper, PostType> implements PostTypeService {
 
 

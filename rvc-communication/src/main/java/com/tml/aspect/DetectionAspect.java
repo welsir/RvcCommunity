@@ -46,7 +46,6 @@ public class DetectionAspect {
     public Object printLog(ProceedingJoinPoint joinPoint) throws Throwable {
         Object ret;
         try {
-            handleBefore();
             ret = joinPoint.proceed();
             handleAfter(joinPoint,ret);
         } finally {
@@ -63,7 +62,7 @@ public class DetectionAspect {
         return annotation;
     }
     private void handleBefore() {
-        log.info("=======Start===================================");
+
 
     }
 
@@ -89,7 +88,7 @@ public class DetectionAspect {
                         } else if (DETECTION_IMG_KEY.equals(field.getName())) {
                             contentValue = (String) field.get(arg);
                             detectionTaskDto.setContent(contentValue);
-                            detectionTaskDto.setType("img");
+                            detectionTaskDto.setType("image");
                             break;
                         } else if (DETECTION_AUDIO_KEY.equals(field.getName())) {
                             contentValue = (String) field.get(arg);
@@ -106,6 +105,7 @@ public class DetectionAspect {
     }
 
     private void handleAfter(ProceedingJoinPoint joinPoint,Object ret) throws IllegalAccessException {
+        log.info("=======Start===================================");
         /**
          * 获取审核内容的主键id
          * 获取被增强方法上的注解对象

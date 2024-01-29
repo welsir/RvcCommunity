@@ -81,4 +81,20 @@ public class ProcessReceive  {
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(POST_COVER.getFullName());
         detectionProcessStrategy.process(detectionTaskDto);
     }
+
+
+    /**
+     * hello world
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "res.topic.communication.hello"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            key = "res.topic.communication.hello.key"
+    ))
+    public void hello(Message message) throws Exception {
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
+        System.out.println(detectionTaskDto);
+    }
 }
