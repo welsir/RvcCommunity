@@ -134,29 +134,29 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isNull(model,ResultCodeEnum.MODEL_NOT_EXITS);
         try {
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
+            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
-            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
             String type = ConcurrentUtil.futureGet(typeFuture);
+
             Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
-            String isLike = ConcurrentUtil.futureGet(likeFuture);
             Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-            String isCollection = ConcurrentUtil.futureGet(collectionFuture);
             Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
             List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
-
             UserInfoVO dto;
             ModelVO modelVO;
             List<String> list = modelUserMapper.queryUidByModelIds(List.of(model.getId()));
-            if(uid==null||!uid.isBlank()||!uid.isEmpty()){
-                io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
-                dto = userInfo.getData();
-                AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
-                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,isLike,isCollection);
+            io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
+            dto = userInfo.getData();
+            AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
+            if(uid==null||StringUtils.isBlank(uid)){
+                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,"0","0");
             }else {
-                modelVO = ModelVO.modelDOToModelVO(model, null,labelList,type,isLike,isCollection);
+                String isLike = ConcurrentUtil.futureGet(likeFuture);
+                String isCollection = ConcurrentUtil.futureGet(collectionFuture);
+                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,isLike,isCollection);
             }
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
@@ -673,18 +673,23 @@ public class ModelServiceImpl implements ModelService {
         if(modelPage.getRecords()==null||modelPage.getRecords().isEmpty()){
             return new Page<ModelVO>().setRecords(new ArrayList<>()).setSize(0);
         }
-
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
+
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
         try {
             Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
             Map<String, UserInfoVO> userInfo = result.getData();
             List<UserInfoVO> userInfoVOS = new ArrayList<>();
             for (int i = 0; i < uids.size(); i++) {
-                userInfoVOS.add(userInfo.get(uids.get(i)));
+                UserInfoVO userInfoVO = userInfo.get(uids.get(i));
+                if(userInfoVO==null){
+                    userInfoVOS.add(null);
+                    continue;
+                }
+                userInfoVOS.add(userInfoVO);
             }
             List<ModelVO> modelVOList;
-            if(StringUtils.isBlank(uid)){
+            if(uid==null||StringUtils.isBlank(uid)){
                 modelVOList  = IntStream.range(0, modelPage.getRecords().size())
                         .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfoVOS.get(i)))
                         .collect(Collectors.toList());
