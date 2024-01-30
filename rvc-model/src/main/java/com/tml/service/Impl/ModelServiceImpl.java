@@ -674,7 +674,6 @@ public class ModelServiceImpl implements ModelService {
             return new Page<ModelVO>().setRecords(new ArrayList<>()).setSize(0);
         }
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
-
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
         try {
             Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
