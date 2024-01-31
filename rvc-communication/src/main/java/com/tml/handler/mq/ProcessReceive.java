@@ -1,12 +1,12 @@
 package com.tml.handler.mq;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.tml.mq.ReceiveHandler;
-import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
 import com.tml.designpattern.strategy.impl.CoverProcessStrategy;
 import com.tml.designpattern.strategy.impl.PostProcessStrategy;
+import com.tml.domain.dto.DetectionStatusDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.core.Message;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.tml.constant.DetectionConstants.*;
 import static com.tml.constant.enums.ContentDetectionEnum.*;
@@ -80,5 +79,21 @@ public class ProcessReceive  {
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
         DetectionProcessStrategy detectionProcessStrategy = strategyMap.get(POST_COVER.getFullName());
         detectionProcessStrategy.process(detectionTaskDto);
+    }
+
+
+    /**
+     * hello world
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "res.topic.communication.hello"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            key = "res.topic.communication.hello.key"
+    ))
+    public void hello(Message message) throws Exception {
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
+        System.out.println(detectionTaskDto);
     }
 }

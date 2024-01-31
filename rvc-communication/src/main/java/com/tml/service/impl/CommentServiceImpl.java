@@ -45,6 +45,7 @@ import static com.tml.constant.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"all"})
 public class CommentServiceImpl implements CommentService {
 
     private final LikeCommentMapper likeCommentMapper;

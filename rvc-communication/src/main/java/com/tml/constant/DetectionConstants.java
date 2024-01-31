@@ -11,9 +11,9 @@ public class DetectionConstants {
      * 审核服务的队列名
      * 审核服务路由key
      */
-    public static final String DETECTION_EXCHANGE_NAME = "detection.topic";
-    public static final String DETECTION_QUEUE_NAME = "detection.topic.queue";
-    public static final String DETECTION_ROUTER_KEY = "detection.topic.key";
+    public static final String DETECTION_EXCHANGE_NAME = "res.topic";
+//    public static final String DETECTION_QUEUE_NAME = "detection.topic.queue";
+    public static final String DETECTION_ROUTER_KEY = "res.topic.key";
 
 
     /**
@@ -22,10 +22,10 @@ public class DetectionConstants {
      * 评论路由
      */
 
-    public static final String DETECTION_RES_COMMENT_QUEUE = "detection.topic.comment";
-    public static final String DETECTION_RES_COMMENT_KEY = "detection.topic.comment.key";
-    public static final String DETECTION_RES_COVER_QUEUE = "detection.topic.cover";
-    public static final String DETECTION_RES_COVER_KEY = "detection.topic.cover.key";
+    public static final String DETECTION_RES_COMMENT_QUEUE = "res.topic.communication.comment";
+    public static final String DETECTION_RES_COMMENT_KEY = "res.topic.communication.comment.key";
+    public static final String DETECTION_RES_COVER_QUEUE = "res.topic.communication.cover";
+    public static final String DETECTION_RES_COVER_KEY = "res.topic.communication.cover.key";
 
 
 

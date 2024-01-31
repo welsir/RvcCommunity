@@ -35,6 +35,7 @@ import static com.tml.constant.DetectionConstants.*;
 @RequestMapping("/communication/post")
 @RequiredArgsConstructor
 @Validated
+@SuppressWarnings({"all"})
 public class PostController {
 
     private final PostService postService;

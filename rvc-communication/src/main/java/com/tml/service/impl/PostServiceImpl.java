@@ -59,6 +59,7 @@ import static com.tml.constant.enums.AppHttpCodeEnum.*;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"all"})
 public class PostServiceImpl implements PostService {
 
     private final CollectPostMapper collectPostMapper;
