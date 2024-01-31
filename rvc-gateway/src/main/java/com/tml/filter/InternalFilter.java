@@ -1,5 +1,6 @@
 package com.tml.filter;
 
+import com.tml.anno.LogTime;
 import io.github.common.logger.CommonLogger;
 import io.github.util.time.TimeUtil;
 import lombok.Data;
@@ -38,6 +39,7 @@ public class InternalFilter implements GlobalFilter, Ordered, InitializingBean {
 
     @SneakyThrows
     @Override
+    @LogTime(funcName = "InternalFilter")
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();

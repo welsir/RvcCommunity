@@ -4,6 +4,7 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.alibaba.cloud.nacos.client.NacosPropertySourceBuilder;
+import com.tml.anno.LogTime;
 import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -46,6 +47,7 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
 
     @SneakyThrows
     @Override
+    @LogTime(funcName = "LaxAuthorizeFilter")
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
