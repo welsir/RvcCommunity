@@ -40,10 +40,9 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -83,6 +82,7 @@ public class ModelServiceImpl implements ModelService {
     @Resource
     SnowflakeGenerator snowflakeGenerator;
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * @description: 分页查询所有模型集合
@@ -134,29 +134,29 @@ public class ModelServiceImpl implements ModelService {
         AbstractAssert.isNull(model,ResultCodeEnum.MODEL_NOT_EXITS);
         try {
             Callable<String> typeTask = () -> typeMapper.selectTypeById(model.getTypeId());
+            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
             Callable<String> likeTask = () -> mapper.queryUserModelLikes(uid, modelId) == null ? "0" : "1";
             Callable<String> collectionTask = () -> mapper.queryUserModelCollection(uid, modelId) == null ? "0" : "1";
-            Callable<List<LabelVO>> labelTask = () -> labelMapper.selectListById(modelId);
 
             Future<String> typeFuture = ConcurrentUtil.doJob(executorService, typeTask);
             String type = ConcurrentUtil.futureGet(typeFuture);
+
             Future<String> likeFuture = ConcurrentUtil.doJob(executorService, likeTask);
-            String isLike = ConcurrentUtil.futureGet(likeFuture);
             Future<String> collectionFuture = ConcurrentUtil.doJob(executorService, collectionTask);
-            String isCollection = ConcurrentUtil.futureGet(collectionFuture);
             Future<List<LabelVO>> labelFuture = ConcurrentUtil.doJob(executorService, labelTask);
             List<LabelVO> labelList = ConcurrentUtil.futureGet(labelFuture);
-
             UserInfoVO dto;
             ModelVO modelVO;
             List<String> list = modelUserMapper.queryUidByModelIds(List.of(model.getId()));
-            if(!uid.isBlank()||!uid.isEmpty()){
-                io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
-                dto = userInfo.getData();
-                AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
-                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,isLike,isCollection);
+            io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
+            dto = userInfo.getData();
+            AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
+            if(uid==null||StringUtils.isBlank(uid)){
+                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,"0","0");
             }else {
-                modelVO = ModelVO.modelDOToModelVO(model, null,labelList,type,isLike,isCollection);
+                String isLike = ConcurrentUtil.futureGet(likeFuture);
+                String isCollection = ConcurrentUtil.futureGet(collectionFuture);
+                modelVO = ModelVO.modelDOToModelVO(model, dto,labelList,type,isLike,isCollection);
             }
             asyncService.asyncAddModelViewNums(modelId);
             return modelVO;
@@ -404,7 +404,7 @@ public class ModelServiceImpl implements ModelService {
             if(commentDO.getParentId()==null||"".equals(commentDO.getParentId())){
                 commentMapper.insertFirstModelComment(commentDO.getModelId(),commentDO.getId().toString());
             }
-            //todo:走审核
+
             return commentDO.getId().toString();
         }catch (RuntimeException e){
             logger.error(e);
@@ -428,14 +428,22 @@ public class ModelServiceImpl implements ModelService {
             return commentMapper.insertUserCommentRelative(commentId,uid)==1;
         }
         if(ModelConstant.UN_FLAG.equals(type)){
-            if(commentDO.getLikesNum()==0){
+            if(commentDO.getLikesNum()<=0){
                 return true;
             }
-            UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
-            wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
-            commentMapper.update(null,wrapper);
-            commentMapper.delUserCommentLikes(commentId,uid);
-            return true;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    UpdateWrapper<CommentDO> wrapper = new UpdateWrapper<>();
+                    wrapper.eq("id",commentId).setSql("likes_num = likes_num-1");
+                    commentMapper.update(null,wrapper);
+                    commentMapper.delUserCommentLikes(commentId,uid);
+                }
+                lock.unlock();
+                return true;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -480,11 +488,20 @@ public class ModelServiceImpl implements ModelService {
             )>0 &&
                     mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
-            if(modelDO.getLikesNum()==0){
+            if(modelDO.getLikesNum()<=0){
                 return true;
             }
-            return mapper.delModelLikes(uid,modelId)==1 &&
-                    mapper.update(null,new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num - 1"))==1;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    int sql1 = mapper.update(null, new UpdateWrapper<ModelDO>().eq("id", modelId).setSql("likes_num = likes_num - 1"));
+                    int sql2 = mapper.delModelLikes(uid, modelId);
+                    lock.unlock();
+                    return true;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -494,7 +511,8 @@ public class ModelServiceImpl implements ModelService {
         ModelDO modelDO = mapper.selectById(modelId);
         AbstractAssert.isNull(modelDO,ResultCodeEnum.QUERY_MODEL_FAIL);
         if(ModelConstant.FLAG.equals(status)){
-            AbstractAssert.notNull(mapper.queryUserModelCollection(uid,modelId),ResultCodeEnum.USER_COLLECTION_ERROR);
+            ModelCollectionDO collectionDO = mapper.queryUserModelCollection(uid, modelId);
+            AbstractAssert.notNull(collectionDO,ResultCodeEnum.USER_COLLECTION_ERROR);
             ModelCollectionDO build = ModelCollectionDO.builder()
                     .modelId(modelId)
                     .uid(uid)
@@ -503,11 +521,20 @@ public class ModelServiceImpl implements ModelService {
                     build)>0 &&
                     mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num +1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)){
-            if(modelDO.getCollectionNum()==0){
+            if(modelDO.getCollectionNum()<=0){
                 return true;
             }
-            return mapper.delModelCollection(uid,modelId)>0 &&
-                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"))>0;
+            try {
+                boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
+                if(flag){
+                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"));
+                    mapper.delModelCollection(uid,modelId);
+                    lock.unlock();
+                    return true;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         throw new BaseException(ResultCodeEnum.PARAMS_ERROR);
     }
@@ -523,7 +550,6 @@ public class ModelServiceImpl implements ModelService {
                 .map(labelDO -> new LabelVO(labelDO.getId().toString(), labelDO.getLabel()))
                 .collect(Collectors.toList());
     }
-
 //    @Override
 //    public List<ModelFileVO> getModelFies(String modelId) {
 //        AbstractAssert.isNull(mapper.selectById(modelId),ResultCodeEnum.QUERY_MODEL_FAIL);
@@ -576,6 +602,7 @@ public class ModelServiceImpl implements ModelService {
                 .picture(userInfo.getData().getAvatar())
                 .nickname(userInfo.getData().getNickname());
         return builder.build();
+
     }
 
     private SecondCommentVO convertToSecondCommentVO(CommentDO commentDO,String uid){
@@ -643,19 +670,31 @@ public class ModelServiceImpl implements ModelService {
         long systemPage = Long.parseLong(systemConfig.getPageSize());
         size = size==null? systemPage :size > systemPage ? systemPage :size;
         Page<ModelDO> modelPage = mapper.selectPage(new Page<>(page, size,false), wrapper);
+        if(modelPage.getRecords()==null||modelPage.getRecords().isEmpty()){
+            return new Page<ModelVO>().setRecords(new ArrayList<>()).setSize(0);
+        }
         List<Long> modelIds = modelPage.getRecords().stream().map(ModelDO::getId).collect(Collectors.toList());
         List<String> uids = modelUserMapper.queryUidByModelIds(modelIds);
         try {
             Result<Map<String, UserInfoVO>> result = userServiceClient.list(uids);
             Map<String, UserInfoVO> userInfo = result.getData();
+            List<UserInfoVO> userInfoVOS = new ArrayList<>();
+            for (int i = 0; i < uids.size(); i++) {
+                UserInfoVO userInfoVO = userInfo.get(uids.get(i));
+                if(userInfoVO==null){
+                    userInfoVOS.add(null);
+                    continue;
+                }
+                userInfoVOS.add(userInfoVO);
+            }
             List<ModelVO> modelVOList;
-            if(StringUtils.isBlank(uid)){
+            if(uid==null||StringUtils.isBlank(uid)){
                 modelVOList  = IntStream.range(0, modelPage.getRecords().size())
-                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfo.get(uids.get(i))))
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), null, userInfoVOS.get(i)))
                         .collect(Collectors.toList());
             }else {
                 modelVOList = IntStream.range(0, modelPage.getRecords().size())
-                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfo.get(uids.get(i))))
+                        .mapToObj(i -> convertToModelVO(modelPage.getRecords().get(i), uid, userInfoVOS.get(i)))
                         .collect(Collectors.toList());
             }
             return new Page<ModelVO>().setRecords(modelVOList).setSize(modelVOList.size());

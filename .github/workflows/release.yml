@@ -37,6 +37,7 @@ jobs:
           skip=""
           docker_env=""
           run_port=""
+          debug_port=""
           
           if [[ "$commit_message" =~ -e:([^\ ]*) ]]; then
           env="${BASH_REMATCH[1]}"
@@ -62,6 +63,9 @@ jobs:
           run_port="${BASH_REMATCH[1]}"
           fi
           
+          if [[ "$commit_message" =~ -dp:([^\ ]*) ]]; then
+          debug_port="${BASH_REMATCH[1]}"
+          fi
           
           if [[ "$commit_message" =~ -de:\<([^>]+)\> ]]; then
           
@@ -74,7 +78,8 @@ jobs:
           echo "Version: $version"
           echo "Skip: $skip"
           echo "Run_Port: $run_port"
-          echo "Docker_Env: $docker_env"    
+          echo "Docker_Env: $docker_env"
+          echo "Debug_Port: $debug_port"
           
           echo "ENV=$env" >> $GITHUB_ENV
           echo "MODULE=$module" >> $GITHUB_ENV
@@ -83,6 +88,7 @@ jobs:
           echo "SKIP=$skip" >> $GITHUB_ENV
           echo "RUN_PORT=$run_port" >> $GITHUB_ENV
           echo "DOCKER_ENV=$docker_env" >> $GITHUB_ENV
+          echo "DEBUG_PORT=$debug_port" >> $GITHUB_ENV
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -125,7 +131,11 @@ jobs:
           cp ./Dockerfile ./docker
           cp ./target/*.jar ./docker
           cd docker
-          docker build -t $DOCKER_REPO/$MODULE:$VERSION .
+          if [ "${{ env.ENV }}" != "test" ]; then
+            docker build -t $DOCKER_REPO/$MODULE:$VERSION .
+          else 
+            docker build --build-arg DEBUG_PORT=${{ env.DEBUG_PORT }} -t $DOCKER_REPO/$MODULE:$VERSION .
+          fi
           docker login -u $DOCKER_REPO -p $DOCKER_PASSWORD
           docker push $DOCKER_REPO/$MODULE:$VERSION
 
@@ -168,6 +178,11 @@ jobs:
                  docker stop $stop_docker_name
               fi
               docker rm ${{ env.MODULE }}-${{ env.VERSION }}
-            
-              docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
+              if [ "${{ env.ENV }}" == "prod" ]; then
+                docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
+              elif [ "${{ env.DEBUG_PORT }}" != "" ]; then
+                docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} -p ${{env.DEBUG_PORT}}:${{env.DEBUG_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
+              else
+                docker run -p ${{env.RUN_PORT}}:${{env.RUN_PORT}} --name ${{ env.MODULE }}-${{ env.VERSION }} ${{env.DOCKER_ENV}} -d ${{ secrets.DOCKER_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
+              fi
             fi

@@ -1,7 +1,13 @@
 package com.tml.pojo.VO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.tml.pojo.DO.ModelDO;
 import com.tml.pojo.DTO.UserInfoDTO;
+import io.github.constant.TimeConstant;
 import lombok.Builder;
 import lombok.Data;
 
@@ -33,7 +39,13 @@ public class ModelVO {
     private String username;
     private String nickname;
     private String avatar;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
     private LocalDateTime createTime;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonFormat(pattern = TimeConstant.YMD_HMS, timezone = "GMT+8")
     private LocalDateTime updateTime;
     private String isFollow;
     public static ModelVO modelDOToModelVO(ModelDO modelDO, UserInfoVO userInfo,List<LabelVO> labels,String... args){
