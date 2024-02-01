@@ -67,7 +67,7 @@ file:
     handler: ${Logger:slf4j}
     enable: true
   image:
-    image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
+    image-file-size: ${IMAGE_FILE_SIZE:ENC(OWOHBOGbuk412z8DDzc+4Xh4/xN2xEeg)}
     image-type: ${IMAGE_TYPE:ENC(sVC2A+yzRP/TG18umYxZYCSL69KRmJqomkK640ATH6qAU2lkcePRwylXen7EEvO9NJXCDjQQ5l0=)}
   model:
     model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
