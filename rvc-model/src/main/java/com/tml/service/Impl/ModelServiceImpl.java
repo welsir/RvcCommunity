@@ -148,6 +148,7 @@ public class ModelServiceImpl implements ModelService {
             UserInfoVO dto;
             ModelVO modelVO;
             List<String> list = modelUserMapper.queryUidByModelIds(List.of(model.getId()));
+
             io.github.common.web.Result<UserInfoVO> userInfo = userServiceClient.one(list.get(0));
             dto = userInfo.getData();
             AbstractAssert.isNull(dto,ResultCodeEnum.GET_USER_INFO_FAIL);
