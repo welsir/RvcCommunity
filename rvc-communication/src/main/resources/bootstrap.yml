@@ -19,3 +19,8 @@ feign:
     max-connections-per-route: 50 # 单个路径的最大连接数
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
+logging:
+  pattern:
+    dateformat: MM-dd HH:mm:ss:SSS
+  level:
+    com.tml: debug

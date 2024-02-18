@@ -6,7 +6,7 @@ spring:
       password: ${NACOS_SERVER_PASSWORD:ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)}
       config:
         file-extension: yaml
-        prefix: rvc-public-config
+        prefix: rvc-public-config-test
         namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e
       discovery:
         namespace: 41325882-1160-44b1-a0b8-7d2ebb683d0e

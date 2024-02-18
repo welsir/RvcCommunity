@@ -15,6 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <assistant.version>1.1.1</assistant.version>
     </properties>
 
     <dependencies>
@@ -26,12 +27,27 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
 
-        <!--        Assistant框架-->
+
+        <!--        genius-->
         <dependency>
             <groupId>io.github.geniusay</groupId>
             <artifactId>assistant-boot-start</artifactId>
-            <version>1.0.4</version>
+            <version>${assistant.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-service</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-cache</artifactId>
+            <version>${assistant.version}</version>
         </dependency>
 
         <dependency>

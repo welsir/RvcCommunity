@@ -33,7 +33,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @GetMapping("/list")
+    @GetMapping(value = "/list")
     @SystemLog(businessName = "获取某个帖子的评论列表")
     @LaxTokenApi
     public Result list(@Valid PageInfo<String> params,

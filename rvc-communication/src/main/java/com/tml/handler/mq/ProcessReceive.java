@@ -1,12 +1,14 @@
 package com.tml.handler.mq;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
 import com.tml.designpattern.strategy.impl.CommentProcessStrategy;
 import com.tml.designpattern.strategy.impl.CoverProcessStrategy;
 import com.tml.designpattern.strategy.impl.PostProcessStrategy;
 import com.tml.domain.dto.DetectionStatusDto;
+import com.tml.domain.dto.DetectionTaskListDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.core.Message;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,5 +98,44 @@ public class ProcessReceive  {
         ObjectMapper objectMapper = new ObjectMapper();
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
         System.out.println(detectionTaskDto);
+        System.out.println(content);
     }
+
+    /**
+     * task list test
+     * 同步
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "res.topic.communication.comment.list"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            key = "res.topic.communication.comment.list.key"
+    ))
+    public void list(Message message) throws Exception {
+
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+//        ArrayList<DetectionStatusDto> detectionTaskDto = objectMapper.readValue(content, new TypeReference<ArrayList<DetectionStatusDto>>() {});
+        DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
+        System.out.println(detectionTaskDto);
+    }
+
+    /**
+     * task list test
+     * 异步
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "res.topic.communication.comment.list.sync"),
+            exchange = @Exchange(name = "res.topic",type = ExchangeTypes.TOPIC),
+            key = "res.topic.communication.comment.list.sync.key"
+    ))
+    public void synclist(Message message) throws Exception {
+
+        String content = new String(message.getBody(), StandardCharsets.UTF_8);
+        ObjectMapper objectMapper = new ObjectMapper();
+        System.out.printf(content);
+        ArrayList<DetectionStatusDto> detectionTaskDto = objectMapper.readValue(content, new TypeReference<ArrayList<DetectionStatusDto>>() {});
+        System.out.println(detectionTaskDto);
+
+    }
+
 }
