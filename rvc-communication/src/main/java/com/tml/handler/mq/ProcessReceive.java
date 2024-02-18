@@ -98,6 +98,7 @@ public class ProcessReceive  {
         ObjectMapper objectMapper = new ObjectMapper();
         DetectionStatusDto detectionTaskDto = objectMapper.readValue(content, DetectionStatusDto.class);
         System.out.println(detectionTaskDto);
+
         System.out.println(content);
     }
 
