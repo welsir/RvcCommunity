@@ -2,11 +2,8 @@ package com.tml.pojo.VO;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 

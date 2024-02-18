@@ -1,8 +1,5 @@
 package com.tml.pojo.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -20,11 +17,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class FeedbackCommentVO {
 
-    private Long cmid;
+    private String cmid;
 
-    private Long replyFbId;
+    private String replyFbId;
 
-    private Long replyCmId;
+    private String replyCmId;
 
     private String uid;
 

@@ -7,7 +7,6 @@ import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
 import com.tml.pojo.VO.*;
 import com.tml.service.ModelService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

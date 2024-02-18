@@ -4,6 +4,7 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 
+import com.tml.anno.LogTime;
 import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -40,6 +41,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
 
     @SneakyThrows
     @Override
+    @LogTime(funcName = "AuthorizeFilter")
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
 
@@ -47,7 +49,6 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
         ServerHttpResponse response = exchange.getResponse();
 
         String path = request.getURI().getPath();
-
         if(whiteApi.contains(path)){
             // 获取请求头
             HttpHeaders headers = request.getHeaders();
@@ -74,7 +75,7 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                 }
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return response.setComplete();
-            } catch (NotLoginException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 //10. 解析jwt令牌出错, 说明令牌过期或者伪造等不合法情况出现
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -82,7 +83,6 @@ public class AuthorizeFilter implements GlobalFilter, Ordered, InitializingBean 
                 return response.setComplete();
             }
         }
-
         // 放行
         return chain.filter(exchange);
     }

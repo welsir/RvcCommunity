@@ -5,10 +5,10 @@ import com.tml.aspect.annotation.ContentDetection;
 import com.tml.aspect.annotation.SystemLog;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.enums.ContentDetectionEnum;
-import com.tml.pojo.dto.CoinDto;
-import com.tml.pojo.dto.CommentDto;
-import com.tml.pojo.dto.PageInfo;
+import com.tml.constant.enums.ContentDetectionEnum;
+import com.tml.domain.dto.CoinDto;
+import com.tml.domain.dto.CommentDto;
+import com.tml.domain.dto.PageInfo;
 import com.tml.service.CommentService;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
-import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
+import static com.tml.constant.DetectionConstants.*;
 
 /**
  * @NAME: CommentController
@@ -28,6 +28,7 @@ import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 @RequestMapping("/communication/comment")
 @RequiredArgsConstructor
 @Validated
+@SuppressWarnings({"all"})
 public class CommentController {
 
     private final CommentService commentService;
@@ -37,7 +38,7 @@ public class CommentController {
     @LaxTokenApi
     public Result list(@Valid PageInfo<String> params,
                        @RequestHeader(required = false) String uid){
-        return Result.success(commentService.list(params,uid));
+        return Result.success(commentService.list(uid, params.getData(),params.getPage(), params.getLimit(),"0"));
     }
 
     @GetMapping("/childrenList")
@@ -45,11 +46,11 @@ public class CommentController {
     @LaxTokenApi
     public Result childrenList(@Valid PageInfo<String> params,
                                @RequestHeader(required = false) String uid){
-        return Result.success(commentService.childrenList(params,uid));
+        return Result.success(commentService.childrenList(uid, params.getData(),params.getPage(), params.getLimit(),"0"));
     }
 
     @PostMapping("/add")
-    @ContentDetection(type = ContentDetectionEnum.COMMENT,exchangeName = DETECTION_EXCHANGE_NAME)
+    @ContentDetection(routerKey = DETECTION_RES_COMMENT_KEY)
     @WhiteApi
     @SystemLog(businessName = "评论帖子    (回复)  [T]  [审]")
     public Result add(@RequestBody @Valid CommentDto commentDto,

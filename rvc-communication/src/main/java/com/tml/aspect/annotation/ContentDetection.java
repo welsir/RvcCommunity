@@ -1,6 +1,6 @@
 package com.tml.aspect.annotation;
 
-import com.tml.enums.ContentDetectionEnum;
+import com.tml.constant.enums.ContentDetectionEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,7 +15,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface ContentDetection {
-    ContentDetectionEnum type();
-    String exchangeName();
-
+    String routerKey();
 }

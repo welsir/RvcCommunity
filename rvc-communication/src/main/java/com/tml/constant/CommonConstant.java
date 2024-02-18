@@ -10,7 +10,6 @@ public class CommonConstant {
 
     public static final String PROJECT_NAME = "rvc-communication";
 
-
     /**
      * redis_key_header
      */

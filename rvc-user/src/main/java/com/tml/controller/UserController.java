@@ -1,15 +1,13 @@
 package com.tml.controller;
 
 import com.tml.annotation.apiAuth.InternalApi;
+import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
-import com.tml.common.UserContext;
-import com.tml.common.annotation.ListElementSize;
 import com.tml.common.annotation.ListNotEmpty;
 import com.tml.exception.RvcSQLException;
-import com.tml.pojo.dto.LoginDTO;
-import com.tml.pojo.dto.RegisterDTO;
-import com.tml.pojo.dto.UpdatePasswordDTO;
-import com.tml.pojo.dto.UserInfoDTO;
+import com.tml.exception.ServerException;
+import com.tml.pojo.dto.*;
+import com.tml.pojo.enums.ResultEnums;
 import com.tml.service.UserService;
 import io.github.common.web.Result;
 import org.hibernate.validator.constraints.Length;
@@ -84,16 +82,38 @@ public class UserController {
                         @RequestParam
                             @Valid
                             @Length(min = 4, max = 10, message = "验证码长度必须在4到6之间")
-                            @NotNull(message = "前置验证码不为空")
+                            @NotBlank(message = "前置验证码不为空")
                             String code,
                         @RequestParam
                             @Valid
-                            @NotNull(message = "前置验证码标识不能为空")
+                            @NotBlank(message = "前置验证码标识不能为空")
                             String uuid,
                         @RequestParam
                             @NotNull(message = "验证码类型不能为空")
                             int type){
         userService.sendCode(email, code, uuid, type);
+        return Result.success();
+    }
+
+    @GetMapping("/resetPwdEmailCode")
+    @WhiteApi
+    public Result resetPwdEmailCode(@RequestHeader String uid,
+                                    @RequestParam
+                                        @Valid
+                                        @NotNull(message = "邮箱不能为空")
+                                        @Length(min = 6, max = 30, message = "邮箱长度必须在6到30之间")
+                                        @Email( message = "参数必须为邮箱")
+                                        String email,
+                                    @RequestParam
+                                        @Valid
+                                        @Length(min = 4, max = 10, message = "验证码长度必须在4到6之间")
+                                        @NotBlank(message = "前置验证码不为空")
+                                        String code,
+                                    @RequestParam
+                                        @Valid
+                                        @NotBlank(message = "前置验证码标识不能为空")
+                                        String uuid){
+        userService.resetPwdEmailCode(email, code, uuid, uid);
         return Result.success();
     }
 
@@ -128,9 +148,8 @@ public class UserController {
     public Result update(@RequestBody
                              @Valid
                              UserInfoDTO userInfoDTO,
-                         @RequestHeader String uid,
-                         @RequestHeader String username){
-        userService.update(userInfoDTO, uid, username);
+                         @RequestHeader String uid){
+        userService.update(userInfoDTO, uid);
         return Result.success();
     }
 
@@ -145,10 +164,8 @@ public class UserController {
                              @NotBlank(message = "uid不能为空")
                              @Length(min = 19, max = 19, message = "uid长度为19")
                              String followUid,
-                         @RequestHeader String uid,
-                         @RequestHeader String username) throws RvcSQLException {
-        UserContext.setCurruntUser(uid, username);
-        userService.follow(followUid, uid, username);
+                         @RequestHeader String uid) throws RvcSQLException {
+        userService.follow(followUid, uid);
         return Result.success();
     }
 
@@ -157,35 +174,45 @@ public class UserController {
     public Result updatePassword(@RequestBody
                                      @Valid
                                      UpdatePasswordDTO updatePasswordDTO,
-                                 @RequestHeader String uid,
-                                 @RequestHeader String username){
-        userService.updatePassword(updatePasswordDTO, uid, username);
+                                 @RequestHeader String uid){
+        if(userService.updatePassword(updatePasswordDTO, uid))
+            throw new ServerException(ResultEnums.FAIL_RESET);
+        return Result.success();
+    }
+
+    @PostMapping("/forgotPassword")
+    @LaxTokenApi
+    public Result forgotPassword(@RequestBody
+                                 @Valid
+                                     ForgotPassword forgotPassword){
+        userService.forgotPassword(forgotPassword);
         return Result.success();
     }
 
     @GetMapping("/getUserInfo")
     @WhiteApi
-    public Result getUserInfo(@RequestHeader String uid,@RequestHeader String username){
-        return Result.success(userService.getUserInfo(uid, username));
+    public Result getUserInfo(@RequestHeader String uid){
+        return Result.success(userService.getUserInfo(uid));
     }
 
     @GetMapping("/getUserInfoById")
+    @LaxTokenApi
     public Result getUserInfoById(@RequestParam
                                       @Valid
                                       @NotBlank
-                                      String uid){
-        return Result.success(userService.getUserInfoById(uid));
+                                      String targetUid,
+                                  @RequestHeader(required = false) String uid){
+        return Result.success(userService.getUserInfoById(targetUid, uid));
     }
 
     @PostMapping("/avatar")
     @WhiteApi
     public Result avatar(@RequestPart("file") MultipartFile file,
-                         @RequestHeader String uid,
-                         @RequestHeader String username){
-        UserContext.setCurruntUser(uid, username);
-        userService.avatar(file, uid, username);
+                         @RequestHeader String uid){
+        userService.avatar(file, uid);
         return Result.success("审核中");
     }
+
 
     @GetMapping("/exist")
     @InternalApi
@@ -195,8 +222,8 @@ public class UserController {
 
     @GetMapping("/getMyFollowUser")
     @WhiteApi
-    public Result getMyFollowUser(@RequestHeader String uid, @RequestHeader String username){
-        return Result.success(userService.getMyFollowUser(uid, username));
+    public Result getMyFollowUser(@RequestHeader String uid){
+        return Result.success(userService.getMyFollowUser(uid));
     }
 
     @GetMapping("/isFollowed")

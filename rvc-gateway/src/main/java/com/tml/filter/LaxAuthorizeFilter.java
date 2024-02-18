@@ -4,6 +4,7 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.cloud.commons.lang.StringUtils;
 import com.alibaba.cloud.nacos.client.NacosPropertySourceBuilder;
+import com.tml.anno.LogTime;
 import io.github.common.logger.CommonLogger;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -46,6 +47,7 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
 
     @SneakyThrows
     @Override
+    @LogTime(funcName = "LaxAuthorizeFilter")
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
@@ -55,11 +57,6 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
             // 请求头中获取令牌
             String token = headers.getFirst(AUTHORIZE_TOKEN);
             ServerHttpRequest newRequest = null;
-            // 判断请求头中是否有令牌
-            if (StringUtils.isEmpty(token)) {
-                newRequest = request.mutate().header("uid","").header("username","").build();
-                return chain.filter(exchange.mutate().request(newRequest).build());
-            }
             try {
                 String loginID = (String) StpUtil.getLoginIdByToken(token);
                 if (StpUtil.isLogin(loginID)) {
@@ -71,10 +68,11 @@ public class LaxAuthorizeFilter implements GlobalFilter, Ordered, InitializingBe
                         return chain.filter(exchange.mutate().request(newRequest).build());
                     }
                 }
-            } catch (NotLoginException e) {
-                newRequest = request.mutate().header("uid","").header("username","").build();
-                return chain.filter(exchange.mutate().request(newRequest).build());
+            } catch (Exception e) {
+               commonLogger.error("token解析失败:%s",e.getMessage());
             }
+            newRequest = request.mutate().header("uid","").header("username","").build();
+            return chain.filter(exchange.mutate().request(newRequest).build());
         }
 
         // 放行

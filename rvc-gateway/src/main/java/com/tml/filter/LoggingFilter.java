@@ -1,5 +1,6 @@
 package com.tml.filter;
 
+import com.tml.anno.LogTime;
 import com.tml.pojo.DO.RequestRecordDO;
 import com.tml.service.RequestRecordService;
 import io.github.common.logger.CommonLogger;
@@ -17,8 +18,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Component
 @RefreshScope
@@ -35,6 +34,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     CommonLogger logger;
 
     @Override
+    @LogTime(funcName = "LoggingFilter")
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         InetSocketAddress remoteAddress = request.getRemoteAddress();

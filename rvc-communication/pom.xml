@@ -19,6 +19,13 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.24</version>
+        </dependency>
+
+
 
         <!--        Assistant框架-->
         <dependency>
@@ -53,7 +60,7 @@
             <artifactId>lettuce-core</artifactId>
         </dependency>
 
-<!--feign-->
+        <!--feign-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -65,10 +72,10 @@
 
 
         <!--        nacos-->
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.cloud</groupId>-->
+        <!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
@@ -85,13 +92,18 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
-<!--雪花-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
+        <!--雪花-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-captcha</artifactId>
             <version>5.8.18</version>
         </dependency>
-<!--        RabbitMQ-->
+        <!--        RabbitMQ-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>

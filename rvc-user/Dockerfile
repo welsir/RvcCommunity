@@ -5,6 +5,7 @@ COPY *.jar /rvc-user.jar
 ARG SERVER_PORT
 ARG ACTIVE
 ARG UNIQUE_ID
+ARG DEBUG_PORT
 
 ARG MYSQL_ADDR
 ARG MYSQL_USERNAME
@@ -24,10 +25,11 @@ ARG MQ_USERNAME
 ARG MQ_PWD
 
 ENV SERVER_PORT=${SERVER_PORT}
+ENV DEBUG_PORT=${DEBUG_PORT}
 ENV ACTIVE=${ACTIVE}
 
 EXPOSE ${SERVER_PORT}
+EXPOSE ${DEBUG_PORT}
 
-ENTRYPOINT ["java","-jar","/rvc-user.jar"]
-
+ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-user.jar; else java -jar /rvc-user.jar; fi"]
 #<Auto> -e:test -m:rvc-user -v:1.0 -rp:9000 -de:<-e ACTIVE=test -e SERVER_PORT=9000>

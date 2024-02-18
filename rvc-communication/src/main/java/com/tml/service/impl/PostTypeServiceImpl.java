@@ -1,16 +1,15 @@
 package com.tml.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tml.mapper.PostTypeMapper;
-import com.tml.pojo.entity.PostType;
+import com.tml.mapper.post.PostTypeMapper;
+import com.tml.domain.entity.PostType;
 import com.tml.service.PostTypeService;
-import com.tml.utils.BeanCopyUtils;
 import com.tml.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Stack;
 
 import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
 
@@ -22,6 +21,7 @@ import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_TYPE;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings({"all"})
 public class PostTypeServiceImpl extends ServiceImpl<PostTypeMapper, PostType> implements PostTypeService {
 
 

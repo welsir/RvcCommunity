@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tml.mapper.common.CommonMapper">
+    <select id="existsRecord" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM ${tableName} WHERE ${key} = '${value}')
+    </select>
+    <select id="pages" resultType="java.util.List">
+        SELECT a.*
+        FROM ${tableName} a
+        inner join(
+            select id
+            from ${tableName}
+            order by create_at desc
+            limit ${page}, ${limit}
+        ) b ON a.id = b.id;
+    </select>
+</mapper>

@@ -1,9 +1,9 @@
 package com.tml.designpattern.strategy.impl;
 
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
-import com.tml.mapper.CoverMapper;
-import com.tml.pojo.dto.DetectionStatusDto;
-import com.tml.pojo.entity.Cover;
+import com.tml.domain.dto.DetectionStatusDto;
+import com.tml.mapper.post.CoverMapper;
+import com.tml.domain.entity.Cover;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

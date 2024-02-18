@@ -2,10 +2,12 @@ package com.tml;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.tml.pojo.entity.Post;
-import com.tml.pojo.entity.PostType;
+import com.tml.domain.dto.PostDto;
+import com.tml.domain.entity.Post;
+import com.tml.domain.entity.PostType;
+import com.tml.mapper.post.PostMapper;
+import com.tml.service.PostService;
 import com.tml.utils.RedisCache;
-import io.netty.handler.codec.string.StringEncoder;
 import org.jasypt.encryption.StringEncryptor;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -13,8 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,8 +32,8 @@ import static com.tml.constant.DBConstant.RVC_COMMUNICATION_POST_WATCH;
  * @Description:
  * @DATE: 2023/12/14
  */
-@SpringBootTest
 @RunWith(SpringRunner.class)
+@SpringBootTest(classes = App.class)
 public class RedisTest {
 
     @Autowired
@@ -38,9 +42,37 @@ public class RedisTest {
     @Autowired
     private StringEncryptor stringEncryptor;
 
+    @Autowired
+    private PostService postService;
+
+    @Resource
+    private PostMapper postMapper;
+
+
     @Test
-    public void Encryptor(){
-        System.out.println(stringEncryptor.encrypt("1.94.28.8"));
+    public void TransactionalTest(){
+//        Post post = postMapper.selectById("1746190259156287488");
+//        System.out.println(post);
+
+        int n = 0,m = 0;
+
+    }
+
+
+    @Test
+    public void insert(){
+
+        for (int i = 1; i < 50; i++) {
+            PostDto postDto = new PostDto();
+            postDto.setTitle("测试帖子" + i);
+            postDto.setContent("测试帖子" + i);
+            postDto.setCoverId("1746188338123112448");
+            postDto.setTagId("1");
+            String uid = "1738846007402758145";
+
+            postService.add(postDto,uid);
+        }
+
 
 
     }

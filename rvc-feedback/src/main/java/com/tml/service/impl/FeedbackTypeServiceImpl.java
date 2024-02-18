@@ -3,8 +3,7 @@ package com.tml.service.impl;
 import com.tml.constant.RedisKeyPool;
 import com.tml.pojo.FeedbackTypeDO;
 import com.tml.service.FeedbackTypeService;
-import com.tml.service.IFeedbackTypeDaoService;
-import io.github.common.RedisKey;
+import io.github.common.logger.CommonLogger;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -28,6 +27,9 @@ public class FeedbackTypeServiceImpl implements FeedbackTypeService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    CommonLogger logger;
+
     @Override
     public FeedbackTypeDO hasType(Integer id) {
         String redisKey = RedisKeyPool.HASH_FEEDBACK_TYPE.getKey();
@@ -45,6 +47,9 @@ public class FeedbackTypeServiceImpl implements FeedbackTypeService {
 
     @Override
     public List<FeedbackTypeDO> queryAll() {
+
+        long startTime = System.currentTimeMillis();
+
         String redisKey = RedisKeyPool.HASH_FEEDBACK_TYPE.getKey();
         List<FeedbackTypeDO> typeDOS;
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(redisKey);
@@ -65,6 +70,9 @@ public class FeedbackTypeServiceImpl implements FeedbackTypeService {
                     .collect(Collectors.toList());
         }
 
+        long endTime = System.currentTimeMillis();
+
+        logger.info("该接口耗时: %s ms",endTime-startTime);
         return typeDOS;
     }
 }
