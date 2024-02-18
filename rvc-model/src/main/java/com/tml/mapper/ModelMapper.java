@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -49,12 +50,16 @@ public interface ModelMapper extends BaseMapper<ModelDO> {
     @Delete("DELETE FROM rvc_model_collection WHERE model_id = #{modelId}")
     int deleteCollectionByModelId(String modelId);
 
-    @Insert("insert into rvc_model_model_file (model_id,index_file_id,pth_file_id,audio_file_id) values(#{modelId},#{modelId},#{modelId},#{audioId})")
-    int insertModelFileRelative(String modelId,String indexId,String pthId,String audioId);
+    @Insert("insert into rvc_model_model_file (model_id,url) values(#{modelId},#{url})")
+    int insertModelFileRelative(String modelId,String url);
 
     @Select("select * from rvc_model_model_file where model_id = #{modelId}")
     ModelFileDO queryModelFile(String modelId);
 
     @Update("update rvc_model set update_time = #{updateTime} where id =  #{modelId}")
-    void updateModel(String updateTime,String modelId);
+    void updateModel(LocalDateTime updateTime, String modelId);
+
+    @Select("select view_num from rvc_model where id = #{id}")
+    Long queryModelViesNums(String id);
+
 }

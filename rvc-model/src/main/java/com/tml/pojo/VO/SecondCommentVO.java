@@ -3,6 +3,8 @@ package com.tml.pojo.VO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @Description
  * @Author welsir
@@ -17,8 +19,8 @@ public class SecondCommentVO {
     private String nickname;
     private String picture;
     private String content;
-    private String likesNum;
-    private String commentTime;
+    private Long likesNum;
+    private LocalDateTime commentTime;
     private String parentId;
     private String isLikes;
 

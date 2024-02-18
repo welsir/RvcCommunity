@@ -11,7 +11,5 @@ import lombok.Data;
 public class ModelFileDO {
 
     private String modelId;
-    private String audioFileId;
-    private String indexFileId;
-    private String pthFileId;
+    private String url;
 }

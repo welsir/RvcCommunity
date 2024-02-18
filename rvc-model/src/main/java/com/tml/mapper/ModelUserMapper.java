@@ -2,9 +2,11 @@ package com.tml.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tml.pojo.DO.ModelUserDO;
+import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Description
@@ -21,9 +23,14 @@ public interface ModelUserMapper extends BaseMapper<ModelUserDO> {
             "<foreach item='modelId' collection='modelIds' open='(' separator=',' close=')'>" +
             "#{modelId}" +
             "</foreach>" +
+            "ORDER BY FIELD(model_id, " +
+            "<foreach item='modelId' collection='modelIds' separator=','>" +
+            "#{modelId}" +
+            "</foreach>" +
+            ")" +
             "</script>")
     List<String> queryUidByModelIds(List<Long> modelIds);
 
-    @Select("select * from rvc_model_model_user where uid = #{uid}")
-    Object queryModelUserRelative(String uid);
+    @Select("select * from rvc_model_model_user where uid = #{uid} and model_id = #{modelId}")
+    Object queryModelUserRelative(String uid,String modelId);
 }

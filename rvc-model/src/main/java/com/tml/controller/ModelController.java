@@ -1,6 +1,7 @@
 package com.tml.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.common.Result;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @Description
@@ -36,8 +38,8 @@ public class ModelController {
      */
     @LaxTokenApi
     @GetMapping("/list")
-    public Result<?> getModelList(@RequestParam("page") @NotBlank(message = "page不能为空") String page,
-                                  @RequestParam(value = "limit",required = false) String limit,
+    public Result<?> getModelList(@RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                  @RequestParam(value = "limit",required = false) Long limit,
                                   @RequestParam(value = "sortType",required = false)  String sortType,
                                   @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(limit,page,sortType,uid);
@@ -56,8 +58,8 @@ public class ModelController {
     @LaxTokenApi
     @GetMapping("/listByType")
     public Result<?> getModelListByType(@RequestParam @NotBlank(message = "id不能为空") String typeId,
-                                        @RequestParam("page") @NotBlank(message = "page不能为空") String page,
-                                        @RequestParam(value = "limit",required = false)  String limit,
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                        @RequestParam(value = "limit",required = false)  Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
                                         @RequestHeader(value = "uid", required = false) String uid){
         Page<ModelVO> modelList = modelService.getModelList(typeId,page,limit,sortType,uid);
@@ -101,7 +103,7 @@ public class ModelController {
      **/
     @WhiteApi
     @PostMapping("/download")
-    public Result<?> downloadModel(@RequestParam("fileId") @NotBlank String modelId,
+    public Result<?> downloadModel(@RequestParam("modelId") @NotBlank String modelId,
                                    @RequestHeader(value = "uid")@NotBlank(message = "id为空") String uid){
         return Result.success(modelService.downloadModel(modelId,uid));
     }
@@ -112,7 +114,8 @@ public class ModelController {
         Boolean flag = modelService.editModelMsg(modelUpdateFormVO,uid);
         return Result.success(flag);
     }
-    @WhiteApi
+    @InternalApi
+//    @WhiteApi
     @PostMapping("/upload/model")
     public Result<?> uploadModel(
             MultipartFile[] file,
@@ -167,8 +170,8 @@ public class ModelController {
     @GetMapping("/likes")
     public Result<?> getUserModelLikesList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
-            @RequestParam("page") @NotBlank(message = "page不能为空") String page,
-            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+            @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "order",required = false) String order
     ){
         return Result.success(modelService.getUserLikesList(uid,page,limit,order));
@@ -186,8 +189,8 @@ public class ModelController {
     @GetMapping("/collection")
     public Result<?> getUserModelCollectionList(
             @RequestHeader(value = "uid") @NotBlank(message = "id为空") String uid,
-            @RequestParam("page") @NotBlank(message = "page不能为空") String page,
-            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+            @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "order",required = false) String order
     ){
         return Result.success(modelService.getUserCollectionList(uid,page,limit,order));
@@ -209,8 +212,8 @@ public class ModelController {
     @WhiteApi
     @GetMapping("user/model")
     public Result<?> queryUserModelList(@RequestHeader("uid") @NotBlank(message = "id为空") String uid,
-                                        @RequestParam("page") @NotBlank(message = "page为空") String page,
-                                        @RequestParam(value = "limit",required = false)String limit){
+                                        @RequestParam("page") @NotNull(message = "page不能为空") Long page,
+                                        @RequestParam(value = "limit",required = false)Long limit){
         return Result.success(modelService.queryUserModelList(uid,page,limit));
     }
 
@@ -233,9 +236,9 @@ public class ModelController {
     @LaxTokenApi
     @GetMapping("/comment/first")
     public Result<?> queryFirstComments(@RequestParam("id") @NotBlank(message = "id为空") String modelId,
-                                        @RequestParam(value = "limit",required = false) String limit,
+                                        @RequestParam(value = "limit",required = false) Long limit,
                                         @RequestParam(value = "sortType",required = false) String sortType,
-                                        @RequestParam("page") @NotBlank(message = "page为空") String page,
+                                        @RequestParam("page") @NotNull(message = "page为空") Long page,
                                         @RequestHeader(value = "uid",required = false) String uid){
         return Result.success(modelService.queryFirstCommentList(modelId,page,limit,sortType,uid));
     }
@@ -244,9 +247,9 @@ public class ModelController {
     @GetMapping("/comment/second")
     public Result<?> querySecondComments(
             @RequestParam("id") @NotBlank(message = "id为空") String commentId,
-            @RequestParam(value = "limit",required = false) String limit,
+            @RequestParam(value = "limit",required = false) Long limit,
             @RequestParam(value = "sortType",required = false) String sortType,
-            @RequestParam("page") @NotBlank(message = "page为空") String page,
+            @RequestParam("page") @NotNull(message = "page为空") Long page,
             @RequestHeader(value = "uid",required = false) String uid
     ){
         return Result.success(modelService.querySecondCommentList(commentId,page,limit,sortType,uid));
@@ -257,17 +260,23 @@ public class ModelController {
     @GetMapping("/label/labelHot")
     public Result<?> queryLabelList(
             @RequestHeader(value = "uid",required = false) String uid,
-            @RequestParam(value = "page") String page,
-            @RequestParam(value = "limit",required = false) String limit
+            @RequestParam(value = "page")@NotNull Long page,
+            @RequestParam(value = "limit",required = false) Long limit
     ){
         return Result.success(modelService.getLabelList(limit,page));
     }
 
-    @WhiteApi
-    @GetMapping("/model/modelFile")
-    public Result<?> queryModelFiles(@RequestHeader(value = "uid")String uid,
-                                     @RequestParam(value = "modelId")String modelId){
-        return Result.success(modelService.getModelFies(modelId));
+//    @LaxTokenApi
+//    @GetMapping("/model/modelFile")
+//    public Result<?> queryModelFiles(@RequestHeader(value = "uid",required = false)String uid,
+//                                     @RequestParam(value = "modelId")String modelId){
+//        return Result.success(modelService.getModelFies(modelId));
+//    }
+
+    @LaxTokenApi
+    @GetMapping("/model/type")
+    public Result<?> queryType(){
+        return Result.success(modelService.queryTypeList());
     }
 
 }
