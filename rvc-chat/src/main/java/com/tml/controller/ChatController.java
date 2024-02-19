@@ -22,7 +22,7 @@ public class ChatController {
      **/
     @PostMapping("/create")
     public Result<RoomDetailInfoVO> createRoom(@RequestBody ChatRoomRequest chatRoomRequest){
-
+        return null;
     }
 
 }
