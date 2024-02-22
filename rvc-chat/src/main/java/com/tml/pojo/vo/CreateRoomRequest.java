@@ -10,11 +10,10 @@ import java.io.Serializable;
  * @Date 2024/2/19 16:00
  */
 @Data
-public class ChatRoomRequest implements Serializable {
+public class CreateRoomRequest implements Serializable {
 
     private static final long serialVersionUID = -2784248520516424354L;
 
     private String title;
     private String password;
-    private String uid;
 }
