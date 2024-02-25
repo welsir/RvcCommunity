@@ -28,6 +28,8 @@
         <module>rvc-chat</module>
         <module>rvc-communication</module>
         <module>rvc-rpc</module>
+        <module>rvc-netty</module>
+        <module>rvc-notice</module>
     </modules>
 
     <properties>

@@ -21,6 +21,7 @@ public class RoomDetailInfoVO implements Serializable {
     private String roomId;
     private String ownerId;
     private String name;
-    private List<UserInfoVO> userInfoVOS = new ArrayList<UserInfoVO>();
+    private String password;
+    private List<UserInfoVO> userInfoVOS = new ArrayList<>();
 
 }
