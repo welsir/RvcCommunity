@@ -1,5 +1,6 @@
 package com.tml.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.tml.annotation.apiAuth.InternalApi;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.annotation.apiAuth.WhiteApi;
@@ -11,6 +12,7 @@ import com.tml.pojo.enums.ResultEnums;
 import com.tml.service.UserService;
 import io.github.common.web.Result;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +35,9 @@ public class UserController {
     @Resource
     UserService userService;
 
+    @Resource
+    RabbitTemplate rabbitTemplate;
+
 
     /**
      * @param loginDTO LoginDTO
@@ -44,6 +49,7 @@ public class UserController {
                             LoginDTO loginDTO){
         return Result.success(userService.login(loginDTO));
     }
+
     @PostMapping("/logout")
     @WhiteApi
     public Result logout(@RequestHeader String uid,@RequestHeader String username){
