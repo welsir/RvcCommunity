@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tml.mapper.RvcLevelRolePrivilegeMapper">
+
+    <resultMap id="BaseResultMap" type="com.tml.domain.entity.RvcLevelRolePrivilege">
+            <id property="id" column="id" jdbcType="VARCHAR"/>
+            <result property="uid" column="uid" jdbcType="VARCHAR"/>
+            <result property="privilegeId" column="privilege_id" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,uid,privilege_id
+    </sql>
+</mapper>
