@@ -4,14 +4,17 @@ package com.tml.controller;
 import com.tml.annotation.apiAuth.LaxTokenApi;
 import com.tml.aop.annotation.GradeSystem;
 import com.tml.aop.annotation.SystemLog;
+import com.tml.utils.RedisCache;
 import io.github.common.web.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 
 
 /**
@@ -25,11 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("level/api/test")
 @Slf4j
 public class UnitTestController {
+
     @GetMapping("/exp")
     @SystemLog(businessName = "等级增加测试")
     @LaxTokenApi
     @GradeSystem
     public Result exp(){
+
         return Result.success("ok");
     }
 }

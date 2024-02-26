@@ -24,10 +24,10 @@ public class RvcLevelUser implements Serializable {
      */
     private String uid;
 
-    /**
-     * 等级
-     */
-    private Integer level;
+//    /**
+//     * 等级
+//     */
+//    private Integer level;
 
     /**
      * 经验值
