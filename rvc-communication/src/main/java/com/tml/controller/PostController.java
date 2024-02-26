@@ -23,7 +23,7 @@ import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
+import static com.tml.constant.DetectionConstants.*;
 
 /**
  * @NAME: PostController
@@ -35,6 +35,7 @@ import static com.tml.constant.DetectionConstants.DETECTION_EXCHANGE_NAME;
 @RequestMapping("/communication/post")
 @RequiredArgsConstructor
 @Validated
+@SuppressWarnings({"all"})
 public class PostController {
 
     private final PostService postService;
@@ -122,7 +123,7 @@ public class PostController {
     }
 
     @PostMapping("/cover")
-    @SystemLog(businessName = "用户上传头像  文件上传")
+    @SystemLog(businessName = "用户上传封面  文件上传")
     @WhiteApi
     public Result setUserProfile(@RequestPart("wangeditor-uploaded-image") MultipartFile profile,
                                  @RequestHeader String uid) throws IOException {
@@ -140,9 +141,9 @@ public class PostController {
     }
 
     @PostMapping("/coverUrl")
-    @SystemLog(businessName = "用户上传头像  url上传")
-    @LaxTokenApi
-//    @ContentDetection(type = ContentDetectionEnum.POST_COVER,exchangeName = DETECTION_EXCHANGE_NAME)
+    @SystemLog(businessName = "用户上传封面  url上传")
+    @ContentDetection(routerKey = DETECTION_RES_COVER_KEY)
+    @WhiteApi
     public Result coverUrl(@RequestBody CoverDto coverDto) {
         return Result.success(postService.coverUrl(coverDto));
     }

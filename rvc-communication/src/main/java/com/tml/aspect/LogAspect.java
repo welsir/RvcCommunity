@@ -35,7 +35,7 @@ public class LogAspect {
         try {
             handleBefore(joinPoint);
             ret = joinPoint.proceed();
-//            handleAfter(ret);
+            handleAfter(ret);
         } finally {
             long endTime = System.currentTimeMillis(); // 获取程序结束时间
             long totalTime = endTime - startTime; // 计算总运行时间
@@ -50,7 +50,23 @@ public class LogAspect {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
 
-        Enumeration<String> token = request.getHeaders("token");
+        //获取被增强方法上的注解对象
+        SystemLog systemLog = getSystemLog(joinPoint);
+        log.info("=======Start=======");
+        // 打印请求 URL
+        log.info("URL            : {}",request.getRequestURL());
+        // 打印描述信息
+        log.info("BusinessName   : {}",systemLog.businessName());
+        // 打印 Http method
+        log.info("HTTP Method    : {}",request.getMethod());
+        // 打印调用 controller 的全路径以及执行方法
+        log.info("Class Method   : {}.{}",joinPoint.getSignature().getDeclaringTypeName(),((MethodSignature) joinPoint.getSignature()).getName() );
+        // 打印请求的 IP
+        log.info("IP             : {}",request.getRemoteHost());
+        // 打印请求入参
+        log.info("Request Args   : {}", JSON.toJSONString(joinPoint.getArgs()));
+        // 结束后换行
+        log.info("=================" + System.lineSeparator());
 
     }
 
@@ -61,7 +77,10 @@ public class LogAspect {
     }
 
     private void handleAfter(Object ret) {
+        int maxSize = 100;
         // 打印出参
-        log.info("Response       : {}",JSON.toJSONString(ret) );
+        String response = JSON.toJSONString(ret);
+        log.info("Response       : {}", response.length() > maxSize ? response.substring(0, maxSize) + "..." : response);
     }
+
 }

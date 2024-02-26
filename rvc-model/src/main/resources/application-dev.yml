@@ -34,7 +34,7 @@ spring:
         file-extension: yaml
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
       discovery:
-        ip: ${SERVER_ADDR:ENC(pUotBACJVShx/DUJATXrXFNULNpIh4s5QW2yyn7mCoA=)}
+        ip: ${SERVER_ADDR:ENC(mHznqI91ae+iAK2gIyK7Bhkx1+9X0p6CRH2NXGb4DtM=)}
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
         cluster-name: BJ
   rabbitmq:
@@ -66,8 +66,10 @@ feign:
   client:
     config:
       default:
-        connect-timeout: 600000
-        read-timeout: 600000
+        connect-timeout: 30000
+        read-timeout: 100000
+        loggerLevel: full
+
 server:
   port: 9100
 
@@ -81,13 +83,13 @@ file:
     handler: ${Logger:slf4j}
     enable: true
   image:
-    image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
-    image-type: ${IMAGE_TYPE:ENC(iJSGa95s7NSA3b9uMLIvCWu67Fp3tdMtUSVQ7VZVRRYsTkiRa9qW+Q==)}
+    image-file-size: ${IMAGE_FILE_SIZE:ENC(2GfrLXvXzt+h3IpYQigpvhlpu3eyVnYgu7Ayv1OGiOcYEheFbBvXUC+6cHjQswgHD4q0d89WBVM=)}
+    image-type: ${IMAGE_TYPE:ENC(sVC2A+yzRP/TG18umYxZYCSL69KRmJqomkK640ATH6qAU2lkcePRwylXen7EEvO9NJXCDjQQ5l0=)}
   model:
     model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
     model-type: ${MODEL_TYPE:ENC(s/b/P1wycc8fmvSEFCZfldt3xy99xZNDqVrl2less4c=)}
   audio:
-    audio-type: ${AUDIO_TYPE:ENC(qgyb5bmrlcXsQ44XrEbIlOgksdwArXo2tJfSadByCLRj5YrrRiDVXMZJvCgfMvEn)}
+    audio-type: ${AUDIO_TYPE:ENC(QtIIwAoihHAeoOEVOOT2K8WNoYVHdaX6TcHBKO14TZJjY01wT6dfNfN4b9+c16vVpzw9LDI8YgSmuSYALo3CN6f372tbdxmqzeMYHauTukc=)}
     audio-file-size: ${AUDIO_FILE_SIZE:ENC(/0Nymk2YtBobya24vOgl+vBVp2q6Ly0Y)}
 
 labels:
@@ -101,4 +103,6 @@ assistant:
       snowflake:
         startTime: 2023-12-05 00:00:00
         register: register-redis
-
+logging:
+  level:
+    feign.Logger: debug

@@ -1,8 +1,12 @@
 package com.tml.common.exception;
 
 import com.alibaba.cloud.commons.lang.StringUtils;
+import com.tml.common.log.AbstractLogger;
 import com.tml.pojo.ResultCodeEnum;
 import org.springframework.lang.Nullable;
+
+import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 
 /**
  * @Description
@@ -18,7 +22,7 @@ public abstract class AbstractAssert {
     }
     public static void isBlank(String str, ResultCodeEnum message) {
         if (StringUtils.isBlank(str)) {
-            throw new BaseException(message);
+            throw new BaseException(str,message);
         }
     }
 

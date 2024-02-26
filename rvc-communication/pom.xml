@@ -15,6 +15,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <assistant.version>1.1.1</assistant.version>
     </properties>
 
     <dependencies>
@@ -26,14 +27,29 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
 
-        <!--        Assistant框架-->
+
+        <!--        genius-->
         <dependency>
             <groupId>io.github.geniusay</groupId>
             <artifactId>assistant-boot-start</artifactId>
-            <version>1.0.4</version>
+            <version>${assistant.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-service</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.geniusay</groupId>
+            <artifactId>assistant-cache</artifactId>
+            <version>${assistant.version}</version>
+        </dependency>
+<!--加密-->
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
@@ -60,7 +76,7 @@
             <artifactId>lettuce-core</artifactId>
         </dependency>
 
-<!--feign-->
+        <!--feign-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -72,10 +88,10 @@
 
 
         <!--        nacos-->
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.cloud</groupId>-->
+        <!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
@@ -92,13 +108,18 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
-<!--雪花-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
+        <!--雪花-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-captcha</artifactId>
             <version>5.8.18</version>
         </dependency>
-<!--        RabbitMQ-->
+        <!--        RabbitMQ-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>

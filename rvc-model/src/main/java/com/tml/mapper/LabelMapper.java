@@ -53,4 +53,7 @@ public interface LabelMapper extends BaseMapper<LabelDO> {
 
     @Update("UPDATE rvc_model_label SET hot = hot + 10 WHERE label = #{label}")
     void updateHot(String label);
+
+    @Insert("INSERT INTO rvc_model_model_label (model_id, label_id) SELECT #{modelId}, id FROM rvc_model_label WHERE label = #{label}")
+    void insertLabelModel(String modelId,String label);
 }

@@ -15,10 +15,25 @@ import javax.annotation.PostConstruct;
  * @Description:
  * @DATE: 2023/11/29
  */
+@Component
 public class Uuid {
     private Integer workerId = 0;
     private Integer datacenterId = 1;
     private final Snowflake snowflake = new Snowflake(workerId, datacenterId);
+    private static volatile Uuid instance = null;
+
+    private Uuid() {
+    };
+    public static synchronized Uuid getInstance() {
+        if (instance == null) {
+            synchronized (Uuid.class) {
+                if (instance == null) {
+                    instance = new Uuid();
+                }
+            }
+        }
+        return instance;
+    }
 
 
     @PostConstruct  //构造后开始执行，加载初始化工作
@@ -44,7 +59,7 @@ public class Uuid {
 
     //测试
     public static String getUuid() {
-        return new String(String.valueOf((new Uuid().snowflakeId())));
+        return new String(String.valueOf((getInstance().snowflakeId())));
         //1277896081711169536
     }
 }

@@ -22,7 +22,7 @@ public class FeedbackVO {
     /**
      * 反馈ID
      */
-    private Long fbid;
+    private String fbid;
 
     /**
      * 用户uid

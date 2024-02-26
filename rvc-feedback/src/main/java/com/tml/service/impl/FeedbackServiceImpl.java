@@ -14,6 +14,7 @@ import com.tml.service.FeedbackTypeService;
 import com.tml.service.IFeedbackDaoService;
 import com.tml.service.IFeedbackLikeDaoService;
 import io.github.common.PageVO;
+import io.github.common.SafeBag;
 import io.github.common.logger.CommonLogger;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.naming.ServiceUnavailableException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -60,13 +62,20 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .collect(Collectors.toList());
 
         //TODO 待聚合
-        Map<String, UserInfoVO> map = userServiceClient.list(uidList).getData();
+        Map<String, UserInfoVO> map;
+
+        try {
+            map = userServiceClient.list(uidList).getData();
+        }catch (Exception e){
+            map = null;
+        }
 
         if(map!=null){
+            SafeBag<Map<String, UserInfoVO>> safeBag = new SafeBag<>(map);
             pageVO.getPageList().forEach(
                     feedbackVO -> {
                         String search_uid = feedbackVO.getUid();
-                        UserInfoVO userInfoVO = map.get(search_uid);
+                        UserInfoVO userInfoVO = safeBag.getData().get(search_uid);
                         if(userInfoVO!=null){
                             feedbackVO.setAvatar(userInfoVO.getAvatar());
                             feedbackVO.setNickname(userInfoVO.getNickname());
@@ -79,13 +88,13 @@ public class FeedbackServiceImpl implements FeedbackService {
         if(StringUtils.hasText(uid)){
 
             List<Long> fbIdList = pageVO.getPageList().stream()
-                    .map(FeedbackVO::getFbid)
+                    .map(feedbackVO -> {return Long.parseLong(feedbackVO.getFbid());})
                     .collect(Collectors.toList());
 
             HashSet<Long> likeSet = likeDaoService.getLikeList(uid, fbIdList);
 
             pageVO.getPageList().forEach(
-                    cm -> cm.setHasUp(likeSet.contains(cm.getFbid())?1:0)
+                    cm -> cm.setHasUp(likeSet.contains(Long.parseLong(cm.getFbid()))?1:0)
             );
         }
         return Result.success(pageVO);
@@ -96,7 +105,13 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         FeedbackVO feedbackVO = feedbackDaoService.feedbackVO(fb_id);
 
-        UserInfoVO userInfoVO = userServiceClient.one(uid).getData();
+        UserInfoVO userInfoVO;
+        try {
+            userInfoVO = userServiceClient.one(uid).getData();
+        }catch (Exception e){
+            userInfoVO = null;
+        }
+
 
         if(userInfoVO!=null){
             feedbackVO.setAvatar(userInfoVO.getAvatar());
@@ -131,19 +146,26 @@ public class FeedbackServiceImpl implements FeedbackService {
         LocalDateTime today = LocalDateTime.now();
         FeedbackDO feedbackDO = FeedbackDO.builder()
                 .uid(uid)
-                .createAt(today)
-                .updateAt(today)
                 .upNum(0L)
                 .commentNum(0L)
+                .createAt(today)
+                .updateAt(today)
                 .status(0)
                 .hasShow(DetectionStatusEnum.DETECTION_SUCCESS.getStatus())
                 .build();
+
+        commonLogger.info("%s 提交了feedback,内容为:%s,时间为:%s,今天的时间为:%s",uid,form.getContent(),feedbackDO.getCreateAt(),today);
         BeanUtils.copyProperties(form,feedbackDO);
         feedbackDO.setFbid(fbid);
 
-        if (feedbackDaoService.feedbackAdd(feedbackDO)) {
-            return Result.success(feedbackDO);
+        try {
+            if (feedbackDaoService.feedbackAdd(feedbackDO)) {
+                return Result.success(feedbackDO);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
         return Result.error("403","添加失败");
     }
 
@@ -152,7 +174,6 @@ public class FeedbackServiceImpl implements FeedbackService {
         Long fbid = form.getFbid();
 
         FeedbackDO feedbackDO = FeedbackDO.builder()
-                .updateAt(LocalDateTime.now())
                 .content(form.getContent())
                 .title(form.getTitle())
                 .hasShow(DetectionStatusEnum.DETECTION_SUCCESS.getStatus())

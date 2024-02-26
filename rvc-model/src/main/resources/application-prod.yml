@@ -67,14 +67,14 @@ file:
     handler: ${Logger:slf4j}
     enable: true
   image:
-    image-file-size: ${IMAGE_FILE_SIZE:ENC(iJ4SBFg1JS8G0zMQ0ysSzpjOTUivPgZa)}
-    image-type: ${IMAGE_TYPE:ENC(iJSGa95s7NSA3b9uMLIvCWu67Fp3tdMtUSVQ7VZVRRYsTkiRa9qW+Q==)}
+    image-file-size: ${IMAGE_FILE_SIZE:ENC(OWOHBOGbuk412z8DDzc+4Xh4/xN2xEeg)}
+    image-type: ${IMAGE_TYPE:ENC(sVC2A+yzRP/TG18umYxZYCSL69KRmJqomkK640ATH6qAU2lkcePRwylXen7EEvO9NJXCDjQQ5l0=)}
   model:
     model-file-size: ${MODEL_FILE_SIZE:ENC(D5OhrXABwbOUkYYldgY+LWFbu52QxhjK)}
     model-type: ${MODEL_TYPE:ENC(s/b/P1wycc8fmvSEFCZfldt3xy99xZNDqVrl2less4c=)}
   audio:
-    audio-type: ${AUDIO_TYPE:ENC(qgyb5bmrlcXsQ44XrEbIlOgksdwArXo2tJfSadByCLRj5YrrRiDVXMZJvCgfMvEn)}
-    audio-file-size: ${AUDIO_FILE_SIZE:ENC(/0Nymk2YtBobya24vOgl+vBVp2q6Ly0Y)}
+    audio-type: ${AUDIO_TYPE:ENC(w/9zi4jpZLH4D0OqJVOPazQzrcAddmoS5fklPFJgiecnYieEhbyPxPVhqFzM/wNDaaWGGNGqJCbyM9qL0ChvFGV2IIxBzYptyIxkV9EcxH8=)}
+    audio-file-size: ${AUDIO_FILE_SIZE:ENC(whOd7WtfGLrfxOL3CT/m+ue8Yfny1G9V)}
 
 labels:
   allow_labels: ${LABELS:ENC(ZGOcc9GZKPsDfP3fQ4xgMxdUr4FgsQAYKvY5MD6ePaEi/4HkZH5yAQ==)}
@@ -87,3 +87,6 @@ assistant:
       snowflake:
         startTime: 2023-12-05 00:00:00
         register: register-redis
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

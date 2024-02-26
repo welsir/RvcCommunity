@@ -1,8 +1,8 @@
 package com.tml.designpattern.strategy.impl;
 
 import com.tml.designpattern.strategy.DetectionProcessStrategy;
+import com.tml.domain.dto.DetectionStatusDto;
 import com.tml.mapper.comment.CommentMapper;
-import com.tml.pojo.dto.DetectionStatusDto;
 import com.tml.domain.entity.Comment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -27,8 +27,6 @@ public class CommentProcessStrategy implements DetectionProcessStrategy {
         }else{
             comment.setDetectionStatus(2);
         }
-
         commentMapper.updateById(comment);
-
     }
 }
