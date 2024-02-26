@@ -25,9 +25,10 @@
         <module>rvc-user</module>
         <module>rvc-feedback</module>
         <module>rvc-admin</module>
-        <module>rvc-chatroom</module>
+        <module>rvc-chat</module>
         <module>rvc-communication</module>
         <module>rvc-rpc</module>
+        <module>rvc-notice</module>
     </modules>
 
     <properties>
