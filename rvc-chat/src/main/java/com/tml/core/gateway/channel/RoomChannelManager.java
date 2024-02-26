@@ -1,5 +1,7 @@
 package com.tml.core.gateway.channel;
 
+import com.tml.pojo.DO.UserInfo;
+import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.dto.ChatRoom;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,10 +25,14 @@ public class RoomChannelManager {
         roomInfoMap.put(roomId,chatRoom);
     }
 
-    public static boolean addChannel(String roomId, ChannelHandlerContext channel, String uid){
-        return roomInfoMap.containsKey(roomId)&&
-                roomChannelMap.computeIfAbsent(roomId, k -> new ConcurrentHashMap<>())
-                .putIfAbsent(uid, channel.channel()) == null;
+    public static boolean addChannel(String roomId, Channel channel, UserInfoVO user){
+        boolean b = roomInfoMap.containsKey(roomId);
+        if(b){
+            roomInfoMap.get(roomId).getUserIdList().add(user);
+            roomChannelMap.put(roomId,Map.of(user.getUid(),channel));
+            return true;
+        }
+        return false;
     }
 
     public static Map<String,Channel> findRoomChannel(String roomId){

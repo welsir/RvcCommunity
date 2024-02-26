@@ -27,4 +27,7 @@ public class NettyServerConfiguration {
 
     @Value("${netty.ws_port}")
     private int port;
+
+    @Value("${netty.websocket.path}")
+    private String wsPath;
 }

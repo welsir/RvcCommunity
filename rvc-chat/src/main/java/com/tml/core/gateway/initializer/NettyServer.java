@@ -23,8 +23,6 @@ public class NettyServer{
     @Resource
     NettyServerConfiguration netty;
     public void start(){
-        ChannelFuture cf = null;
-        ChannelFuture cfWs = null;
         ServerBootstrap bootstrap = new ServerBootstrap();
         bossGroup = NettyFactory.eventLoopGroup(1, "bossLoopGroup");
         workerGroup = NettyFactory.eventLoopGroup(4, "workerLoopGroup");
@@ -41,7 +39,7 @@ public class NettyServer{
                 .childHandler(new NettyServerInitializer());
         bootstrap.bind(netty.getPort()).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                System.out.println("websocket端口绑定成功 port = " + netty.getPort());
+                System.out.println("websocket端口绑定成功 [port]-> " + netty.getPort());
             } else {
                 System.out.println("websocket端口绑定失败");
             }

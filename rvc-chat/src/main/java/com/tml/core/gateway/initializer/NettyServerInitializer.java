@@ -7,6 +7,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 import javax.annotation.Resource;
 
@@ -23,8 +24,11 @@ public class NettyServerInitializer extends ChannelInitializer<NioSocketChannel>
     @Override
     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
         ChannelPipeline pipeline = nioSocketChannel.pipeline();
-        pipeline.addLast("httpServerCodec",new HttpServerCodec())
+        pipeline
+        .addLast("httpServerCodec",new HttpServerCodec())
         .addLast("httpObjectAggregator", new HttpObjectAggregator(2048))
-        .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler("/ws"));
+        .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler(netty.getWsPath()))
+        .addLast("chunkedWriteHandler",new ChunkedWriteHandler())
+        ;
     }
 }

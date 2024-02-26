@@ -59,8 +59,9 @@ public class ChatRoomHandler extends AbstractHandler{
         Map<String, Channel> roomChannel = RoomChannelManager.findRoomChannel(roomId);
         if(null!=roomChannel){
             String uid = msg.getString("uid");
-            RoomChannelManager.addChannel(roomId,channel,uid);
+            //保存用户信息
             UserInfoVO user = userServiceClient.one(uid).getData();
+            RoomChannelManager.addChannel(roomId,channel.channel(),user);
             for (String key : roomChannel.keySet()) {
                 roomChannel.get(key).writeAndFlush(new TextWebSocketFrame(user.getNickname()+"加入房间"));
             }
@@ -79,7 +80,8 @@ public class ChatRoomHandler extends AbstractHandler{
     //监听用户channel将channel加入channelMap
     private Object handleCreateGroup(ChannelHandlerContext channel,JSONObject msg,String roomId){
         String uid = msg.getString("uid");
-        boolean res = RoomChannelManager.addChannel(roomId, channel, uid);
+        UserInfoVO user = userServiceClient.one(uid).getData();
+        boolean res = RoomChannelManager.addChannel(roomId, channel.channel(), user);
         if(res){
             channel.channel().write(new TextWebSocketFrame("成功创建聊天室!"));
             return true;
