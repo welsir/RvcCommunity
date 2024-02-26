@@ -8,6 +8,6 @@ import lombok.Data;
  */
 @Data
 public class AsyncDetectionForm {
-    private DetectionTaskDto taskDTO;
+    private DetectionTaskDTO taskDTO;
     private String type;
 }
