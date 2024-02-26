@@ -20,8 +20,8 @@ public class RoomDetailInfoVO implements Serializable {
 
     private String roomId;
     private String ownerId;
+    private String picture;
     private String name;
-    private String password;
-    private List<UserInfoVO> userInfoVOS = new ArrayList<>();
+    private List<String> userIdList;
 
 }
