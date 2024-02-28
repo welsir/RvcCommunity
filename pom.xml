@@ -29,7 +29,6 @@
         <module>rvc-communication</module>
         <module>rvc-rpc</module>
         <module>rvc-notice</module>
-        <module>rvc-top</module>
     </modules>
 
     <properties>
