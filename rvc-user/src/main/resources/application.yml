@@ -15,3 +15,4 @@ sa-token:
   is-share: true
   token-style: uuid
   is-log: true
+
