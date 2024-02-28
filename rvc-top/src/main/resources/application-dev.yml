@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: rvc-top-service
+
+  datasource:
+    driver-class-name: ${MYSQL_DRIVER:com.mysql.cj.jdbc.Driver}
+    url: ${MYSQL_ADDR:ENC(xMRgIMkkMeGcEa2r7Evzw4AZMCHiDpIGN7ETNEIallJTWSl30aRIZqniNoQpgsujTuur8qAezCXaaNxOYKLvlFQjS7pPoe3oBCz2fFUMRhZ0G2qZG8ZYUnUjnkIZyUWDSbns7no1+8L02z0CP+ghKbPao+l7DolA9lLGx2vUbZY=)}
+    username: ${MYSQL_USERNAME:ENC(O0WJdHK10k6bhTSQJbTEGrsBytLKSmRX)}
+    password: ${MYSQL_PASSWORD:ENC(xk8u9sk/O8iQp5hULhWtASCPvSC6R5o+AggfXiITFKR7iA8kGncdzw==)}
+  redis:
+    host: ${REDIS_ADDR:ENC(7+i1abkV1AAW737zy56ZvAWdcUq8AKM0WufHtc+3eqo=)}
+    database: 0
+    port: ${REDIS_PORT:ENC(vZrw6ItoyBBaKAHqyYi6zzoVUc8BRiM+)}
+    password: ${REDIS_PWD:ENC(BWt70dzHaoTtVWtJWZF2c592HJgBHV9CdjwRTcOos/qort27DDnJag==)}
+    timeout: 3000ms
