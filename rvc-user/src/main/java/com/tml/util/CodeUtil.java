@@ -1,7 +1,7 @@
 package com.tml.util;
 
 import com.tml.client.CaptchaServiceClient;
-import com.tml.config.CodeCofig;
+import com.tml.config.RedisBaseConfig;
 import com.tml.exception.ServerException;
 import com.tml.mapper.UserInfoMapper;
 import com.tml.pojo.Result;
@@ -11,7 +11,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -52,13 +51,13 @@ public class CodeUtil {
             throw new ServerException(ResultEnums.FAIL_SEND_VER_CODE);
         }
 
-        stringRedisTemplate.opsForValue().set(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email, result.getData().get("code"), 5, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(RedisBaseConfig.EMAIL_BASE + enums.getCodeHeader() + email, result.getData().get("code"), 5, TimeUnit.MINUTES);
     }
 
     public boolean emailVerify(String email, EmailEnums enums, String code){
-        String c = stringRedisTemplate.opsForValue().get(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
+        String c = stringRedisTemplate.opsForValue().get(RedisBaseConfig.EMAIL_BASE + enums.getCodeHeader() + email);
         if(c != null && c.equalsIgnoreCase(code)){
-            stringRedisTemplate.delete(CodeCofig.EMAIL_BASE + enums.getCodeHeader() + email);
+            stringRedisTemplate.delete(RedisBaseConfig.EMAIL_BASE + enums.getCodeHeader() + email);
             return true;
         }
         return false;
@@ -73,14 +72,14 @@ public class CodeUtil {
         String base64 = map.get("base64");
         String code = map.get("code");
         String uuid = UUID.randomUUID().toString();
-        stringRedisTemplate.opsForValue().set(CodeCofig.IMAGE_BASE + uuid, code, 2, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(RedisBaseConfig.IMAGE_BASE + uuid, code, 2, TimeUnit.MINUTES);
         return Map.of("base64", base64, "uuid", uuid);
     }
 
     public boolean preVerify(String uuid, String code){
-        String c = stringRedisTemplate.opsForValue().get(CodeCofig.IMAGE_BASE + uuid);
+        String c = stringRedisTemplate.opsForValue().get(RedisBaseConfig.IMAGE_BASE + uuid);
         if(c != null && c.equalsIgnoreCase(code)){
-            stringRedisTemplate.delete(CodeCofig.IMAGE_BASE + uuid);
+            stringRedisTemplate.delete(RedisBaseConfig.IMAGE_BASE + uuid);
             return true;
         }
         return false;

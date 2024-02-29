@@ -376,7 +376,7 @@ public class UserServiceImpl implements UserService {
         Map<String, UserData> userDataMap = userDataMapper.selectList(dataQueryWrapper).stream().collect(Collectors.toMap(UserData::getUid, userData -> userData));
         List<UserInfoVO> userInfoVOS = new ArrayList<>();
         for (UserInfo userInfo:userInfoList){
-            UserInfoVO userInfoVO = new UserInfoVO();
+            UserInfoVO userInfoVO = UserInfoVO.builder().build();
             BeanUtils.copyProperties(userInfo, userInfoVO);
             BeanUtils.copyProperties(userDataMap.get(userInfo.getUid()), userInfoVO);
             userInfoVOS.add(userInfoVO);

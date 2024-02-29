@@ -1,5 +1,6 @@
 package com.tml.pojo.vo;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -9,6 +10,7 @@ import java.time.LocalDate;
  * @Author xiaochun
  */
 @Data
+@Builder
 public class UserInfoVO {
     private String uid;
 
