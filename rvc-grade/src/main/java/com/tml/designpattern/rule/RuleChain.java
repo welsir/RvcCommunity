@@ -1,5 +1,6 @@
 package com.tml.designpattern.rule;
 
+import com.alibaba.fastjson.JSON;
 import com.tml.designpattern.chain.ApproveChain;
 import com.tml.domain.dto.MqConsumerTaskDto;
 import com.tml.domain.entity.RvcLevelTask;
@@ -34,6 +35,7 @@ public class RuleChain {
     }
 
     public boolean ruleCheck(){
+        rule.ruleParser(JSON.parseObject(task.getRule()));
         if(rule.check()){
             if(nextChain != null){
                 return nextChain.ruleCheck();
