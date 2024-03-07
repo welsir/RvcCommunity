@@ -31,6 +31,8 @@ public class NumberApproveChain extends ApproveChain {
         }
         return false;
     }
+
+
     /**
      * 首先判断是否需要进行次数校验
      * 若不需要直接返回 真
