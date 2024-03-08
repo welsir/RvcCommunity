@@ -29,6 +29,7 @@
         <module>rvc-communication</module>
         <module>rvc-rpc</module>
         <module>rvc-notice</module>
+        <module>rvc-grade</module>
     </modules>
 
     <properties>
@@ -41,6 +42,7 @@
 
         <nacos.version>2.2.5.RELEASE</nacos.version>
         <redis.version>2.3.9.RELEASE</redis.version>
+        <redision.version>3.16.0</redision.version>
         <boot.version>2.3.9.RELEASE</boot.version>
         <rockermq.version>2.3.9.RELEASE</rockermq.version>
         <mybatis.version>2.1.1</mybatis.version>
@@ -107,6 +109,12 @@
                     </exclusion>
                 </exclusions>
                 <version>${redis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redision.version}</version> <!-- 请根据实际情况选择版本 -->
             </dependency>
             <!--springBoot-->
             <dependency>

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tml.designpattern.chain.ext.LastStepApproveChain;
 import com.tml.designpattern.chain.ext.NumberApproveChain;
+import com.tml.designpattern.rule.RuleChain;
+import com.tml.designpattern.rule.RuleDomain;
 import com.tml.domain.dto.MqConsumerTaskDto;
 import com.tml.domain.entity.Rule;
 import com.tml.domain.entity.RvcLevelTask;
@@ -46,6 +48,10 @@ public class ConsumerProcessHandler {
     @Resource
     private LastStepApproveChain lastStepApproveChain;
 
+    //规则发现机
+    @Resource
+    RuleDomain ruleDomain;
+
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(name = "rvc.grade.consumer.queue"),
@@ -66,21 +72,15 @@ public class ConsumerProcessHandler {
 //        JSONObject jsonObject = JSON.parseObject(task.getRule());
 //        Rule rule = new Rule(jsonObject);
 
-        /**
-         * 2、进行校验
-         * 2.1 时间直接判断   次数-> 每一个任务对应一个 zset  完成次数就是分数值
-         *
-         */
+        //获取规则链表
+        RuleChain ruleChain = ruleDomain.buildChain(task, mqConsumerTaskDto);
 
-
-        /**todo
-         * 校验使用责任链  传rule对象 根据rule对象的属性值来判断是否需要校验
-         */
-        numberApproveChain.setNext(mqConsumerTaskDto,task,lastStepApproveChain);
-        numberApproveChain.approve();
-//        if (numberApproveChain.approve()){
-//            processingResult(task,mqConsumerTaskDto);
-//        }
+        //校验规则链表
+        if (ruleChain.ruleCheck()) {
+            //校验通过 进行遗言操作
+            ruleChain.lastWord();
+            //TODO : 2024/2/21 处理经验值增加的业务
+        }
 
     }
 

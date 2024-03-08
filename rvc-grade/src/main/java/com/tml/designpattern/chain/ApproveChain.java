@@ -1,6 +1,7 @@
 package com.tml.designpattern.chain;
 
 import com.tml.client.UserServiceClient;
+import com.tml.designpattern.rule.AbstractGradeRule;
 import com.tml.domain.dto.MqConsumerTaskDto;
 import com.tml.domain.entity.Rule;
 import com.tml.domain.entity.RvcLevelTask;
@@ -30,6 +31,7 @@ public abstract class ApproveChain{
 
     ApproveChain nextChain;
 
+
     public void setNext(MqConsumerTaskDto taskDto,RvcLevelTask task,ApproveChain nextChain){
         this.taskDto = taskDto;
         this.task = task;
@@ -37,4 +39,6 @@ public abstract class ApproveChain{
     }
 
     public abstract boolean approve();
+
+
 }
