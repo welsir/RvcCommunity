@@ -24,5 +24,5 @@ public class ChatRoom {
     private String name;
     private String picture;
     private String password;
-    private List<UserInfoVO> userIdList;
+    private List<String> userIdList;
 }
