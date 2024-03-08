@@ -229,45 +229,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = RvcSQLException.class)
-    public void follow(String followUid, String uid) throws RvcSQLException {
+    public boolean follow(String followUid, String type, String uid) throws RvcSQLException {
         if(uid.equals(followUid)){
             throw new ServerException(ResultEnums.CANT_FOLLOW_YOURSELF);
         }
         if(!userInfoMapper.exist("uid", followUid)){
             throw new ServerException(ResultEnums.USER_NOT_EXIST);
         }
-        QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
-        followWrapper
-                .eq("follow_uid", uid)
-                .eq("followed_uid", followUid);
-        if(userFollowMapper.selectCount(followWrapper) > 0){
-            userFollowMapper.delete(followWrapper);
-            UserData userData = userDataMapper.selectByUid(uid);
-            userData.setFollowNum(userData.getFollowNum() - 1);
-            UserData followUserData = userDataMapper.selectByUid(followUid);
-            followUserData.setFansNum(followUserData.getFansNum() - 1);
-            try {
-                userDataMapper.updateById(userData);
-                userDataMapper.updateById(followUserData);
-            } catch (Exception e){
-                throw new RvcSQLException(e.getMessage());
-            }
-            return;
-        }
         try {
-            UserFollow follow = new UserFollow();
-            follow.setFollowUid(uid);
-            follow.setFollowedUid(followUid);
-            UserData userData = userDataMapper.selectByUid(uid);
-            userData.setFollowNum(userData.getFollowNum() + 1);
-            UserData followUserData = userDataMapper.selectByUid(followUid);
-            followUserData.setFansNum(followUserData.getFansNum() + 1);
-            userDataMapper.updateById(userData);
-            userDataMapper.updateById(followUserData);
-            userFollowMapper.insert(follow);
+            QueryWrapper<UserFollow> followWrapper = new QueryWrapper<>();
+            followWrapper
+                    .eq("follow_uid", uid)
+                    .eq("followed_uid", followUid);
+            if(type.equals("0")){
+                userFollowMapper.delete(followWrapper);
+                userDataMapper.updateFollowNum(uid, false);
+                userDataMapper.updateFansNum(followUid, false);
+            } else {
+                UserFollow follow = new UserFollow();
+                follow.setFollowUid(uid);
+                follow.setFollowedUid(followUid);
+                userFollowMapper.insert(follow);
+                userDataMapper.updateFollowNum(uid, true);
+                userDataMapper.updateFansNum(followUid, true);
+            }
         } catch (Exception e){
-            throw new RvcSQLException(e.getMessage());
+            e.printStackTrace();
+            throw new RvcSQLException("操作失败");
         }
+        return true;
     }
 
     @Override

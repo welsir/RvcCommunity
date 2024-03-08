@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tml.mapper.UserDataMapper">
+    <select id="selectByUid" parameterType="java.lang.String" resultType="com.tml.pojo.DO.UserData">
+        SELECT * FROM rvc_user_data WHERE uid = #{uid}
+    </select>
+
+    <update id="updateFollowNum">
+        UPDATE rvc_user_data
+        <if test="flag == true">
+            SET follow_num = follow_num + 1
+        </if>
+        <if test="flag == false">
+            SET follow_num = follow_num - 1
+        </if>
+        WHERE uid=#{uid};
+    </update>
+    <update id="updateFansNum">
+        UPDATE rvc_user_data
+        <if test="flag == true">
+            SET fans_num = fans_num + 1
+        </if>
+        <if test="flag == false">
+            SET fans_num = fans_num - 1
+        </if>
+        WHERE uid=#{uid};
+    </update>
+</mapper>

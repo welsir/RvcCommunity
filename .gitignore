@@ -46,3 +46,4 @@ EncYMLTest.*
 /rvc-user/src/test/java/com/tml/FeignTest.java
 /rvc-user/src/test/java/com/tml/Test.java
 /rvc-top/src/main/resources/bootstrap-dev.yml
+/rvc-user/src/main/resources/bootstrap-dev.yml

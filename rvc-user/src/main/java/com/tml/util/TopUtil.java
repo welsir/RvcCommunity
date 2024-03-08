@@ -26,8 +26,8 @@ public class TopUtil {
     StringRedisTemplate stringRedisTemplate;
 
     public <E> void top(String key, List<E> data, Class<E> clazz){
-        List<String> idList = new ArrayList<>();
-        List<Object> userList = redisTemplate.opsForValue().multiGet(stringRedisTemplate.opsForZSet().range(key, 0, 99));
-        CopyUtil.copyPropertiesForList(userList, data, clazz);
+//        stringRedisTemplate.opsForZSet().range(key, 0, 99)
+//        List<Object> list = redisTemplate.opsForValue().multiGet();
+//        CopyUtil.copyPropertiesForList(userList, data, clazz);
     }
 }

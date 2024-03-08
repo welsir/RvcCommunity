@@ -1,0 +1,19 @@
+<!-- src/main/resources/mapper/com/example/mapper/UserInfoMapper.xml -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tml.mapper.UserInfoMapper">
+
+    <select id="exist" resultType="boolean">
+        SELECT CASE WHEN COUNT(uid) >= 1 THEN true ELSE false END AS Result
+        FROM rvc_user_info WHERE ${clunme} = #{value}
+    </select>
+
+    <select id="selectByUid" resultType="com.tml.pojo.DO.UserInfo">
+        SELECT * FROM rvc_user_info WHERE uid = #{uid}
+    </select>
+
+    <select id="selectByClumneAndValue" resultType="com.tml.pojo.DO.UserInfo">
+        SELECT * FROM rvc_user_info WHERE ${clunme} = #{value}
+    </select>
+
+</mapper>
