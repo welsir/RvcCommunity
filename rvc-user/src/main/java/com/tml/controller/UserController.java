@@ -21,6 +21,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 /**
@@ -169,9 +170,13 @@ public class UserController {
                              @NotBlank(message = "uid不能为空")
                              @Length(min = 19, max = 19, message = "uid长度为19")
                              String followUid,
+                         @RequestPart
+                            @Valid
+                            @NotBlank(message = "操作类型不能为空")
+                            @Pattern(regexp = "[01]", message = "type只能为0或1")
+                            String type,
                          @RequestHeader String uid) throws RvcSQLException {
-        userService.follow(followUid, uid);
-        return Result.success();
+        return Result.success(userService.follow(followUid, type, uid));
     }
 
     @PostMapping("/updatePassword")

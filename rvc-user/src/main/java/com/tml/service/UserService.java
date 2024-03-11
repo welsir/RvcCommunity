@@ -34,7 +34,7 @@ public interface UserService {
 
     void update(UserInfoDTO userInfoDTO, String uid);
 
-    void follow(String followUid, String uid) throws RvcSQLException;
+    boolean follow(String followUid, String type, String uid) throws RvcSQLException;
 
     boolean updatePassword(UpdatePasswordDTO updatePasswordDTO, String uid);
 

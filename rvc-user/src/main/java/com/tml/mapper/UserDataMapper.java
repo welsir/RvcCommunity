@@ -12,6 +12,9 @@ import org.apache.ibatis.annotations.Select;
  */
 @Mapper
 public interface UserDataMapper extends BaseMapper<UserData> {
-    @Select("SELECT * FROM rvc_user_data WHERE uid = #{uid}")
     UserData selectByUid(@Param("uid") String uid);
+
+    int updateFollowNum(String uid, boolean flag);
+
+    int updateFansNum(String uid, boolean flag);
 }

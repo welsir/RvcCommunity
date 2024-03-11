@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RvcSQLException.class)
     public Result handleException(RvcSQLException e){
         logger.error("数据插入出错：" + e.getMessage());
-        return Result.error("500", e.getMessage());
+        return Result.success(false);
     }
 
     /*
@@ -73,6 +73,6 @@ public class GlobalExceptionHandler {
     public Result handleBindException(Exception ex) {
         logger.error("未定义错误：" + ex.getMessage());
         ex.printStackTrace();
-        return Result.error("400", ex.getMessage());
+        return Result.error("400", "未知错误");
     }
 }

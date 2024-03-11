@@ -11,7 +11,5 @@ import org.apache.ibatis.annotations.Select;
  */
 @Mapper
 public interface UserFollowMapper extends BaseMapper<UserFollow> {
-    @Select("SELECT CASE WHEN COUNT(*) >= 1 THEN true ELSE false END AS Result " +
-            "FROM rvc_user_follow WHERE ${clunme1} = #{value1} AND ${clunme2} = #{value2}")
     boolean exist(String clunme1, String value1, String clunme2, String value2);
 }

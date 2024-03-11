@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.tml.pojo.vo.UserInfoVO;
 import lombok.Data;
+import org.apache.catalina.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,14 +47,14 @@ public class UserInfo {
     private LocalDateTime updatedAt;
 
     public static UserInfoVO toVO(UserInfo userInfo){
-        UserInfoVO userInfoVO = new UserInfoVO();
-        userInfoVO.setUid(userInfo.getUid());
-        userInfoVO.setUsername(userInfo.getUsername());
-        userInfoVO.setNickname(userInfo.getNickname());
-        userInfoVO.setBirthday(userInfo.getBirthday());
-        userInfoVO.setSex(userInfo.getSex());
-        userInfoVO.setAvatar(userInfo.getAvatar());
-        userInfoVO.setDescription(userInfo.getDescription());
-        return userInfoVO;
+        return UserInfoVO.builder()
+                .uid(userInfo.getUid())
+                .username(userInfo.getUsername())
+                .nickname(userInfo.getNickname())
+                .birthday(userInfo.getBirthday())
+                .sex(userInfo.getSex())
+                .avatar(userInfo.getAvatar())
+                .description(userInfo.getDescription())
+                .build();
     }
 }
