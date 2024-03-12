@@ -15,7 +15,7 @@ netty:
   address: ${address:ENC(BjtXwQuSkFhyspyw2a5BQcd9wVjl/6sZrLVtX4yIQF0=)}
   maxContentLength: ${MAX_CONTENT_LENGTH:2048}
   websocket:
-    port: ${PORT:9112}
+    port: ${PORT:9111}
     path: ${PATH:/chat}
   protocol: ${PROTOCOL:websocket}
 channel:
