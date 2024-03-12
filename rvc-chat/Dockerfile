@@ -1,0 +1,35 @@
+FROM adoptopenjdk:11-jre-hotspot
+COPY *.jar /rvc-chat.jar
+
+ARG SERVER_PORT
+ARG ACTIVE
+ARG UNIQUE_ID
+ARG DEBUG_PORT
+
+ARG MYSQL_ADDR
+ARG MYSQL_USERNAME
+ARG MYSQL_PASSWORD
+
+ARG REDIS_ADDR
+ARG REDIS_PORT
+ARG REDIS_PWD
+
+ARG NACOS_SERVER_ADDR
+ARG NACOS_SERVER_USER
+ARG NACOS_SERVER_PASSWORD
+
+ARG MQ_ADDR
+ARG MQ_PORT
+ARG MQ_USERNAME
+ARG MQ_PWD
+
+ENV SERVER_PORT=${SERVER_PORT}
+ENV ACTIVE=${ACTIVE}
+ENV UNIQUE_ID=${UNIQUE_ID}
+ENV DEBUG_PORT=${DEBUG_PORT}
+
+
+EXPOSE ${SERVER_PORT}
+EXPOSE ${DEBUG_PORT}
+
+ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-model.jar; else java -jar /rvc-model.jar; fi"]
