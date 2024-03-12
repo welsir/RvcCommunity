@@ -32,4 +32,4 @@ ENV DEBUG_PORT=${DEBUG_PORT}
 EXPOSE ${SERVER_PORT}
 EXPOSE ${DEBUG_PORT}
 
-ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-model.jar; else java -jar /rvc-model.jar; fi"]
+ENTRYPOINT ["/bin/sh", "-c", "if [ ! -z \"$DEBUG_PORT\" ]; then java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:$DEBUG_PORT -jar /rvc-chat.jar; else java -jar /rvc-chat.jar; fi"]
