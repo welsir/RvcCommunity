@@ -14,15 +14,11 @@ import com.tml.service.RoomService;
 import io.github.common.web.Result;
 import io.github.id.snowflake.SnowflakeGenerator;
 import io.github.id.snowflake.SnowflakeRegisterException;
-import io.netty.channel.ChannelHandlerContext;
-import org.checkerframework.checker.units.qual.C;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -51,7 +47,7 @@ public class RoomServiceImpl implements RoomService {
             ChatRoom room = ChatRoom.builder()
                     .id(id.toString())
                     .name(request.getTitle() == null ? userInfo.getNickname() + "的房间" : request.getTitle())
-//                    .userIdList(List.of(uid))
+                    .userIdList(List.of(userInfo))
                     .build();
             //todo:存入数据到redis 1.房间列表(维护目前所有房间列表) 2.房间信息
             memoryStore.subscribe(uid, room.getId());

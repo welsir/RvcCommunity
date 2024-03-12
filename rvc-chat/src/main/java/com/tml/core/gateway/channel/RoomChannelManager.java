@@ -1,6 +1,5 @@
 package com.tml.core.gateway.channel;
 
-import com.tml.pojo.DO.UserInfo;
 import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.dto.ChatRoom;
 import io.netty.channel.Channel;
@@ -38,4 +37,14 @@ public class RoomChannelManager {
     public static Map<String,Channel> findRoomChannel(String roomId){
         return roomChannelMap.get(roomId);
     }
+
+    public static boolean tryAdd(String roomId,String pwd,Channel channel,UserInfoVO user){
+        if(roomInfoMap.get(roomId).getPassword().equals(pwd)){
+            return addChannel(roomId,channel,user);
+        }else{
+            return false;
+        }
+    }
+
+
 }

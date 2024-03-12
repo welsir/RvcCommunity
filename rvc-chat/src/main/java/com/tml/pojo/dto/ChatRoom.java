@@ -1,6 +1,6 @@
 package com.tml.pojo.dto;
 
-import com.tml.pojo.DO.UserInfo;
+
 import com.tml.pojo.VO.UserInfoVO;
 import io.netty.channel.Channel;
 import lombok.Builder;

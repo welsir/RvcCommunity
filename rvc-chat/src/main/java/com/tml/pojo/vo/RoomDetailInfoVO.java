@@ -1,7 +1,4 @@
 package com.tml.pojo.vo;
-
-import com.tml.pojo.DO.UserInfo;
-import com.tml.pojo.VO.UserInfoVO;
 import lombok.Data;
 
 import java.io.Serializable;

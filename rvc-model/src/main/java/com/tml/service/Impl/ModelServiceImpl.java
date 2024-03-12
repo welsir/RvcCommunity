@@ -486,8 +486,7 @@ public class ModelServiceImpl implements ModelService {
                     .build();
             return mapper.insertModelUserLikes(
                     build
-            )>0 &&
-                    mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
+            )>0 && mapper.update(null, new UpdateWrapper<ModelDO>().eq("id",modelId).setSql("likes_num = likes_num+1"))>0;
         }else if(ModelConstant.UN_FLAG.equals(status)) {
             if(modelDO.getLikesNum()<=0){
                 return true;
@@ -495,10 +494,10 @@ public class ModelServiceImpl implements ModelService {
             try {
                 boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
                 if(flag){
-                    int sql1 = mapper.update(null, new UpdateWrapper<ModelDO>().eq("id", modelId).setSql("likes_num = likes_num - 1"));
-                    int sql2 = mapper.delModelLikes(uid, modelId);
+                    int sql1 = mapper.delModelLikes(uid, modelId);
+                    boolean res = sql1==1 && 1==mapper.update(null, new UpdateWrapper<ModelDO>().eq("id", modelId).setSql("likes_num = likes_num - 1"));
                     lock.unlock();
-                    return true;
+                    return res;
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -528,10 +527,9 @@ public class ModelServiceImpl implements ModelService {
             try {
                 boolean flag = lock.tryLock(5, TimeUnit.SECONDS);
                 if(flag){
-                    mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"));
-                    mapper.delModelCollection(uid,modelId);
+                    boolean res = 1==mapper.delModelCollection(uid,modelId)&&1==mapper.update(null,new UpdateWrapper<ModelDO>().setSql("collection_num = collection_num - 1"));;
                     lock.unlock();
-                    return true;
+                    return res;
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

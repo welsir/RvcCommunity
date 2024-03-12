@@ -16,16 +16,16 @@ public class NettyServerConfiguration {
     @Value("${channel.handshake.wait}")
     private int handshakeWaitSecond;
 
-    @Value("${netty.server}")
+    @Value("${netty.address}")
     private String nettyServer;
 
-    @Value("${netty.protocol}:websocket")
+    @Value("${netty.protocol}")
     private String nettyProtocol;
 
     @Value("${netty.maxContentLength}")
     private int maxContentLength;
 
-    @Value("${netty.ws_port}")
+    @Value("${netty.websocket.port}")
     private int port;
 
     @Value("${netty.websocket.path}")

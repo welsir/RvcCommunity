@@ -6,6 +6,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
@@ -15,11 +16,10 @@ import javax.annotation.Resource;
  * @Date 2024/2/19 15:36
  */
 @Slf4j
+@Component
 public class NettyServer{
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private Channel channel;
-    private Channel channelWs;
     @Resource
     NettyServerConfiguration netty;
     public void start(){
