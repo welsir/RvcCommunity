@@ -120,6 +120,7 @@
                 <configuration>
                     <executable>true</executable>
                     <layout>JAR</layout>
+                    <mainClass>com.tml.RvcChatApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
