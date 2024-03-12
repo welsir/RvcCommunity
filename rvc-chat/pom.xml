@@ -7,6 +7,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>rvc-chat</name>
     <description>rvc-chat</description>
+    <packaging>jar</packaging>
     <parent>
         <artifactId>RvcCommunity</artifactId>
         <groupId>com.tml</groupId>
