@@ -122,6 +122,8 @@
                     <layout>JAR</layout>
                     <mainClass>com.tml.RvcChatApplication</mainClass>
                 </configuration>
+
+
                 <executions>
                     <execution>
                         <goals>
