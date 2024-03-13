@@ -7,7 +7,8 @@ import com.tml.core.store.memory.MemoryStoreImpl;
 import com.tml.core.store.redis.RedisStoreRepoImpl;
 import com.tml.pojo.VO.UserInfoVO;
 import com.tml.pojo.dto.ChatRoom;
-import com.tml.pojo.vo.CreateRoomRequest;
+import com.tml.pojo.vo.CreateGroupAuth;
+
 import com.tml.pojo.vo.EnterRequest;
 import com.tml.pojo.vo.RoomDetailInfoVO;
 import com.tml.service.RoomService;
@@ -39,7 +40,8 @@ public class RoomServiceImpl implements RoomService {
     UserServiceClient userServiceClient;
 
     @Override
-    public RoomDetailInfoVO createRoom(CreateRoomRequest request, String uid) {
+    public RoomDetailInfoVO createRoom(CreateGroupAuth request, String uid) {
+
         try {
             Result<UserInfoVO> response = userServiceClient.one(uid);
             UserInfoVO userInfo = response.getData();

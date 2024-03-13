@@ -20,20 +20,23 @@ import javax.annotation.Resource;
  * @Author welsir
  * @Date 2024/2/25 15:22
  */
-@Component
 public class NettyServerInitializer extends ChannelInitializer<NioSocketChannel> {
 
     private static final NettyServerHandler NETTY_SERVER_HANDLER = new NettyServerHandler(new CenterServerHandler());
 
-    @Resource
-    NettyServerConfiguration netty;
+    public NettyServerInitializer(String path,int length){
+        this.length = length;
+        this.path =path;
+    }
+    private String path;
+    private int length;
 
     @Override
     protected void initChannel(NioSocketChannel nioSocketChannel) {
         ChannelPipeline pipeline = nioSocketChannel.pipeline();
         pipeline.addLast("httpServerCodec",new HttpServerCodec())
-        .addLast("httpObjectAggregator", new HttpObjectAggregator(netty.getMaxContentLength()))
-        .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler(netty.getWsPath()))
+        .addLast("httpObjectAggregator", new HttpObjectAggregator(length))
+        .addLast("webSocketServerProtocolHandler", new WebSocketServerProtocolHandler(path))
         .addLast("chunkedWriteHandler",new ChunkedWriteHandler())
         .addLast("codec",WebSocketPacketCodec.INSTANCE)
         .addLast("handler",NETTY_SERVER_HANDLER);

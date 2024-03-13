@@ -12,7 +12,8 @@ spring:
         namespace: 98732302-bf12-40a5-8d93-7f2d97187a12
         cluster-name: BJ
 netty:
-  address: ${address:ENC(BjtXwQuSkFhyspyw2a5BQcd9wVjl/6sZrLVtX4yIQF0=)}
+#  address: ${address:ENC(BjtXwQuSkFhyspyw2a5BQcd9wVjl/6sZrLVtX4yIQF0=)}
+  address: localhost
   maxContentLength: ${MAX_CONTENT_LENGTH:2048}
   websocket:
     port: ${PORT:9111}
@@ -21,3 +22,7 @@ netty:
 channel:
   handshake:
     wait: ${HANDSHAKE_TIME:5}
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    password: genius_serve_0704

@@ -4,7 +4,8 @@ import com.google.gson.JsonObject;
 import com.tml.annotation.apiAuth.WhiteApi;
 import com.tml.pojo.Result;
 import com.tml.pojo.dto.ChatRoom;
-import com.tml.pojo.vo.CreateRoomRequest;
+import com.tml.pojo.vo.CreateGroupAuth;
+
 import com.tml.pojo.vo.EnterRequest;
 import com.tml.pojo.vo.RoomDetailInfoVO;
 import com.tml.service.RoomService;
@@ -19,7 +20,8 @@ import javax.annotation.Resource;
  * @Author welsir
  * @Date 2024/2/19 15:53
  */
-@RequestMapping("room")
+@RequestMapping("chat")
+@RestController
 public class ChatController {
 
     @Resource
@@ -31,14 +33,14 @@ public class ChatController {
      * @return: Result<RoomDetailInfoVO>
      **/
     @WhiteApi
-    @RequestMapping("create")
+    @RequestMapping(value = "/create",method = RequestMethod.POST)
     public void createRoom(
-            @RequestBody CreateRoomRequest request,
-                @RequestHeader(value = "uid") String uid){
+            CreateGroupAuth request,
+            @RequestHeader(value = "uid") String uid){
             roomService.createRoom(request,uid);
     }
 
-    @RequestMapping("entry")
+    @RequestMapping(value = "/entry",method = RequestMethod.POST)
     @WhiteApi
     public Result<String> entryRoom(@RequestBody EnterRequest enterRequest){
         return Result.success(roomService.joinRoom(enterRequest));

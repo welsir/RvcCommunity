@@ -36,7 +36,7 @@ public class NettyServer{
                 .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(64 * 1024, 128 * 1024))
-                .childHandler(new NettyServerInitializer());
+                .childHandler(new NettyServerInitializer(netty.getWsPath(),netty.getMaxContentLength()));
         bootstrap.bind(netty.getPort()).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 System.out.println("websocket端口绑定成功 [port]-> " + netty.getPort());

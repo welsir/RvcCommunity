@@ -10,10 +10,7 @@ import java.io.Serializable;
  * @Date 2024/2/19 16:00
  */
 @Data
-public class CreateRoomRequest implements Serializable {
-
-    private static final long serialVersionUID = -2784248520516424354L;
-
+public class CreateGroupAuth {
     private String title;
     private String password;
 }

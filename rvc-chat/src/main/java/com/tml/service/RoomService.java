@@ -2,7 +2,8 @@ package com.tml.service;
 
 import com.google.gson.JsonObject;
 import com.tml.pojo.dto.ChatRoom;
-import com.tml.pojo.vo.CreateRoomRequest;
+import com.tml.pojo.vo.CreateGroupAuth;
+
 import com.tml.pojo.vo.EnterRequest;
 import com.tml.pojo.vo.RoomDetailInfoVO;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,7 +16,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 public interface RoomService {
 
-    RoomDetailInfoVO createRoom(CreateRoomRequest params, String uid);
+    RoomDetailInfoVO createRoom(CreateGroupAuth params, String uid);
 
     String joinRoom(EnterRequest request);
 }
