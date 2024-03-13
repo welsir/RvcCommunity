@@ -27,7 +27,7 @@ spring:
     name: rvc-model-service
   cloud:
     nacos:
-      server-addr: ENC(VdzZDIUI6EP3mXnpOmb0l46RpSA5HlJgqy9/ZxU0Mx3U777m+o9J6Q==)
+      server-addr: ENC(j4BGuU4Drn/PCMVnZxSNiVoS29f/oIUfV9FPF6inupI=)
       username: ENC(qqqHXA1bwhhYPJ9SXXZqyO5j//wygYDK)
       password: ENC(v1J0g/bB0xWCi9Te8mwH1o309G9xtm6q1L8SeCkYdYY=)
       config:
