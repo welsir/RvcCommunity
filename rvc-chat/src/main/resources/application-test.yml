@@ -20,4 +20,4 @@ netty:
   protocol: ${PROTOCOL:websocket}
 channel:
   handshake:
-    wait: 5
+    wait: ${HANDSHAKE_TIME:5}
